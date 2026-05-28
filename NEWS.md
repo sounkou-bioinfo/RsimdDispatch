@@ -1,4 +1,4 @@
-# RsimdDispatch 0.1.1
+# RsimdDispatch 0.1.1 (2026-05-28)
 
 * Stage scalar and optional SIMD kernel objects during `configure`, then link
   them through generated `src/Makevars` with the baseline R API, CPU feature

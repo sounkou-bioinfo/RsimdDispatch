@@ -13,7 +13,6 @@
 ^README\.Rmd$
 ^README\.html$
 ^REVIEW\.md$
-^cran-comments\.md$
 ^\.github$
 ^_pkgdown\.yml$
 ^docs$
