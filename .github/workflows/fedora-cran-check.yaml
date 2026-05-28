@@ -25,7 +25,7 @@ jobs:
       - name: Install OS dependencies
         run: |
           dnf install -y --setopt=install_weak_deps=False \
-            make pandoc qpdf texlive-scheme-medium
+            diffutils make pandoc qpdf texlive-scheme-medium
 
       - name: Cache R library
         uses: actions/cache@v4
