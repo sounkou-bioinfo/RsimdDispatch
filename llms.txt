@@ -64,7 +64,7 @@ simd_set_backend("avx2")
 simd_backend()
 #> [1] "avx2"
 simd_set_backend("auto")
-simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends")]
+simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends", "simde_native_backends")]
 #> $compiled_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
@@ -72,7 +72,10 @@ simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"  
 #> 
 #> $available_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"
+#> [1] "scalar" "sse2"   "sse41"  "avx2"  
+#> 
+#> $simde_native_backends
+#> [1] "sse2"   "sse41"  "avx2"   "avx512"
 simde_info()[c("version", "commit")]
 #> $version
 #> [1] "0.8.4"
@@ -159,8 +162,8 @@ knitr::kable(bench, digits = 3)
 
 | backend | median_ms | mb_per_second | iterations | speedup_vs_scalar |
 |:--------|----------:|--------------:|-----------:|------------------:|
-| scalar  |    11.334 |      4600.371 |         20 |             1.000 |
-| avx2    |     1.914 |     26794.354 |         20 |             5.824 |
+| scalar  |    11.344 |      4618.084 |         20 |             1.000 |
+| avx2    |     2.159 |     24295.597 |         20 |             5.261 |
 
 ## Development
 

@@ -89,7 +89,7 @@ pointer selects the active implementation.</p>
 <span></span>
 <span><span class="fu"><a href="../reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"auto"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/simd_backend.html">simd_backend</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "avx512"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "avx2"</span></span></code></pre></div>
 <p><code><a href="../reference/simd_set_backend.html">simd_set_backend()</a></code> performs two checks for explicit
 choices:</p>
 <ul>
@@ -106,16 +106,82 @@ execute.</p>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $cpu_supported_backends</span></span>
-<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
+<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $available_backends</span></span>
-<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="simde-and-native-isa-compilation">SIMDe and native ISA compilation<a class="anchor" aria-label="anchor" href="#simde-and-native-isa-compilation"></a>
+</h2>
+<p>The SIMD source files use SIMDe types and functions, but the backend
+names refer to native target-specific translation units. During
+configuration, each optional backend is accepted only if the compiler
+flag and SIMDe header together define the expected native SIMDe macro.
+For example, the AVX2 probe compiles with <code>-mavx2</code>, includes
+<code>&lt;simde/x86/avx2.h&gt;</code>, and requires
+<code>SIMDE_X86_AVX2_NATIVE</code>. AVX-512 similarly requires the
+native F, BW, and VL macros.</p>
+<p>Those flags make the compiler define target macros such as
+<code>__AVX2__</code> or <code>__AVX512BW__</code>. SIMDe maps those to
+<code>SIMDE_ARCH_*</code> and then to <code>SIMDE_*_NATIVE</code>; the
+SIMDe function bodies use native intrinsics under those macros and fall
+back only when the native macro is absent. The dispatcher, CPU feature
+detection, and R API are still compiled without those ISA flags.</p>
+<p>The installed diagnostics report the backends that passed the
+SIMDe-native compile probe:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"simde_native_backends"</span>, <span class="st">"simde_version"</span>, <span class="st">"simde_commit"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; $compiled_backends</span></span>
+<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $simde_native_backends</span></span>
+<span><span class="co">#&gt; [1] "sse2"   "sse41"  "avx2"   "avx512"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $simde_version</span></span>
+<span><span class="co">#&gt; [1] "0.8.4"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $simde_commit</span></span>
+<span><span class="co">#&gt; [1] "f3e8262173b7089db9a9d57a9ecef8dd07ad9c97"</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="benchmarking-backend-switching">Benchmarking backend switching<a class="anchor" aria-label="anchor" href="#benchmarking-backend-switching"></a>
+</h2>
+<p>The following benchmark is evaluated when this article is built. It
+uses a small input so package checks remain fast, but it still exercises
+same-process backend switching through the public API.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"bench"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">bench_x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/raw.html" class="external-link">as.raw</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">0</span>, <span class="fl">255</span>, <span class="fl">7</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fl">2</span><span class="op">^</span><span class="fl">20</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">bench</span> <span class="op">&lt;-</span> <span class="fu">bench</span><span class="fu">::</span><span class="fu"><a href="https://bench.r-lib.org/reference/mark.html" class="external-link">mark</a></span><span class="op">(</span></span>
+<span>    scalar <span class="op">=</span> <span class="op">{</span></span>
+<span>      <span class="fu"><a href="../reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"scalar"</span><span class="op">)</span></span>
+<span>      <span class="fu"><a href="../reference/count_nonzero.html">count_nonzero</a></span><span class="op">(</span><span class="va">bench_x</span><span class="op">)</span></span>
+<span>    <span class="op">}</span>,</span>
+<span>    auto <span class="op">=</span> <span class="op">{</span></span>
+<span>      <span class="fu"><a href="../reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"auto"</span><span class="op">)</span></span>
+<span>      <span class="fu"><a href="../reference/count_nonzero.html">count_nonzero</a></span><span class="op">(</span><span class="va">bench_x</span><span class="op">)</span></span>
+<span>    <span class="op">}</span>,</span>
+<span>    iterations <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>    check <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="fu"><a href="../reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"auto"</span><span class="op">)</span></span>
+<span>  <span class="va">bench</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"expression"</span>, <span class="st">"median"</span>, <span class="st">"itr/sec"</span>, <span class="st">"n_itr"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
+<span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      476.1µs     <span style="text-decoration: underline;">2</span>083.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         54.8µs    <span style="text-decoration: underline;">17</span>535.</span></span></code></pre></div>
 <p><code>"auto"</code> selects the best backend from the compiled and
 supported intersection. The current ranking is:</p>
 <pre class="text"><code>avx512 &gt; avx2 &gt; sse41 &gt; sse2 &gt; neon &gt; scalar</code></pre>
 <p>Architecture guards mean x86 systems normally consider x86 backends
 and ARM systems normally consider NEON. Scalar is always available.</p>
-  </main>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 

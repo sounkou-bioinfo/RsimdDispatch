@@ -13,7 +13,7 @@ x <- as.raw(c(0, 1, 2, 0, 255))
 count_nonzero(x)
 #> [1] 3
 simd_backend()
-#> [1] "avx512"
+#> [1] "avx2"
 ```
 
 Inspect the installed build:
@@ -25,10 +25,10 @@ simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $cpu_supported_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
+#> [1] "scalar" "sse2"   "sse41"  "avx2"  
 #> 
 #> $available_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
+#> [1] "scalar" "sse2"   "sse41"  "avx2"
 ```
 
 Switching is allowed in the same R process:
@@ -48,7 +48,7 @@ if (!is.na(candidate)) {
 
 simd_set_backend("auto")
 simd_backend()
-#> [1] "avx512"
+#> [1] "avx2"
 ```
 
 An explicit backend is accepted only when it was compiled and the

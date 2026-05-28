@@ -102,7 +102,7 @@
 <span><span class="fu"><a href="reference/simd_backend.html">simd_backend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "avx2"</span></span>
 <span><span class="fu"><a href="reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"auto"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"cpu_supported_backends"</span>, <span class="st">"available_backends"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"cpu_supported_backends"</span>, <span class="st">"available_backends"</span>, <span class="st">"simde_native_backends"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $compiled_backends</span></span>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -110,7 +110,10 @@
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $available_backends</span></span>
-<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"</span></span>
+<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"  </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $simde_native_backends</span></span>
+<span><span class="co">#&gt; [1] "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="fu"><a href="reference/simde_info.html">simde_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"version"</span>, <span class="st">"commit"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $version</span></span>
 <span><span class="co">#&gt; [1] "0.8.4"</span></span>
@@ -194,17 +197,17 @@
 <tbody>
 <tr>
 <td align="left">scalar</td>
-<td align="right">11.334</td>
-<td align="right">4600.371</td>
+<td align="right">11.344</td>
+<td align="right">4618.084</td>
 <td align="right">20</td>
 <td align="right">1.000</td>
 </tr>
 <tr>
 <td align="left">avx2</td>
-<td align="right">1.914</td>
-<td align="right">26794.354</td>
+<td align="right">2.159</td>
+<td align="right">24295.597</td>
 <td align="right">20</td>
-<td align="right">5.824</td>
+<td align="right">5.261</td>
 </tr>
 </tbody>
 </table>
