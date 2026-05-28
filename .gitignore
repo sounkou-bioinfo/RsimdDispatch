@@ -6,6 +6,7 @@
 *.Rcheck/
 README.html
 README.knit.md
+REVIEW.md
 src/Makevars
 src/Makevars.win
 src/config.h
