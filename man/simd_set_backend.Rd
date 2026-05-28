@@ -5,12 +5,13 @@
 \title{Select the runtime SIMD backend}
 \usage{
 simd_set_backend(
-  backend = c("auto", "scalar", "sse2", "sse41", "avx2", "avx512", "neon")
+  backend = c("auto", "scalar", "sse2", "sse41", "avx2", "avx512", "neon",
+    "wasm_simd128")
 )
 }
 \arguments{
 \item{backend}{One of \code{"auto"}, \code{"scalar"}, \code{"sse2"}, \code{"sse41"},
-\code{"avx2"}, \code{"avx512"}, or \code{"neon"}.}
+\code{"avx2"}, \code{"avx512"}, \code{"neon"}, or \code{"wasm_simd128"}.}
 }
 \value{
 The selected backend, invisibly. For \code{"auto"}, this is the backend

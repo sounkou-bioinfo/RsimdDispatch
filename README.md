@@ -8,9 +8,9 @@
 <!-- badges: end -->
 
 Pure-C runtime SIMD dispatch templates for R packages. Stage scalar,
-SSE, AVX, AVX-512, and NEON kernel objects during configuration; link
-one shared library and switch among compiled and CPU-supported
-implementations at runtime without unsafe overrides.
+SSE, AVX, AVX-512, NEON, and WebAssembly SIMD128 kernel objects during
+configuration; link one shared library and switch among compiled and
+CPU-supported implementations at runtime without unsafe overrides.
 
 ## Install
 
@@ -40,10 +40,11 @@ The helper updates `DESCRIPTION` with `LinkingTo: RsimdDispatch`, writes
 the scaffold files, and substitutes package-specific registration and C
 symbol prefixes. It does not add a runtime dependency on
 `RsimdDispatch`. Replace the demo `count_nonzero()` kernels under
-`tools/kernels/` with your own scalar/SSE/AVX/NEON kernels. The
-generated `configure` script probes compiler support, stages selected
-kernel objects in `src/rsd-kernels/`, and leaves `src/Makevars` to link
-those objects with the baseline R API, CPU detection, and dispatcher.
+`tools/kernels/` with your own scalar/SSE/AVX/NEON/WebAssembly kernels.
+The generated `configure` script probes compiler support, stages
+selected kernel objects in `src/rsd-kernels/`, and leaves `src/Makevars`
+to link those objects with the baseline R API, CPU detection, and
+dispatcher.
 
 See the package vignettes for the downstream-package workflow and
 dispatch semantics.
@@ -160,8 +161,8 @@ knitr::kable(bench, digits = 3)
 
 | backend | median_ms | mb_per_second | iterations | speedup_vs_scalar |
 |:--------|----------:|--------------:|-----------:|------------------:|
-| scalar  |    11.355 |      4616.141 |         20 |             1.000 |
-| avx2    |     1.991 |     26181.311 |         20 |             5.672 |
+| scalar  |    11.263 |      4652.186 |         20 |             1.000 |
+| avx2    |     1.928 |     26974.586 |         20 |             5.798 |
 
 ## Development
 
@@ -193,4 +194,5 @@ make rd       # roxygen docs and NAMESPACE
 make readme   # evaluate README.Rmd and write README.md
 make test
 make check
+bash tools/webr-build-check.sh  # build and check the webR/WebAssembly package
 ```

@@ -10,6 +10,7 @@ int rsd_cpu_has_sse41(void);
 int rsd_cpu_has_avx2(void);
 int rsd_cpu_has_avx512(void);
 int rsd_cpu_has_neon(void);
+int rsd_cpu_has_wasm_simd128(void);
 
 const char *rsd_target_arch(void);
 const char *rsd_target_os(void);

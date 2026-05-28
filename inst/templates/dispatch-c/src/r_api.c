@@ -30,6 +30,9 @@
 #ifndef RSD_SIMDE_NATIVE_NEON
 #define RSD_SIMDE_NATIVE_NEON 0
 #endif
+#ifndef RSD_SIMDE_NATIVE_WASM_SIMD128
+#define RSD_SIMDE_NATIVE_WASM_SIMD128 0
+#endif
 
 static const char *rsd_string_scalar(SEXP x, const char *arg) {
     if (TYPEOF(x) != STRSXP || XLENGTH(x) != 1 || STRING_ELT(x, 0) == NA_STRING) {
@@ -77,13 +80,16 @@ static int rsd_backend_simde_native(const char *backend) {
     if (strcmp(backend, "neon") == 0) {
         return RSD_SIMDE_NATIVE_NEON != 0;
     }
+    if (strcmp(backend, "wasm_simd128") == 0) {
+        return RSD_SIMDE_NATIVE_WASM_SIMD128 != 0;
+    }
     return 0;
 }
 
 static SEXP rsd_backend_character_vector(int mode) {
-    const char *backends[] = {"scalar", "sse2", "sse41", "avx2", "avx512", "neon"};
+    const char *backends[] = {"scalar", "sse2", "sse41", "avx2", "avx512", "neon", "wasm_simd128"};
     const int n_backends = (int)(sizeof(backends) / sizeof(backends[0]));
-    int include[6] = {0, 0, 0, 0, 0, 0};
+    int include[7] = {0, 0, 0, 0, 0, 0, 0};
     int n = 0;
 
     for (int i = 0; i < n_backends; ++i) {
@@ -124,6 +130,7 @@ SEXP RC_simd_info(void) {
         "cpu_avx2",
         "cpu_avx512",
         "cpu_neon",
+        "cpu_wasm_simd128",
         "target_arch",
         "target_os",
         "simde_version",
@@ -148,10 +155,11 @@ SEXP RC_simd_info(void) {
     SET_VECTOR_ELT(out, 9, Rf_ScalarLogical(rsd_cpu_has_avx2() != 0));
     SET_VECTOR_ELT(out, 10, Rf_ScalarLogical(rsd_cpu_has_avx512() != 0));
     SET_VECTOR_ELT(out, 11, Rf_ScalarLogical(rsd_cpu_has_neon() != 0));
-    SET_VECTOR_ELT(out, 12, Rf_mkString(rsd_target_arch()));
-    SET_VECTOR_ELT(out, 13, Rf_mkString(rsd_target_os()));
-    SET_VECTOR_ELT(out, 14, Rf_mkString(RSD_SIMDE_VERSION));
-    SET_VECTOR_ELT(out, 15, Rf_mkString(RSD_SIMDE_COMMIT));
+    SET_VECTOR_ELT(out, 12, Rf_ScalarLogical(rsd_cpu_has_wasm_simd128() != 0));
+    SET_VECTOR_ELT(out, 13, Rf_mkString(rsd_target_arch()));
+    SET_VECTOR_ELT(out, 14, Rf_mkString(rsd_target_os()));
+    SET_VECTOR_ELT(out, 15, Rf_mkString(RSD_SIMDE_VERSION));
+    SET_VECTOR_ELT(out, 16, Rf_mkString(RSD_SIMDE_COMMIT));
 
     for (int i = 0; i < n; ++i) {
         SET_STRING_ELT(out_names, i, Rf_mkChar(names[i]));

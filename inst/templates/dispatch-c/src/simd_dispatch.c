@@ -29,6 +29,10 @@ extern size_t rsd_count_nonzero_avx512(const uint8_t *x, size_t n);
 extern size_t rsd_count_nonzero_neon(const uint8_t *x, size_t n);
 #endif
 
+#if RSD_HAVE_WASM_SIMD128
+extern size_t rsd_count_nonzero_wasm_simd128(const uint8_t *x, size_t n);
+#endif
+
 static rsd_count_nonzero_fn rsd_count_nonzero_impl = rsd_count_nonzero_scalar;
 static int rsd_dispatch_initialized = 0;
 static char rsd_requested_backend_buf[32] = "auto";
@@ -40,6 +44,7 @@ static const char *const rsd_backend_order[] = {
     "sse41",
     "sse2",
     "neon",
+    "wasm_simd128",
     "scalar"
 };
 
@@ -52,7 +57,8 @@ int rsd_backend_known(const char *backend) {
            strcmp(backend, "sse41") == 0 ||
            strcmp(backend, "avx2") == 0 ||
            strcmp(backend, "avx512") == 0 ||
-           strcmp(backend, "neon") == 0;
+           strcmp(backend, "neon") == 0 ||
+           strcmp(backend, "wasm_simd128") == 0;
 }
 
 int rsd_backend_compiled(const char *backend) {
@@ -76,6 +82,9 @@ int rsd_backend_compiled(const char *backend) {
     }
     if (strcmp(backend, "neon") == 0) {
         return RSD_HAVE_NEON != 0;
+    }
+    if (strcmp(backend, "wasm_simd128") == 0) {
+        return RSD_HAVE_WASM_SIMD128 != 0;
     }
     return 0;
 }
@@ -101,6 +110,9 @@ int rsd_backend_cpu_supported(const char *backend) {
     }
     if (strcmp(backend, "neon") == 0) {
         return rsd_cpu_has_neon();
+    }
+    if (strcmp(backend, "wasm_simd128") == 0) {
+        return rsd_cpu_has_wasm_simd128();
     }
     return 0;
 }
@@ -136,6 +148,11 @@ static rsd_count_nonzero_fn rsd_backend_function(const char *backend) {
 #if RSD_HAVE_NEON
     if (strcmp(backend, "neon") == 0) {
         return rsd_count_nonzero_neon;
+    }
+#endif
+#if RSD_HAVE_WASM_SIMD128
+    if (strcmp(backend, "wasm_simd128") == 0) {
+        return rsd_count_nonzero_wasm_simd128;
     }
 #endif
     return NULL;
@@ -216,7 +233,7 @@ static const char *rsd_backends_csv(int want_compiled, int want_supported, int w
     next = (next + 1) % 3;
     out[0] = '\0';
 
-    const char *names[] = {"scalar", "sse2", "sse41", "avx2", "avx512", "neon"};
+    const char *names[] = {"scalar", "sse2", "sse41", "avx2", "avx512", "neon", "wasm_simd128"};
     size_t n = sizeof(names) / sizeof(names[0]);
     for (size_t i = 0; i < n; ++i) {
         const char *name = names[i];

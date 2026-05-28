@@ -128,12 +128,14 @@ HAVE_SSE41=0
 HAVE_AVX2=0
 HAVE_AVX512=0
 HAVE_NEON=0
+HAVE_WASM_SIMD128=0
 
 SIMDE_NATIVE_SSE2=0
 SIMDE_NATIVE_SSE41=0
 SIMDE_NATIVE_AVX2=0
 SIMDE_NATIVE_AVX512=0
 SIMDE_NATIVE_NEON=0
+SIMDE_NATIVE_WASM_SIMD128=0
 
 mkdir -p "$SRC_DIR_PATH" "$KERNEL_OBJECT_DIR_PATH"
 if ! compile_kernel "kernel_scalar.c" "kernel_scalar.o" ""; then
@@ -180,6 +182,12 @@ case "$arch" in
             SIMDE_NATIVE_NEON=1
         fi
         ;;
+    wasm32|wasm64|wasm*)
+        if check_cflag "-msimd128" "simde/wasm/simd128.h" "SIMDE_WASM_SIMD128_NATIVE" && append_compiled_kernel "kernel_wasm_simd128.c" "kernel_wasm_simd128.o" "-msimd128"; then
+            HAVE_WASM_SIMD128=1
+            SIMDE_NATIVE_WASM_SIMD128=1
+        fi
+        ;;
 esac
 
 SIMDE_VERSION_FILE=""
@@ -213,11 +221,13 @@ cat > "$CONFIG_OUT_PATH" <<EOF
 #define RSD_HAVE_AVX2 ${HAVE_AVX2}
 #define RSD_HAVE_AVX512 ${HAVE_AVX512}
 #define RSD_HAVE_NEON ${HAVE_NEON}
+#define RSD_HAVE_WASM_SIMD128 ${HAVE_WASM_SIMD128}
 #define RSD_SIMDE_NATIVE_SSE2 ${SIMDE_NATIVE_SSE2}
 #define RSD_SIMDE_NATIVE_SSE41 ${SIMDE_NATIVE_SSE41}
 #define RSD_SIMDE_NATIVE_AVX2 ${SIMDE_NATIVE_AVX2}
 #define RSD_SIMDE_NATIVE_AVX512 ${SIMDE_NATIVE_AVX512}
 #define RSD_SIMDE_NATIVE_NEON ${SIMDE_NATIVE_NEON}
+#define RSD_SIMDE_NATIVE_WASM_SIMD128 ${SIMDE_NATIVE_WASM_SIMD128}
 #define RSD_SIMDE_VERSION "${SIMDE_VERSION}"
 #define RSD_SIMDE_COMMIT "${SIMDE_COMMIT}"
 

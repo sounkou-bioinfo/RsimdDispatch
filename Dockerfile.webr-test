@@ -1,0 +1,13 @@
+FROM ghcr.io/r-wasm/webr:main
+
+WORKDIR /work
+COPY . /work
+
+RUN rm -rf RsimdDispatch.Rcheck ..Rcheck README.html RsimdDispatch_*.tar.gz RsimdDispatch_*.tgz \
+           src/Makevars src/Makevars.win src/config.h src/rsd-kernels \
+           src/*.o src/*.so src/*.dll src/*.dylib
+RUN R CMD build --no-build-vignettes .
+RUN Rscript -e 'if (!requireNamespace("pak", quietly = TRUE)) install.packages("pak", repos = "https://repo.r-wasm.org/"); pak::pak("r-wasm/rwasm", ask = FALSE)'
+RUN Rscript -e 'version <- read.dcf("DESCRIPTION")[1, "Version"]; tarball <- sprintf("./RsimdDispatch_%s.tar.gz", version); stopifnot(file.exists(tarball)); print(tarball); rwasm::build(tarball); stopifnot(file.exists(sprintf("RsimdDispatch_%s.tgz", version)))'
+
+CMD ["bash", "-lc", "ls -lh RsimdDispatch_*.tgz"]

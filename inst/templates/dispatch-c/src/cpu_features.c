@@ -2,14 +2,14 @@
 
 #include <stdint.h>
 
-#if defined(_WIN32)
+#if defined(__EMSCRIPTEN__)
+#define RSD_TARGET_OS "emscripten"
+#elif defined(_WIN32)
 #define RSD_TARGET_OS "windows"
 #elif defined(__APPLE__)
 #define RSD_TARGET_OS "darwin"
 #elif defined(__linux__)
 #define RSD_TARGET_OS "linux"
-#elif defined(__EMSCRIPTEN__)
-#define RSD_TARGET_OS "emscripten"
 #else
 #define RSD_TARGET_OS "unknown"
 #endif
@@ -24,6 +24,8 @@
 #define RSD_TARGET_ARCH "arm"
 #elif defined(__wasm32__)
 #define RSD_TARGET_ARCH "wasm32"
+#elif defined(__wasm64__)
+#define RSD_TARGET_ARCH "wasm64"
 #else
 #define RSD_TARGET_ARCH "unknown"
 #endif
@@ -227,6 +229,17 @@ int rsd_cpu_has_neon(void) {
 #if defined(__aarch64__) || defined(_M_ARM64)
     return 1;
 #elif defined(__ARM_NEON) || defined(__ARM_NEON__)
+    return 1;
+#else
+    return 0;
+#endif
+}
+
+int rsd_cpu_has_wasm_simd128(void) {
+#if defined(__wasm__) || defined(__wasm32__) || defined(__wasm64__) || defined(__EMSCRIPTEN__)
+    /* A module containing a staged SIMD128 object can only load on a runtime
+       with WebAssembly SIMD128 support. There is no in-process CPUID-style
+       feature check for the already-instantiated module. */
     return 1;
 #else
     return 0;

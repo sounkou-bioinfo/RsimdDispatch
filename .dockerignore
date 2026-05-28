@@ -1,0 +1,15 @@
+.git
+.Rproj.user
+RsimdDispatch.Rcheck
+..Rcheck
+*.tar.gz
+*.tgz
+README.html
+src/Makevars
+src/Makevars.win
+src/config.h
+src/rsd-kernels
+src/*.o
+src/*.so
+src/*.dll
+src/*.dylib

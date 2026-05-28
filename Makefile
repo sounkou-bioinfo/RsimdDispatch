@@ -63,7 +63,7 @@ install3:
 	R CMD INSTALL .
 
 clean:
-	@rm -rf $(PKGNAME)_$(PKGVERS).tar.gz $(PKGNAME).Rcheck src/Makevars src/Makevars.win src/config.h src/rsd-kernels config.log src/*.o src/*.so src/*.dll src/*.dylib
+	@rm -rf $(PKGNAME)_$(PKGVERS).tar.gz $(PKGNAME)_$(PKGVERS).tgz $(PKGNAME).Rcheck src/Makevars src/Makevars.win src/config.h src/rsd-kernels config.log src/*.o src/*.so src/*.dll src/*.dylib
 
 # Development targets
 dev-install:

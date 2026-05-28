@@ -27,7 +27,7 @@ count_nonzero <- function(x) {
 #' guarded function pointers. This makes same-process benchmarking possible.
 #'
 #' @param backend One of `"auto"`, `"scalar"`, `"sse2"`, `"sse41"`,
-#'   `"avx2"`, `"avx512"`, or `"neon"`.
+#'   `"avx2"`, `"avx512"`, `"neon"`, or `"wasm_simd128"`.
 #' @return The selected backend, invisibly. For `"auto"`, this is the backend
 #'   chosen from the compiled and CPU-supported set.
 #' @examples
@@ -35,7 +35,7 @@ count_nonzero <- function(x) {
 #' simd_set_backend("scalar")
 #' simd_set_backend("auto")
 #' @export
-simd_set_backend <- function(backend = c("auto", "scalar", "sse2", "sse41", "avx2", "avx512", "neon")) {
+simd_set_backend <- function(backend = c("auto", "scalar", "sse2", "sse41", "avx2", "avx512", "neon", "wasm_simd128")) {
   backend <- match.arg(backend)
   invisible(.Call(RC_simd_set_backend, backend))
 }

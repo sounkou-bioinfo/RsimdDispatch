@@ -27,7 +27,7 @@ count_nonzero <- function(x) {
 #' guarded function pointers. This makes same-process benchmarking possible.
 #'
 #' @param backend One of `"auto"`, `"scalar"`, `"sse2"`, `"sse41"`,
-#'   `"avx2"`, `"avx512"`, or `"neon"`.
+#'   `"avx2"`, `"avx512"`, `"neon"`, or `"wasm_simd128"`.
 #' @return The selected backend, invisibly. For `"auto"`, this is the backend
 #'   chosen from the compiled and CPU-supported set.
 #' @examples
@@ -35,7 +35,7 @@ count_nonzero <- function(x) {
 #' simd_set_backend("scalar")
 #' simd_set_backend("auto")
 #' @export
-simd_set_backend <- function(backend = c("auto", "scalar", "sse2", "sse41", "avx2", "avx512", "neon")) {
+simd_set_backend <- function(backend = c("auto", "scalar", "sse2", "sse41", "avx2", "avx512", "neon", "wasm_simd128")) {
   backend <- match.arg(backend)
   invisible(.Call(RC_simd_set_backend, backend))
 }
@@ -53,8 +53,9 @@ simd_backend <- function() {
 #' Report runtime SIMD dispatch diagnostics
 #'
 #' Returns the requested backend, selected backend, compiled backends,
-#' CPU-supported backends, and target information. Calling this initializes the
-#' lazy auto-dispatch selection if it has not already been initialized.
+#' CPU-supported backends, SIMDe-native backends, target information, and SIMDe
+#' provenance compiled into the shared library. Calling this initializes the lazy auto-dispatch
+#' selection if it has not already been initialized.
 #'
 #' @return A named list of dispatch and CPU feature diagnostics. Backend-set
 #'   entries are character vectors, not comma-separated strings.
@@ -64,3 +65,4 @@ simd_backend <- function() {
 simd_info <- function() {
   .Call(RC_simd_info)
 }
+

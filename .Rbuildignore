@@ -1,6 +1,8 @@
 ^\.git$
 ^\.gitignore$
+^\.dockerignore$
 ^RsimdDispatch.*\.tar\.gz$
+^RsimdDispatch.*\.tgz$
 ^RsimdDispatch\.Rcheck$
 ^src/Makevars$
 ^src/Makevars\.win$
@@ -10,6 +12,7 @@
 ^src/rsd-kernels/.*$
 ^config\.log$
 ^Makefile$
+^Dockerfile\.webr-test$
 ^README\.Rmd$
 ^README\.html$
 ^REVIEW\.md$

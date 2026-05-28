@@ -8,7 +8,7 @@ expect_true(is.list(info))
 expect_true(all(c(
   "dispatch_mode", "requested_backend", "selected_backend",
   "compiled_backends", "cpu_supported_backends", "available_backends",
-  "simde_native_backends", "cpu_avx2", "target_arch", "simde_version", "simde_commit"
+  "simde_native_backends", "cpu_avx2", "cpu_wasm_simd128", "target_arch", "simde_version", "simde_commit"
 ) %in% names(info)))
 expect_true(is.character(info$compiled_backends))
 expect_true(is.character(info$cpu_supported_backends))

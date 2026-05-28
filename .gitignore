@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 *.tar.gz
+*.tgz
 *.Rcheck/
 README.html
 README.knit.md

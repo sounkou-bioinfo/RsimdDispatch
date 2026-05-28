@@ -7,7 +7,7 @@ The important pattern is:
 
 - compile R API, CPU detection, and dispatch files through ordinary `src/Makevars`;
 - stage scalar and optional SIMD kernel objects during `configure`;
-- select only a backend that is both compiled and supported by the current CPU;
+- select only a backend that is both compiled and supported by the current CPU/runtime;
 - switch guarded function pointers when `simd_set_backend()` is called.
 
 Copy with:
