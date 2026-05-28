@@ -14,21 +14,15 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 Downstream packages use `RsimdDispatch` as a template and header provider. The
 usual workflow is:
 
-1. add `RsimdDispatch` to `LinkingTo`;
-2. copy the dispatch scaffold;
-3. replace the demo `count_nonzero()` kernels with package-specific kernels;
-4. keep CPU detection and dispatch files compiled with baseline flags;
-5. compile each ISA file with only the flags it needs.
+1. call `use_simd_dispatch()` from the package root;
+2. replace the demo `count_nonzero()` kernels with package-specific kernels;
+3. keep CPU detection and dispatch files compiled with baseline flags;
+4. compile each ISA file with only the flags it needs.
 
-## DESCRIPTION
-
-Add the header provider:
-
-```text
-LinkingTo: RsimdDispatch
-```
-
-This makes bundled SIMDe headers available to C code:
+`use_simd_dispatch()` updates `DESCRIPTION`, adding `RsimdDispatch` to
+`LinkingTo`, and copies package-specific scaffold files. It does not add a
+runtime dependency on `RsimdDispatch`. The `LinkingTo` entry makes bundled SIMDe
+headers available to C code:
 
 ```c
 #include <simde/x86/avx2.h>
@@ -40,8 +34,13 @@ This makes bundled SIMDe headers available to C code:
 From the downstream package root:
 
 ```{r, eval = FALSE}
-RsimdDispatch::use_simd_dispatch(".")
+RsimdDispatch::use_simd_dispatch(pkg = "MyPackage", prefix = "mypkg")
 ```
+
+If `pkg` is omitted, the package name is read from `DESCRIPTION`. If `prefix` is
+omitted, a lowercase C identifier prefix is derived from the package name. The
+helper performs the important substitutions, including `@useDynLib`,
+`R_init_<Package>()`, `rsd_`, `RSD_`, and `RC_` symbols.
 
 The copied scaffold includes:
 
@@ -51,6 +50,7 @@ configure.win
 cleanup
 tools/configure-simd-dispatch.sh
 src/Makevars.in
+src/Makevars.win.in
 src/cpu_features.c
 src/simd_dispatch.c
 src/kernel_scalar.c
@@ -67,8 +67,8 @@ The demo kernel has this shape:
 typedef size_t (*rsd_count_nonzero_fn)(const uint8_t *x, size_t n);
 ```
 
-For a real package, rename the `rsd_` and `RC_` symbols and replace the kernel
-signature with your own. Keep the same structure:
+For a real package, replace the demo kernel signature with your own and keep the
+same structure:
 
 ```text
 R API wrapper        baseline flags

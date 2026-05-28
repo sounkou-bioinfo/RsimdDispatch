@@ -34,16 +34,35 @@ if [ -z "${CPPFLAGS:-}" ] && [ -n "${R_HOME:-}" ] && [ -x "${R_HOME}/bin/R" ]; t
     CPPFLAGS=$("${R_HOME}/bin/R" CMD config CPPFLAGS 2>/dev/null || true)
 fi
 
-SIMDE_INCLUDE="-I$ROOT/inst/include"
+RSD_LOG_PREFIX=${RSD_LOG_PREFIX:-RsimdDispatch}
+
+if [ -z "${RSD_SIMDE_INCLUDE:-}" ]; then
+    if [ -d "$ROOT/inst/include/simde" ]; then
+        RSD_SIMDE_INCLUDE="-I$ROOT/inst/include"
+    elif [ -n "${R_HOME:-}" ] && [ -x "${R_HOME}/bin/Rscript" ]; then
+        RSD_INC=$(
+            "${R_HOME}/bin/Rscript" -e 'cat(system.file("include", package = "RsimdDispatch"))' 2>/dev/null || true
+        )
+        if [ -n "$RSD_INC" ] && [ -d "$RSD_INC/simde" ]; then
+            RSD_SIMDE_INCLUDE="-I$RSD_INC"
+        fi
+    fi
+fi
+SIMDE_INCLUDE=${RSD_SIMDE_INCLUDE:-}
+
 TMPDIR=${TMPDIR:-/tmp}
 CONFDIR=$(mktemp -d "$TMPDIR/rsd-conf-XXXXXX")
 trap 'rm -rf "$CONFDIR"' EXIT INT HUP TERM
 
 check_cflag() {
     flags=$1
-    cat > "$CONFDIR/conftest.c" <<'EOF'
-int main(void) { return 0; }
-EOF
+    header=${2:-}
+    {
+        if [ -n "$header" ]; then
+            printf '#include <%s>\n' "$header"
+        fi
+        printf 'int main(void) { return 0; }\n'
+    } > "$CONFDIR/conftest.c"
     # shellcheck disable=SC2086
     ${CC} ${CPPFLAGS:-} ${CFLAGS:-} ${SIMDE_INCLUDE} ${flags} -c "$CONFDIR/conftest.c" -o "$CONFDIR/conftest.o" >/dev/null 2>&1
 }
@@ -69,25 +88,30 @@ HAVE_AVX2=0
 HAVE_AVX512=0
 HAVE_NEON=0
 
-arch=$(uname -m 2>/dev/null || echo unknown)
+machine=$(${CC} -dumpmachine 2>/dev/null || true)
+if [ -n "$machine" ]; then
+    arch=$(printf '%s\n' "$machine" | sed 's/-.*//')
+else
+    arch=$(uname -m 2>/dev/null || echo unknown)
+fi
 case "$arch" in
     x86_64|amd64|i386|i686)
-        if check_cflag "-msse2"; then
+        if check_cflag "-msse2" "simde/x86/sse2.h"; then
             append_object kernel_sse2.o
             SSE2_CFLAGS="-msse2"
             HAVE_SSE2=1
         fi
-        if check_cflag "-msse4.1"; then
+        if check_cflag "-msse4.1" "simde/x86/sse4.1.h"; then
             append_object kernel_sse41.o
             SSE41_CFLAGS="-msse4.1"
             HAVE_SSE41=1
         fi
-        if check_cflag "-mavx2"; then
+        if check_cflag "-mavx2" "simde/x86/avx2.h"; then
             append_object kernel_avx2.o
             AVX2_CFLAGS="-mavx2"
             HAVE_AVX2=1
         fi
-        if check_cflag "-mavx512f -mavx512bw -mavx512vl"; then
+        if check_cflag "-mavx512f -mavx512bw -mavx512vl" "simde/x86/avx512.h"; then
             append_object kernel_avx512.o
             AVX512_CFLAGS="-mavx512f -mavx512bw -mavx512vl"
             HAVE_AVX512=1
@@ -98,7 +122,7 @@ case "$arch" in
         HAVE_NEON=1
         ;;
     armv7l|armv7*|arm*)
-        if check_cflag "-mfpu=neon"; then
+        if check_cflag "-mfpu=neon" "simde/arm/neon.h"; then
             append_object kernel_neon.o
             NEON_CFLAGS="-mfpu=neon"
             HAVE_NEON=1
@@ -136,5 +160,5 @@ sed \
     -e "s|@RSD_NEON_CFLAGS@|${NEON_CFLAGS}|g" \
     "$MAKEVARS_IN_PATH" > "$MAKEVARS_OUT_PATH"
 
-echo "RsimdDispatch configure: objects='kernel_scalar.o ${RSD_OBJECTS}'"
-echo "RsimdDispatch configure: wrote ${CONFIG_OUT} and ${MAKEVARS_OUT}"
+echo "${RSD_LOG_PREFIX} configure: objects='kernel_scalar.o ${RSD_OBJECTS}'"
+echo "${RSD_LOG_PREFIX} configure: wrote ${CONFIG_OUT} and ${MAKEVARS_OUT}"

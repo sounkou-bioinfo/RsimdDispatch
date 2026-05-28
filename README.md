@@ -30,20 +30,17 @@ remotes::install_github("sounkou-bioinfo/RsimdDispatch")
 
 ## Use in other packages
 
-Add `RsimdDispatch` as a header/template provider:
-
-``` text
-LinkingTo: RsimdDispatch
-```
-
-Then copy the C dispatch scaffold from your package root:
+Copy the C dispatch scaffold from your package root:
 
 ``` r
-RsimdDispatch::use_simd_dispatch(".")
+RsimdDispatch::use_simd_dispatch(pkg = "MyPackage", prefix = "mypkg")
 ```
 
-Replace the demo `count_nonzero()` kernels with your own
-scalar/SSE/AVX/NEON kernels. Keep the R API, CPU detection, and
+The helper updates `DESCRIPTION` with `LinkingTo: RsimdDispatch`, writes
+the scaffold files, and substitutes package-specific registration and C
+symbol prefixes. It does not add a runtime dependency on
+`RsimdDispatch`. Replace the demo `count_nonzero()` kernels with your
+own scalar/SSE/AVX/NEON kernels. Keep the R API, CPU detection, and
 dispatcher at baseline compiler flags; only ISA-specific translation
 units get flags such as `-mavx2` or `-mavx512f -mavx512bw -mavx512vl`.
 
@@ -153,8 +150,8 @@ knitr::kable(bench, digits = 3)
 
 | backend | median_ms | mb_per_second | iterations | speedup_vs_scalar |
 |:--------|----------:|--------------:|-----------:|------------------:|
-| scalar  |    11.421 |      4576.025 |         20 |             1.000 |
-| avx2    |     2.173 |     23877.845 |         20 |             5.218 |
+| scalar  |    11.376 |      4611.203 |         20 |             1.000 |
+| avx2    |     2.133 |     24087.850 |         20 |             5.224 |
 
 ## Development
 

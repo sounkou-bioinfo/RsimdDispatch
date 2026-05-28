@@ -13,7 +13,9 @@ The important pattern is:
 Copy with:
 
 ```r
-RsimdDispatch::use_simd_dispatch("/path/to/pkg")
+RsimdDispatch::use_simd_dispatch("/path/to/pkg", pkg = "YourPackage", prefix = "ypkg")
 ```
 
-Then rename the `rsd_` and `RC_` symbols for your package and kernel signatures.
+The helper substitutes the package name and C symbol prefixes. Then replace the
+example `count_nonzero()` kernel with your package-specific kernel signature.
+See `CHECKLIST.md` if you copy files manually.

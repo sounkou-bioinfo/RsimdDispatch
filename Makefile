@@ -28,7 +28,15 @@ vendor:
 update-authors:
 	Rscript tools/update-authors.R
 
-build: update-authors
+authors: update-authors
+
+check-template-sync:
+	@diff -rq src inst/templates/dispatch-c/src \
+		--exclude='*.o' --exclude='*.so' --exclude='*.dll' --exclude='*.dylib' \
+		--exclude='Makevars' --exclude='Makevars.win' --exclude='config.h' \
+		|| (echo 'ERROR: template/src drift detected' && exit 1)
+
+build:
 	R CMD build .
 
 check: build
@@ -67,4 +75,4 @@ test0:
 test: install
 	R -e "tinytest::test_package('$(PKGNAME)', testdir = 'inst/tinytest')"
 
-.PHONY: all rd readme vig vig-md pkgdown vendor update-authors build check install_deps install install2 install3 clean dev-install test1 test2 test0 test
+.PHONY: all rd readme vig vig-md pkgdown vendor update-authors authors check-template-sync build check install_deps install install2 install3 clean dev-install test1 test2 test0 test

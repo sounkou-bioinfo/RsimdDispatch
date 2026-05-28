@@ -46,6 +46,16 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      - name: Check template sync
+        if: runner.os == 'Linux'
+        run: make check-template-sync
+
+      - name: Install copied template package
+        if: runner.os == 'Linux'
+        run: |
+          R CMD INSTALL --preclean .
+          Rscript -e 'tmp <- file.path(tempdir(), "TestSIMD"); dir.create(tmp); writeLines(c("Package: TestSIMD", "Title: Test SIMD Dispatch Template", "Version: 0.0.1", "Authors@R: person(\"Test\", \"User\", email = \"test@example.com\", role = c(\"aut\", \"cre\"))", "Description: Minimal package generated during continuous integration to test the copied SIMD dispatch template.", "License: GPL (>= 2)", "Encoding: UTF-8"), file.path(tmp, "DESCRIPTION")); dir.create(file.path(tmp, "R")); RsimdDispatch::use_simd_dispatch(tmp, pkg = "TestSIMD", prefix = "testsimd", overwrite = TRUE); writeLines("export(count_nonzero)\nexport(simd_backend)\nexport(simd_info)\nexport(simd_set_backend)\nuseDynLib(TestSIMD, .registration = TRUE)", file.path(tmp, "NAMESPACE")); status <- system2(file.path(R.home("bin"), "R"), c("CMD", "INSTALL", "--preclean", tmp)); quit(status = status)'
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true

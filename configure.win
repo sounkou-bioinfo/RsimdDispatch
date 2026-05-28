@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+RSD_LOG_PREFIX="$(basename "$ROOT")" \
 RSD_PACKAGE_ROOT="$ROOT" \
+RSD_MAKEVARS_IN=src/Makevars.win.in \
 RSD_MAKEVARS_OUT=src/Makevars.win \
 sh "$ROOT/tools/configure-simd-dispatch.sh"
