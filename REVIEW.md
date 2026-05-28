@@ -24,16 +24,14 @@ than as a scaffolding dependency.
 
 ### Proposed Fix
 
-Move
+Keep
 [`simd_dispatch_template_path()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_dispatch_template_path.md)
 and
 [`use_simd_dispatch()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_dispatch_template_path.md)
-into a dedicated `R/zzz_template.R` file and mark them clearly as
-developer utilities. Add a `Lifecycle: experimental` or equivalent note.
-Alternatively, gate them behind a `Suggests: usethis` dependency so they
-are only available in a dev context. At minimum, add a
-`@section Developer utilities:` roxygen tag to separate them visually
-from user-facing exports.
+in a dedicated template helper file and mark them clearly as developer
+utilities. Do not depend on `usethis` at runtime; the helper should
+update package files directly and document that these functions are for
+package authors, not end users.
 
 ------------------------------------------------------------------------
 

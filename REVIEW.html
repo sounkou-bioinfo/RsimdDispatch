@@ -51,7 +51,7 @@
 </div>
 <div class="section level3">
 <h3 id="proposed-fix">Proposed Fix<a class="anchor" aria-label="anchor" href="#proposed-fix"></a></h3>
-<p>Move <code><a href="reference/simd_dispatch_template_path.html">simd_dispatch_template_path()</a></code> and <code><a href="reference/simd_dispatch_template_path.html">use_simd_dispatch()</a></code> into a dedicated <code>R/zzz_template.R</code> file and mark them clearly as developer utilities. Add a <code>Lifecycle: experimental</code> or equivalent note. Alternatively, gate them behind a <code>Suggests: usethis</code> dependency so they are only available in a dev context. At minimum, add a <code>@section Developer utilities:</code> roxygen tag to separate them visually from user-facing exports.</p>
+<p>Keep <code><a href="reference/simd_dispatch_template_path.html">simd_dispatch_template_path()</a></code> and <code><a href="reference/simd_dispatch_template_path.html">use_simd_dispatch()</a></code> in a dedicated template helper file and mark them clearly as developer utilities. Do not depend on <code>usethis</code> at runtime; the helper should update package files directly and document that these functions are for package authors, not end users.</p>
 <hr></div>
 </div>
 <div class="section level2">

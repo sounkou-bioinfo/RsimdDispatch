@@ -70,35 +70,39 @@
 <p>Downstream packages use <code>RsimdDispatch</code> as a template and
 header provider. The usual workflow is:</p>
 <ol style="list-style-type: decimal">
-<li>add <code>RsimdDispatch</code> to <code>LinkingTo</code>;</li>
-<li>copy the dispatch scaffold;</li>
+<li>call <code><a href="../reference/simd_dispatch_template_path.html">use_simd_dispatch()</a></code> from the package root;</li>
 <li>replace the demo <code><a href="../reference/count_nonzero.html">count_nonzero()</a></code> kernels with
 package-specific kernels;</li>
 <li>keep CPU detection and dispatch files compiled with baseline
 flags;</li>
 <li>compile each ISA file with only the flags it needs.</li>
 </ol>
-<div class="section level2">
-<h2 id="description">DESCRIPTION<a class="anchor" aria-label="anchor" href="#description"></a>
-</h2>
-<p>Add the header provider:</p>
-<pre class="text"><code><span><span class="va">LinkingTo</span><span class="op">:</span> <span class="va">RsimdDispatch</span></span></code></pre>
-<p>This makes bundled SIMDe headers available to C code:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;simde/x86/avx2.h&gt;</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;simde/arm/neon.h&gt;</span></span></code></pre></div>
-</div>
+<p><code><a href="../reference/simd_dispatch_template_path.html">use_simd_dispatch()</a></code> updates <code>DESCRIPTION</code>,
+adding <code>RsimdDispatch</code> to <code>LinkingTo</code>, and copies
+package-specific scaffold files. It does not add a runtime dependency on
+<code>RsimdDispatch</code>. The <code>LinkingTo</code> entry makes
+bundled SIMDe headers available to C code:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;simde/x86/avx2.h&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;simde/arm/neon.h&gt;</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="copy-the-scaffold">Copy the scaffold<a class="anchor" aria-label="anchor" href="#copy-the-scaffold"></a>
 </h2>
 <p>From the downstream package root:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">RsimdDispatch</span><span class="fu">::</span><span class="fu"><a href="../reference/simd_dispatch_template_path.html">use_simd_dispatch</a></span><span class="op">(</span><span class="st">"."</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">RsimdDispatch</span><span class="fu">::</span><span class="fu"><a href="../reference/simd_dispatch_template_path.html">use_simd_dispatch</a></span><span class="op">(</span>pkg <span class="op">=</span> <span class="st">"MyPackage"</span>, prefix <span class="op">=</span> <span class="st">"mypkg"</span><span class="op">)</span></span></code></pre></div>
+<p>If <code>pkg</code> is omitted, the package name is read from
+<code>DESCRIPTION</code>. If <code>prefix</code> is omitted, a lowercase
+C identifier prefix is derived from the package name. The helper
+performs the important substitutions, including <code>@useDynLib</code>,
+<code>R_init_&lt;Package&gt;()</code>, <code>rsd_</code>,
+<code>RSD_</code>, and <code>RC_</code> symbols.</p>
 <p>The copied scaffold includes:</p>
 <pre class="text"><code><span><span class="va">configure</span></span>
 <span><span class="va">configure.win</span></span>
 <span><span class="va">cleanup</span></span>
 <span><span class="va">tools</span><span class="op">/</span><span class="va">configure</span><span class="op">-</span><span class="va">simd</span><span class="op">-</span><span class="va">dispatch.sh</span></span>
 <span><span class="va">src</span><span class="op">/</span><span class="va">Makevars.in</span></span>
+<span><span class="va">src</span><span class="op">/</span><span class="va">Makevars.win.in</span></span>
 <span><span class="va">src</span><span class="op">/</span><span class="va">cpu_features.c</span></span>
 <span><span class="va">src</span><span class="op">/</span><span class="va">simd_dispatch.c</span></span>
 <span><span class="va">src</span><span class="op">/</span><span class="va">kernel_scalar.c</span></span>
@@ -110,10 +114,9 @@ flags;</li>
 <h2 id="replace-the-demo-kernel">Replace the demo kernel<a class="anchor" aria-label="anchor" href="#replace-the-demo-kernel"></a>
 </h2>
 <p>The demo kernel has this shape:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="kw">typedef</span> <span class="dt">size_t</span> <span class="op">(*</span>rsd_count_nonzero_fn<span class="op">)(</span><span class="dt">const</span> <span class="dt">uint8_t</span> <span class="op">*</span>x<span class="op">,</span> <span class="dt">size_t</span> n<span class="op">);</span></span></code></pre></div>
-<p>For a real package, rename the <code>rsd_</code> and <code>RC_</code>
-symbols and replace the kernel signature with your own. Keep the same
-structure:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="kw">typedef</span> <span class="dt">size_t</span> <span class="op">(*</span>rsd_count_nonzero_fn<span class="op">)(</span><span class="dt">const</span> <span class="dt">uint8_t</span> <span class="op">*</span>x<span class="op">,</span> <span class="dt">size_t</span> n<span class="op">);</span></span></code></pre></div>
+<p>For a real package, replace the demo kernel signature with your own
+and keep the same structure:</p>
 <pre class="text"><code>R API wrapper        baseline flags
 CPU feature checks   baseline flags
 dispatch table       baseline flags
@@ -129,7 +132,7 @@ remain safe on baseline CPUs.</p>
 <p>The generated <code>configure</code> checks compiler support and
 writes <code>src/config.h</code> plus <code>src/Makevars</code>. Runtime
 CPU support is checked later by the installed package:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL .</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL .</span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
