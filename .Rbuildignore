@@ -6,6 +6,10 @@
 ^src/Makevars\.win$
 ^src/config\.h$
 ^config\.log$
+^Makefile$
+^README\.Rmd$
+^REVIEW\.md$
+^cran-comments\.md$
 ^\.github$
 ^_pkgdown\.yml$
 ^docs$

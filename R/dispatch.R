@@ -22,8 +22,7 @@ count_nonzero <- function(x) {
 
 #' Select the runtime SIMD backend
 #'
-#' Select the backend used by subsequent calls to `count_nonzero()`. Unlike
-#' loader-based systems that open one backend shared library per process,
+#' Select the backend used by subsequent calls to `count_nonzero()`.
 #' `RsimdDispatch` keeps all compiled variants in one shared object and switches
 #' guarded function pointers. This makes same-process benchmarking possible.
 #'

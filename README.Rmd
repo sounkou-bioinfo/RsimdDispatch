@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/sounkou-bioinfo/RsimdDispatch/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sounkou-bioinfo/RsimdDispatch/actions/workflows/R-CMD-check.yaml)
-[![R-universe](https://sounkou-bioinfo.r-universe.dev/badges/RsimdDispatch)](https://sounkou-bioinfo.r-universe.dev/RsimdDispatch)
+[![R-universe](https://sounkou-bioinfo.r-universe.dev/badges/RsimdDispatch)](https://sounkou-bioinfo.r-universe.dev)
 <!-- badges: end -->
 
 Pure-C runtime SIMD dispatch templates for R packages. Compile scalar, SSE,

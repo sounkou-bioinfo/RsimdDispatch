@@ -17,8 +17,7 @@ The selected backend, invisibly. For \code{"auto"}, this is the backend
 chosen from the compiled and CPU-supported set.
 }
 \description{
-Select the backend used by subsequent calls to \code{count_nonzero()}. Unlike
-loader-based systems that open one backend shared library per process,
+Select the backend used by subsequent calls to \code{count_nonzero()}.
 \code{RsimdDispatch} keeps all compiled variants in one shared object and switches
 guarded function pointers. This makes same-process benchmarking possible.
 }
