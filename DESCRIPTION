@@ -12,8 +12,8 @@ Authors@R: c(
 Description: Provides templates and a working example for runtime Single
     Instruction Multiple Data ('SIMD') dispatch in 'C' code used by 'R'
     packages. Packages can stage scalar and architecture-specific kernel
-    objects during configuration, then select a compiled and CPU-supported
-    implementation at runtime through guarded function pointers. The package
+    objects during configuration, then select compiled and CPU-supported
+    implementations at runtime through guarded operation tables. The package
     also vendors the header-only 'SIMDe' library for downstream packages through
     the 'LinkingTo' field.
 License: GPL (>= 2)

@@ -18,9 +18,10 @@ The selected backend, invisibly. For \code{"auto"}, this is the backend
 chosen from the compiled and CPU-supported set.
 }
 \description{
-Select the backend used by subsequent calls to \code{count_nonzero()}.
-\code{RsimdDispatch} keeps all compiled variants in one shared object and switches
-guarded function pointers. This makes same-process benchmarking possible.
+Select the backend used by subsequent calls to dispatched demo kernels such
+as \code{count_nonzero()} and \code{convolve3()}. \code{RsimdDispatch} keeps all compiled
+variants in one shared object and switches guarded operation tables. This
+makes same-process benchmarking possible.
 }
 \examples{
 old <- simd_backend()

@@ -39,12 +39,12 @@ RsimdDispatch::use_simd_dispatch(pkg = "MyPackage", prefix = "mypkg")
 The helper updates `DESCRIPTION` with `LinkingTo: RsimdDispatch`, writes
 the scaffold files, and substitutes package-specific registration and C
 symbol prefixes. It does not add a runtime dependency on
-`RsimdDispatch`. Replace the demo `count_nonzero()` kernels under
-`tools/kernels/` with your own scalar/SSE/AVX/NEON/WebAssembly kernels.
-The generated `configure` script probes compiler support, stages
-selected kernel objects in `src/rsd-kernels/`, and leaves `src/Makevars`
-to link those objects with the baseline R API, CPU detection, and
-dispatcher.
+`RsimdDispatch`. Replace the demo `count_nonzero()` and `convolve3()`
+kernels under `tools/kernels/` with your own
+scalar/SSE/AVX/NEON/WebAssembly kernels. The generated `configure`
+script probes compiler support, stages selected kernel objects in
+`src/rsd-kernels/`, and leaves `src/Makevars` to link those objects with
+the baseline R API, CPU detection, and dispatcher.
 
 See the package vignettes for the downstream-package workflow and
 dispatch semantics.
@@ -55,9 +55,12 @@ dispatch semantics.
 library(RsimdDispatch)
 
 x <- as.raw(c(0, 1, 2, 0, 255))
+y <- c(1, 2, 4, 8, 16)
 
 count_nonzero(x)
 #> [1] 3
+convolve3(y, c(0.25, 0.5, 0.25))
+#> [1] 2.25 4.50 9.00
 simd_backend()
 #> [1] "avx2"
 simd_set_backend("scalar")
@@ -97,6 +100,8 @@ There is no unsafe override.
 ``` r
 count_nonzero(x)
 #> [1] 3
+convolve3(y, c(1, 0, -1))
+#> [1]  -3  -6 -12
 simd_info()[c("selected_backend", "available_backends")]
 #> $selected_backend
 #> [1] "avx2"
@@ -106,26 +111,29 @@ simd_info()[c("selected_backend", "available_backends")]
 ```
 
 Switching backends is same-process because all variants are linked into
-one R shared library and selected through guarded function pointers.
+one R shared library and selected through a guarded operation table.
 
 ``` r
 simd_set_backend("scalar")
 scalar_count <- count_nonzero(x)
+scalar_conv <- convolve3(y, c(1, 0, -1))
 
 simd_set_backend("avx2")
 avx2_count <- count_nonzero(x)
+avx2_conv <- convolve3(y, c(1, 0, -1))
 
 simd_set_backend("auto")
 data.frame(
   scalar = scalar_count,
   avx2 = avx2_count,
+  convolution_equal = identical(scalar_conv, avx2_conv),
   selected_after_auto = simd_backend()
 )
-#>   scalar avx2 selected_after_auto
-#> 1      3    3                avx2
+#>   scalar avx2 convolution_equal selected_after_auto
+#> 1      3    3              TRUE                avx2
 ```
 
-## Scalar vs AVX2 benchmark
+## Scalar vs AVX2 benchmarks
 
 ``` r
 set.seed(1)
@@ -161,8 +169,50 @@ knitr::kable(bench, digits = 3)
 
 | backend | median_ms | mb_per_second | iterations | speedup_vs_scalar |
 |:--------|----------:|--------------:|-----------:|------------------:|
-| scalar  |    11.263 |      4652.186 |         20 |             1.000 |
-| avx2    |     1.928 |     26974.586 |         20 |             5.798 |
+| scalar  |    11.395 |      4594.631 |         20 |             1.000 |
+| avx2    |     2.005 |     25790.055 |         20 |             5.613 |
+
+The same runtime switch can benchmark a numeric three-tap
+convolution/FIR kernel.
+
+``` r
+set.seed(2)
+y <- runif(2 * 1024 * 1024)
+k <- c(0.25, 0.5, 0.25)
+
+conv_mark <- bench::mark(
+  scalar = {
+    simd_set_backend("scalar")
+    convolve3(y, k)
+  },
+  avx2 = {
+    simd_set_backend("avx2")
+    convolve3(y, k)
+  },
+  iterations = 10,
+  check = TRUE,
+  memory = FALSE
+)
+
+simd_set_backend("auto")
+
+conv_bench <- data.frame(
+  backend = as.character(conv_mark$expression),
+  median_ms = as.numeric(conv_mark$median) * 1000,
+  million_outputs_per_second = (length(y) - 2) * as.numeric(conv_mark$`itr/sec`) / 1e6,
+  iterations = conv_mark$n_itr,
+  row.names = NULL
+)
+conv_bench$speedup_vs_scalar <- conv_bench$million_outputs_per_second /
+  conv_bench$million_outputs_per_second[conv_bench$backend == "scalar"]
+
+knitr::kable(conv_bench, digits = 3)
+```
+
+| backend | median_ms | million_outputs_per_second | iterations | speedup_vs_scalar |
+|:--------|----------:|---------------------------:|-----------:|------------------:|
+| scalar  |     4.453 |                    473.137 |          9 |             1.000 |
+| avx2    |     4.408 |                    475.333 |          9 |             1.005 |
 
 ## Development
 

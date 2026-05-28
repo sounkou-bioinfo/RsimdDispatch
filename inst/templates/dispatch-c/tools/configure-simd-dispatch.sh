@@ -30,13 +30,21 @@ if [ ! -d "$KERNEL_DIR_PATH" ]; then
     exit 1
 fi
 
-if [ -z "${CC:-}" ]; then
+# Use R's configured C compiler command when R is driving installation.  Keep
+# the executable separate from compiler-command fragments such as -std=gnu2x so
+# probes like -dumpmachine behave like the ordinary R package build path while
+# still allowing explicit CC=... overrides.
+RSD_CC_CMD=${CC:-}
+if [ -z "$RSD_CC_CMD" ]; then
     if [ -n "${R_HOME:-}" ] && [ -x "${R_HOME}/bin/R" ]; then
-        CC=$("${R_HOME}/bin/R" CMD config CC)
+        RSD_CC_CMD=$("${R_HOME}/bin/R" CMD config CC)
     else
-        CC=cc
+        RSD_CC_CMD=cc
     fi
 fi
+CC=$(printf '%s\n' "$RSD_CC_CMD" | awk '{print $1}')
+RSD_CC_CMD_REST=$(printf '%s\n' "$RSD_CC_CMD" | sed 's/^[^[:space:]]*[[:space:]]*//')
+RSD_CC_EXTRA=${RSD_CC_EXTRA:-$RSD_CC_CMD_REST}
 
 if [ -z "${CFLAGS:-}" ] && [ -n "${R_HOME:-}" ] && [ -x "${R_HOME}/bin/R" ]; then
     CFLAGS=$("${R_HOME}/bin/R" CMD config CFLAGS)
@@ -50,19 +58,28 @@ fi
 
 RSD_LOG_PREFIX=${RSD_LOG_PREFIX:-RsimdDispatch}
 
-if [ -z "${RSD_SIMDE_INCLUDE:-}" ]; then
+SIMDE_INCLUDE_DIR=${RSD_SIMDE_INCLUDE_DIR:-}
+RSD_SIMDE_CPPFLAGS=${RSD_SIMDE_CPPFLAGS:-}
+if [ -z "$SIMDE_INCLUDE_DIR" ]; then
     if [ -d "$ROOT/inst/include/simde" ]; then
-        RSD_SIMDE_INCLUDE="-I$ROOT/inst/include"
+        SIMDE_INCLUDE_DIR="$ROOT/inst/include"
+        RSD_SIMDE_CPPFLAGS="-I../inst/include"
     elif [ -n "${R_HOME:-}" ] && [ -x "${R_HOME}/bin/Rscript" ]; then
         RSD_INC=$(
             "${R_HOME}/bin/Rscript" -e 'cat(system.file("include", package = "RsimdDispatch"))' 2>/dev/null || true
         )
         if [ -n "$RSD_INC" ] && [ -d "$RSD_INC/simde" ]; then
-            RSD_SIMDE_INCLUDE="-I$RSD_INC"
+            SIMDE_INCLUDE_DIR="$RSD_INC"
         fi
     fi
 fi
-SIMDE_INCLUDE=${RSD_SIMDE_INCLUDE:-}
+if [ -z "$RSD_SIMDE_CPPFLAGS" ] && [ -n "$SIMDE_INCLUDE_DIR" ]; then
+    RSD_SIMDE_CPPFLAGS="-I\"$SIMDE_INCLUDE_DIR\""
+fi
+
+sed_escape() {
+    printf '%s' "$1" | sed 's/[\\&|]/\\&/g'
+}
 
 TMPDIR=${TMPDIR:-/tmp}
 CONFDIR=$(mktemp -d "$TMPDIR/rsd-conf-XXXXXX")
@@ -81,8 +98,13 @@ check_cflag() {
         done
         printf 'int main(void) { return 0; }\n'
     } > "$CONFDIR/conftest.c"
-    # shellcheck disable=SC2086
-    ${CC} ${CPPFLAGS:-} ${CFLAGS:-} ${SIMDE_INCLUDE} ${flags} -c "$CONFDIR/conftest.c" -o "$CONFDIR/conftest.o" >/dev/null 2>&1
+    if [ -n "$SIMDE_INCLUDE_DIR" ]; then
+        # shellcheck disable=SC2086
+        ${CC} ${RSD_CC_EXTRA:-} ${CPPFLAGS:-} ${CFLAGS:-} -I"$SIMDE_INCLUDE_DIR" ${flags} -c "$CONFDIR/conftest.c" -o "$CONFDIR/conftest.o" >/dev/null 2>&1
+    else
+        # shellcheck disable=SC2086
+        ${CC} ${RSD_CC_EXTRA:-} ${CPPFLAGS:-} ${CFLAGS:-} ${flags} -c "$CONFDIR/conftest.c" -o "$CONFDIR/conftest.o" >/dev/null 2>&1
+    fi
 }
 
 compile_kernel() {
@@ -96,8 +118,13 @@ compile_kernel() {
         return 1
     fi
     rm -f "$object_path"
-    # shellcheck disable=SC2086
-    ${CC} ${CPPFLAGS:-} ${CFLAGS:-} ${CPICFLAGS:-} -I"$SRC_DIR_PATH" ${SIMDE_INCLUDE} ${flags} -c "$source_path" -o "$object_path" >"$CONFDIR/$object_file.log" 2>&1
+    if [ -n "$SIMDE_INCLUDE_DIR" ]; then
+        # shellcheck disable=SC2086
+        ${CC} ${RSD_CC_EXTRA:-} ${CPPFLAGS:-} ${CFLAGS:-} ${CPICFLAGS:-} -I"$SRC_DIR_PATH" -I"$SIMDE_INCLUDE_DIR" ${flags} -c "$source_path" -o "$object_path" >"$CONFDIR/$object_file.log" 2>&1
+    else
+        # shellcheck disable=SC2086
+        ${CC} ${RSD_CC_EXTRA:-} ${CPPFLAGS:-} ${CFLAGS:-} ${CPICFLAGS:-} -I"$SRC_DIR_PATH" ${flags} -c "$source_path" -o "$object_path" >"$CONFDIR/$object_file.log" 2>&1
+    fi
 }
 
 append_object() {
@@ -145,7 +172,7 @@ if ! compile_kernel "kernel_scalar.c" "kernel_scalar.o" ""; then
 fi
 append_object "$KERNEL_OBJECT_MAKE_DIR/kernel_scalar.o"
 
-machine=$(${CC} -dumpmachine 2>/dev/null || true)
+machine=$(${CC} ${RSD_CC_EXTRA:-} -dumpmachine 2>/dev/null || true)
 if [ -n "$machine" ]; then
     arch=$(printf '%s\n' "$machine" | sed 's/-.*//')
 else
@@ -234,8 +261,10 @@ cat > "$CONFIG_OUT_PATH" <<EOF
 #endif
 EOF
 
+RSD_SIMDE_CPPFLAGS_ESCAPED=$(sed_escape "$RSD_SIMDE_CPPFLAGS")
 sed \
     -e "s|@RSD_OBJECTS@|${RSD_OBJECTS}|g" \
+    -e "s|@RSD_SIMDE_CPPFLAGS@|${RSD_SIMDE_CPPFLAGS_ESCAPED}|g" \
     "$MAKEVARS_IN_PATH" > "$MAKEVARS_OUT_PATH"
 
 echo "${RSD_LOG_PREFIX} configure: staged kernel objects='${RSD_OBJECTS}'"

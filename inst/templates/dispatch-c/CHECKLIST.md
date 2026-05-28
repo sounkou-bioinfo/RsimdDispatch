@@ -5,8 +5,8 @@ If you copy files manually, update at least these package-specific values:
 - `R/dispatch.R`: `@useDynLib RsimdDispatch` must use your package name.
 - `src/registration.c`: `R_init_RsimdDispatch()` must become `R_init_<Package>()`.
 - `tools/configure-simd-dispatch.sh`: set `RSD_LOG_PREFIX` or replace the log prefix.
-- Review exported R names (`count_nonzero()`, `simd_set_backend()`, `simd_backend()`, `simd_info()`).
-- Replace the demo `count_nonzero()` kernel signature in `tools/kernels/` with your package kernel signature.
+- Review exported R names (`count_nonzero()`, `convolve3()`, `simd_set_backend()`, `simd_backend()`, `simd_info()`).
+- Replace the demo `count_nonzero()` and `convolve3()` kernel signatures in `tools/kernels/` with your package kernel signatures.
 
 Prefer using:
 

@@ -48,7 +48,7 @@ RsimdDispatch::use_simd_dispatch(pkg = "MyPackage", prefix = "mypkg")
 
 The helper updates `DESCRIPTION` with `LinkingTo: RsimdDispatch`, writes the
 scaffold files, and substitutes package-specific registration and C symbol
-prefixes. It does not add a runtime dependency on `RsimdDispatch`. Replace the demo `count_nonzero()` kernels under `tools/kernels/` with your own
+prefixes. It does not add a runtime dependency on `RsimdDispatch`. Replace the demo `count_nonzero()` and `convolve3()` kernels under `tools/kernels/` with your own
 scalar/SSE/AVX/NEON/WebAssembly kernels. The generated `configure` script probes
 compiler support, stages selected kernel objects in `src/rsd-kernels/`, and leaves
 `src/Makevars` to link those objects with the baseline R API, CPU detection, and
@@ -63,8 +63,10 @@ semantics.
 library(RsimdDispatch)
 
 x <- as.raw(c(0, 1, 2, 0, 255))
+y <- c(1, 2, 4, 8, 16)
 
 count_nonzero(x)
+convolve3(y, c(0.25, 0.5, 0.25))
 simd_backend()
 simd_set_backend("scalar")
 simd_backend()
@@ -83,28 +85,32 @@ unsafe override.
 
 ```{r}
 count_nonzero(x)
+convolve3(y, c(1, 0, -1))
 simd_info()[c("selected_backend", "available_backends")]
 ```
 
 Switching backends is same-process because all variants are linked into one R
-shared library and selected through guarded function pointers.
+shared library and selected through a guarded operation table.
 
 ```{r}
 simd_set_backend("scalar")
 scalar_count <- count_nonzero(x)
+scalar_conv <- convolve3(y, c(1, 0, -1))
 
 simd_set_backend("avx2")
 avx2_count <- count_nonzero(x)
+avx2_conv <- convolve3(y, c(1, 0, -1))
 
 simd_set_backend("auto")
 data.frame(
   scalar = scalar_count,
   avx2 = avx2_count,
+  convolution_equal = identical(scalar_conv, avx2_conv),
   selected_after_auto = simd_backend()
 )
 ```
 
-## Scalar vs AVX2 benchmark
+## Scalar vs AVX2 benchmarks
 
 ```{r, results = "asis"}
 set.seed(1)
@@ -136,6 +142,42 @@ bench <- data.frame(
 bench$speedup_vs_scalar <- bench$mb_per_second / bench$mb_per_second[bench$backend == "scalar"]
 
 knitr::kable(bench, digits = 3)
+```
+
+The same runtime switch can benchmark a numeric three-tap convolution/FIR kernel.
+
+```{r, results = "asis"}
+set.seed(2)
+y <- runif(2 * 1024 * 1024)
+k <- c(0.25, 0.5, 0.25)
+
+conv_mark <- bench::mark(
+  scalar = {
+    simd_set_backend("scalar")
+    convolve3(y, k)
+  },
+  avx2 = {
+    simd_set_backend("avx2")
+    convolve3(y, k)
+  },
+  iterations = 10,
+  check = TRUE,
+  memory = FALSE
+)
+
+simd_set_backend("auto")
+
+conv_bench <- data.frame(
+  backend = as.character(conv_mark$expression),
+  median_ms = as.numeric(conv_mark$median) * 1000,
+  million_outputs_per_second = (length(y) - 2) * as.numeric(conv_mark$`itr/sec`) / 1e6,
+  iterations = conv_mark$n_itr,
+  row.names = NULL
+)
+conv_bench$speedup_vs_scalar <- conv_bench$million_outputs_per_second /
+  conv_bench$million_outputs_per_second[conv_bench$backend == "scalar"]
+
+knitr::kable(conv_bench, digits = 3)
 ```
 
 ## Development

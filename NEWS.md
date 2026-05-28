@@ -8,6 +8,12 @@
   built by a SIMD128-capable WebAssembly toolchain.
 * Add webR check tooling based on the local `rwasm::build()` + Node `webr`
   workflow used by related packages.
+* Generate explicit SIMDe include flags in `src/Makevars` and quote configure
+  include paths so copied templates are more robust in downstream libraries.
+* Eagerly initialize dispatch at package load, exercise copied-template runtime
+  behavior in CI, and remove legacy comma-separated backend-list C helpers.
+* Add a dispatched `convolve3()` numeric three-tap convolution demo and include
+  it in tests, documentation, webR checks, and evaluated benchmarks.
 
 # RsimdDispatch 0.1.1 (2026-05-28)
 

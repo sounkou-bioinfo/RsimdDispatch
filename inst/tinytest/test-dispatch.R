@@ -3,6 +3,15 @@ expect_equal(count_nonzero(x), 4)
 expect_equal(count_nonzero(raw()), 0)
 expect_error(count_nonzero(1:3), "raw vector")
 
+conv_x <- seq(-2, 3, length.out = 17)
+conv_kernel <- c(0.25, -0.5, 0.75)
+conv_ref <- conv_kernel[1] * conv_x[-c(length(conv_x) - 1L, length(conv_x))] +
+  conv_kernel[2] * conv_x[-c(1L, length(conv_x))] +
+  conv_kernel[3] * conv_x[-c(1L, 2L)]
+expect_equal(convolve3(conv_x, conv_kernel), conv_ref, tolerance = 1e-12)
+expect_equal(convolve3(c(1, 2), conv_kernel), numeric())
+expect_error(convolve3(conv_x, c(1, 2)), "length 3")
+
 info <- simd_info()
 expect_true(is.list(info))
 expect_true(all(c(
@@ -21,12 +30,14 @@ expect_true("scalar" %in% info$available_backends)
 expect_silent(simd_set_backend("scalar"))
 expect_equal(simd_backend(), "scalar")
 expect_equal(count_nonzero(x), 4)
+expect_equal(convolve3(conv_x, conv_kernel), conv_ref, tolerance = 1e-12)
 
 available <- simd_info()$available_backends
 for (backend in setdiff(available, "scalar")) {
   expect_silent(simd_set_backend(backend))
   expect_equal(simd_backend(), backend)
   expect_equal(count_nonzero(x), 4)
+  expect_equal(convolve3(conv_x, conv_kernel), conv_ref, tolerance = 1e-12)
 }
 
 expect_silent(simd_set_backend("auto"))

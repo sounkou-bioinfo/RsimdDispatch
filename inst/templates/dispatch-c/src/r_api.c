@@ -53,6 +53,26 @@ SEXP RC_count_nonzero(SEXP x) {
     return Rf_ScalarReal((double)count);
 }
 
+SEXP RC_convolve3(SEXP x, SEXP kernel) {
+    if (TYPEOF(x) != REALSXP) {
+        Rf_error("x must be a numeric vector");
+    }
+    if (TYPEOF(kernel) != REALSXP || XLENGTH(kernel) != 3) {
+        Rf_error("kernel must be a numeric vector of length 3");
+    }
+    R_xlen_t len = XLENGTH(x);
+    if ((uint64_t)len > (uint64_t)SIZE_MAX) {
+        Rf_error("x is too large for this platform");
+    }
+    R_xlen_t out_len = len >= 3 ? len - 2 : 0;
+    SEXP out = PROTECT(Rf_allocVector(REALSXP, out_len));
+    if (out_len > 0) {
+        rsd_convolve3_valid(REAL(x), (size_t)len, REAL(kernel), REAL(out));
+    }
+    UNPROTECT(1);
+    return out;
+}
+
 SEXP RC_simd_set_backend(SEXP backend_s) {
     const char *backend = rsd_string_scalar(backend_s, "backend");
     rsd_set_backend(backend);
