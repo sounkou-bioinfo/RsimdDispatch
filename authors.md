@@ -15,15 +15,15 @@
 Source:
 [`DESCRIPTION`](https://github.com/sounkou-bioinfo/RsimdDispatch/blob/main/DESCRIPTION)
 
-Toure S (2026). *RsimdDispatch: Runtime SIMD Dispatch Templates for C
-Code in R Packages*. R package version 0.1.0.9000,
+Toure S (2026). *RsimdDispatch: Runtime 'SIMD' Dispatch Templates for
+'C' Code in 'R' Packages*. R package version 0.1.0,
 <https://github.com/sounkou-bioinfo/RsimdDispatch>.
 
     @Manual{,
-      title = {RsimdDispatch: Runtime SIMD Dispatch Templates for C Code in R Packages},
+      title = {RsimdDispatch: Runtime 'SIMD' Dispatch Templates for 'C' Code in 'R' Packages},
       author = {Sounkou Mahamane Toure},
       year = {2026},
-      note = {R package version 0.1.0.9000},
+      note = {R package version 0.1.0},
       url = {https://github.com/sounkou-bioinfo/RsimdDispatch},
     }
 

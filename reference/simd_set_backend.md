@@ -2,10 +2,9 @@
 
 Select the backend used by subsequent calls to
 [`count_nonzero()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/count_nonzero.md).
-Unlike loader-based systems that open one backend shared library per
-process, `RsimdDispatch` keeps all compiled variants in one shared
-object and switches guarded function pointers. This makes same-process
-benchmarking possible.
+`RsimdDispatch` keeps all compiled variants in one shared object and
+switches guarded function pointers. This makes same-process benchmarking
+possible.
 
 ## Usage
 

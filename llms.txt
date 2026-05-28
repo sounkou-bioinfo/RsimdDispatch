@@ -156,8 +156,8 @@ knitr::kable(bench, digits = 3)
 
 | backend | median_ms | mb_per_second | iterations | speedup_vs_scalar |
 |:--------|----------:|--------------:|-----------:|------------------:|
-| scalar  |    11.623 |      4527.086 |         20 |             1.000 |
-| avx2    |     2.171 |     23935.872 |         20 |             5.287 |
+| scalar  |    11.421 |      4576.025 |         20 |             1.000 |
+| avx2    |     2.173 |     23877.845 |         20 |             5.218 |
 
 ## Development
 

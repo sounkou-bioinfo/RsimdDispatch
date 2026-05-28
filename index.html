@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Runtime SIMD Dispatch Templates for C Code in R Packages">
-<meta name="description" content="Demonstrates and templates Parasail-style runtime SIMD dispatch for C code in R packages. Packages can compile scalar, SSE2, SSE4.1, AVX2, AVX-512, and NEON translation units separately, then select a compiled and CPU-supported implementation at runtime through guarded function pointers. The package also vendors the header-only SIMDe library for downstream C packages via LinkingTo-style includes.">
-<meta property="og:description" content="Demonstrates and templates Parasail-style runtime SIMD dispatch for C code in R packages. Packages can compile scalar, SSE2, SSE4.1, AVX2, AVX-512, and NEON translation units separately, then select a compiled and CPU-supported implementation at runtime through guarded function pointers. The package also vendors the header-only SIMDe library for downstream C packages via LinkingTo-style includes.">
+<meta name="description" content="Provides templates and a working example for runtime Single Instruction Multiple Data (SIMD) dispatch in C code used by R packages. Packages can compile scalar, SSE2, SSE4.1, AVX2, AVX-512, and NEON translation units separately, then select a compiled and CPU-supported implementation at runtime through guarded function pointers. The package also vendors the header-only SIMDe library for downstream packages through the LinkingTo field.">
+<meta property="og:description" content="Provides templates and a working example for runtime Single Instruction Multiple Data (SIMD) dispatch in C code used by R packages. Packages can compile scalar, SSE2, SSE4.1, AVX2, AVX-512, and NEON translation units separately, then select a compiled and CPU-supported implementation at runtime through guarded function pointers. The package also vendors the header-only SIMDe library for downstream packages through the LinkingTo field.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">RsimdDispatch</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -189,17 +189,17 @@
 <tbody>
 <tr>
 <td align="left">scalar</td>
-<td align="right">11.623</td>
-<td align="right">4527.086</td>
+<td align="right">11.421</td>
+<td align="right">4576.025</td>
 <td align="right">20</td>
 <td align="right">1.000</td>
 </tr>
 <tr>
 <td align="left">avx2</td>
-<td align="right">2.171</td>
-<td align="right">23935.872</td>
+<td align="right">2.173</td>
+<td align="right">23877.845</td>
 <td align="right">20</td>
-<td align="right">5.287</td>
+<td align="right">5.218</td>
 </tr>
 </tbody>
 </table>
@@ -262,7 +262,7 @@
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://github.com/sounkou-bioinfo/RsimdDispatch/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/sounkou-bioinfo/RsimdDispatch/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
-<li><a href="https://sounkou-bioinfo.r-universe.dev/RsimdDispatch" class="external-link"><img src="https://sounkou-bioinfo.r-universe.dev/badges/RsimdDispatch" alt="R-universe"></a></li>
+<li><a href="https://sounkou-bioinfo.r-universe.dev" class="external-link"><img src="https://sounkou-bioinfo.r-universe.dev/badges/RsimdDispatch" alt="R-universe"></a></li>
 </ul>
 </div>
 
