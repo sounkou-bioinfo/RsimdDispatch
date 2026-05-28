@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">RsimdDispatch</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,19 +36,26 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/v0.1.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.1" id="rsimddispatch-011">RsimdDispatch 0.1.1<a class="anchor" aria-label="anchor" href="#rsimddispatch-011"></a></h2>
+<ul><li>Stage scalar and optional SIMD kernel objects during <code>configure</code>, then link them through generated <code>src/Makevars</code> with the baseline R API, CPU feature detection, and dispatcher code.</li>
+<li>Move demo kernels from <code>src/</code> to <code>tools/kernels/</code> so copied templates keep build-time kernel sources separate from ordinary R package <code>src/</code> files.</li>
+<li>Reword <code>DESCRIPTION</code> to avoid incoming spell-check notes for backend acronym names while keeping detailed backend names in user-facing documentation.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="rsimddispatch-010">RsimdDispatch 0.1.0<a class="anchor" aria-label="anchor" href="#rsimddispatch-010"></a></h2>
 <p>Initial release.</p>
-<ul><li>Provides a working runtime SIMD dispatch example for R packages, using one shared library with scalar, SSE2, SSE4.1, AVX2, AVX-512, and NEON translation units where supported by the compiler and CPU.</li>
+<ul><li>Provides a working runtime SIMD dispatch example for R packages, using one shared library with scalar, SSE2, SSE4.1, AVX2, AVX-512, and NEON kernel objects where supported by the compiler and CPU.</li>
 <li>Exports <code><a href="../reference/count_nonzero.html">count_nonzero()</a></code>, <code><a href="../reference/simd_set_backend.html">simd_set_backend()</a></code>, <code><a href="../reference/simd_backend.html">simd_backend()</a></code>, and <code><a href="../reference/simd_info.html">simd_info()</a></code> to demonstrate safe same-process backend selection and diagnostics.</li>
 <li>Adds <code><a href="../reference/simd_dispatch_template_path.html">use_simd_dispatch()</a></code> and <code><a href="../reference/simd_dispatch_template_path.html">simd_dispatch_template_path()</a></code> for package authors who want to copy and adapt the C dispatch scaffold.</li>
 <li>Vendors the header-only SIMDe library for downstream packages through <code>LinkingTo: RsimdDispatch</code>.</li>
 <li>Adds <code><a href="../reference/simde_info.html">simde_info()</a></code> and SIMDe fields in <code><a href="../reference/simd_info.html">simd_info()</a></code> to report the vendored SIMDe version and pinned upstream commit.</li>
 </ul></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

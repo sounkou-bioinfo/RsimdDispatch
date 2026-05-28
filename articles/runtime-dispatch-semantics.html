@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">RsimdDispatch</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,7 @@
       <h1>Runtime Dispatch Semantics</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/v0.1.0/vignettes/runtime-dispatch-semantics.Rmd" class="external-link"><code>vignettes/runtime-dispatch-semantics.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/main/vignettes/runtime-dispatch-semantics.Rmd" class="external-link"><code>vignettes/runtime-dispatch-semantics.Rmd</code></a></small>
       <div class="d-none name"><code>runtime-dispatch-semantics.Rmd</code></div>
     </div>
 
@@ -114,7 +114,7 @@ execute.</p>
 <h2 id="simde-and-native-isa-compilation">SIMDe and native ISA compilation<a class="anchor" aria-label="anchor" href="#simde-and-native-isa-compilation"></a>
 </h2>
 <p>The SIMD source files use SIMDe types and functions, but the backend
-names refer to native target-specific translation units. During
+names refer to native target-specific staged kernel objects. During
 configuration, each optional backend is accepted only if the compiler
 flag and SIMDe header together define the expected native SIMDe macro.
 For example, the AVX2 probe compiles with <code>-mavx2</code>, includes
@@ -125,8 +125,10 @@ native F, BW, and VL macros.</p>
 <code>__AVX2__</code> or <code>__AVX512BW__</code>. SIMDe maps those to
 <code>SIMDE_ARCH_*</code> and then to <code>SIMDE_*_NATIVE</code>; the
 SIMDe function bodies use native intrinsics under those macros and fall
-back only when the native macro is absent. The dispatcher, CPU feature
-detection, and R API are still compiled without those ISA flags.</p>
+back only when the native macro is absent. The generated
+<code>src/Makevars</code> links the staged objects into the package
+shared library while the dispatcher, CPU feature detection, and R API
+are compiled by R’s ordinary <code>src/Makevars</code> path.</p>
 <p>The installed diagnostics report the backends that passed the
 SIMDe-native compile probe:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -172,8 +174,8 @@ same-process backend switching through the public API.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      348.9µs     <span style="text-decoration: underline;">2</span>878.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         52.3µs    <span style="text-decoration: underline;">16</span>762.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      474.2µs     <span style="text-decoration: underline;">2</span>177.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         57.1µs    <span style="text-decoration: underline;">16</span>265.</span></span></code></pre></div>
 <p><code>"auto"</code> selects the best backend from the compiled and
 supported intersection. The current ranking is:</p>
 <pre class="text"><code>avx512 &gt; avx2 &gt; sse41 &gt; sse2 &gt; neon &gt; scalar</code></pre>

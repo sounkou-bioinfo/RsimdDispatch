@@ -9,8 +9,10 @@ provider. The usual workflow is:
 2.  replace the demo
     [`count_nonzero()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/count_nonzero.md)
     kernels with package-specific kernels;
-3.  keep CPU detection and dispatch files compiled with baseline flags;
-4.  compile each ISA file with only the flags it needs.
+3.  keep CPU detection, dispatch, and R API files compiled by R’s
+    ordinary `src/Makevars` path;
+4.  let `configure` stage scalar and ISA-specific kernel objects before
+    linking one shared library.
 
 [`use_simd_dispatch()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_dispatch_template_path.md)
 updates `DESCRIPTION`, adding `RsimdDispatch` to `LinkingTo`, and copies
@@ -44,14 +46,16 @@ configure
 configure.win
 cleanup
 tools/configure-simd-dispatch.sh
+tools/kernels/kernel_scalar.c
+tools/kernels/kernel_sse2.c
+tools/kernels/kernel_sse41.c
+tools/kernels/kernel_avx2.c
+tools/kernels/kernel_avx512.c
+tools/kernels/kernel_neon.c
 src/Makevars.in
 src/Makevars.win.in
 src/cpu_features.c
 src/simd_dispatch.c
-src/kernel_scalar.c
-src/kernel_avx2.c
-src/kernel_avx512.c
-src/kernel_neon.c
 ```
 
 ## Replace the demo kernel
@@ -66,21 +70,23 @@ For a real package, replace the demo kernel signature with your own and
 keep the same structure:
 
 ``` text
-R API wrapper        baseline flags
-CPU feature checks   baseline flags
-dispatch table       baseline flags
-scalar kernel        baseline flags
-SSE/AVX/NEON files   per-file ISA flags
+R API wrapper        ordinary src/Makevars compilation
+CPU feature checks   ordinary src/Makevars compilation
+dispatch table       ordinary src/Makevars compilation
+scalar kernel        staged by configure under src/rsd-kernels/
+SSE/AVX/NEON files   staged by configure as optional objects under src/rsd-kernels/
 ```
 
 Do not put `-mavx2`, `-mavx512*`, or `-march=native` in global package
-flags. The dispatcher must remain safe on baseline CPUs.
+flags. The configure helper keeps ISA flags local to optional staged
+kernel objects, and the dispatcher remains safe on baseline CPUs.
 
 ## Build
 
-The generated `configure` checks compiler support and writes
-`src/config.h` plus `src/Makevars`. Runtime CPU support is checked later
-by the installed package:
+The generated `configure` checks compiler support, writes `src/config.h`
+plus `src/Makevars`, and stages selected kernel objects in
+`src/rsd-kernels/`. Runtime CPU support is checked later by the
+installed package:
 
 ``` sh
 R CMD INSTALL .

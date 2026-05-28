@@ -54,7 +54,7 @@ simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends
 ## SIMDe and native ISA compilation
 
 The SIMD source files use SIMDe types and functions, but the backend
-names refer to native target-specific translation units. During
+names refer to native target-specific staged kernel objects. During
 configuration, each optional backend is accepted only if the compiler
 flag and SIMDe header together define the expected native SIMDe macro.
 For example, the AVX2 probe compiles with `-mavx2`, includes
@@ -65,8 +65,9 @@ Those flags make the compiler define target macros such as `__AVX2__` or
 `__AVX512BW__`. SIMDe maps those to `SIMDE_ARCH_*` and then to
 `SIMDE_*_NATIVE`; the SIMDe function bodies use native intrinsics under
 those macros and fall back only when the native macro is absent. The
-dispatcher, CPU feature detection, and R API are still compiled without
-those ISA flags.
+generated `src/Makevars` links the staged objects into the package
+shared library while the dispatcher, CPU feature detection, and R API
+are compiled by R’s ordinary `src/Makevars` path.
 
 The installed diagnostics report the backends that passed the
 SIMDe-native compile probe:
@@ -117,8 +118,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar      348.9µs     2878.
-#> 2 auto         52.3µs    16762.
+#> 1 scalar      474.2µs     2177.
+#> 2 auto         57.1µs    16265.
 ```
 
 `"auto"` selects the best backend from the compiled and supported

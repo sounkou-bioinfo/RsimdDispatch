@@ -1,12 +1,24 @@
 # Changelog
 
+## RsimdDispatch 0.1.1
+
+- Stage scalar and optional SIMD kernel objects during `configure`, then
+  link them through generated `src/Makevars` with the baseline R API,
+  CPU feature detection, and dispatcher code.
+- Move demo kernels from `src/` to `tools/kernels/` so copied templates
+  keep build-time kernel sources separate from ordinary R package `src/`
+  files.
+- Reword `DESCRIPTION` to avoid incoming spell-check notes for backend
+  acronym names while keeping detailed backend names in user-facing
+  documentation.
+
 ## RsimdDispatch 0.1.0
 
 Initial release.
 
 - Provides a working runtime SIMD dispatch example for R packages, using
   one shared library with scalar, SSE2, SSE4.1, AVX2, AVX-512, and NEON
-  translation units where supported by the compiler and CPU.
+  kernel objects where supported by the compiler and CPU.
 - Exports
   [`count_nonzero()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/count_nonzero.md),
   [`simd_set_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_set_backend.md),

@@ -1,9 +1,9 @@
 # Getting Started with RsimdDispatch
 
 `RsimdDispatch` demonstrates a single-shared-library runtime dispatch
-pattern for C code in R packages. The package compiles scalar and SIMD
-translation units separately and switches among compiled, CPU-supported
-implementations through a guarded function pointer.
+pattern for C code in R packages. The package stages scalar and SIMD
+kernel objects during configuration and switches among compiled,
+CPU-supported implementations through a guarded function pointer.
 
 ``` r
 
