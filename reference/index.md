@@ -13,3 +13,5 @@
   : Report runtime SIMD dispatch diagnostics
 - [`simd_set_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_set_backend.md)
   : Select the runtime SIMD backend
+- [`simde_info()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simde_info.md)
+  : Report vendored SIMDe provenance

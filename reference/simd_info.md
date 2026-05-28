@@ -1,8 +1,9 @@
 # Report runtime SIMD dispatch diagnostics
 
 Returns the requested backend, selected backend, compiled backends,
-CPU-supported backends, and target information. Calling this initializes
-the lazy auto-dispatch selection if it has not already been initialized.
+CPU-supported backends, target information, and SIMDe provenance
+compiled into the shared library. Calling this initializes the lazy
+auto-dispatch selection if it has not already been initialized.
 
 ## Usage
 
@@ -23,5 +24,5 @@ names(simd_info())
 #>  [4] "compiled_backends"      "cpu_supported_backends" "available_backends"    
 #>  [7] "cpu_sse2"               "cpu_sse41"              "cpu_avx2"              
 #> [10] "cpu_avx512"             "cpu_neon"               "target_arch"           
-#> [13] "target_os"              "simde_commit"          
+#> [13] "target_os"              "simde_version"          "simde_commit"          
 ```

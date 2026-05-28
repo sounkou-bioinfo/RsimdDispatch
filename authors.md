@@ -34,6 +34,7 @@ Toure S (2026). *RsimdDispatch: Runtime 'SIMD' Dispatch Templates for
     RsimdDispatch bundles the header-only SIMDe library in inst/include/simde.
 
     Upstream repository: https://github.com/simd-everywhere/simde
+    Vendored version: 0.8.4
     Vendored commit: f3e8262173b7089db9a9d57a9ecef8dd07ad9c97
     Vendored commit date: 2026-05-10
 
