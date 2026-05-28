@@ -7,19 +7,10 @@
 [![R-universe](https://sounkou-bioinfo.r-universe.dev/badges/RsimdDispatch)](https://sounkou-bioinfo.r-universe.dev/RsimdDispatch)
 <!-- badges: end -->
 
-Pure-C runtime SIMD dispatch templates for R packages. Compile several
-kernel variants, then select only a backend that is both compiled and
-supported by the current CPU.
-
-``` r
-simd_set_backend("scalar")
-count_nonzero(x)
-
-simd_set_backend("avx2")
-count_nonzero(x)
-
-simd_set_backend("auto")
-```
+Pure-C runtime SIMD dispatch templates for R packages. Compile scalar,
+SSE, AVX, AVX-512, and NEON C translation units separately; switch among
+the compiled and CPU-supported implementations at runtime without unsafe
+overrides.
 
 ## Install
 
@@ -37,45 +28,51 @@ From GitHub:
 remotes::install_github("sounkou-bioinfo/RsimdDispatch")
 ```
 
-From a checkout:
-
-``` sh
-R CMD INSTALL .
-```
-
 ## API
-
-``` r
-count_nonzero(x)          # demo C kernel over raw vectors
-simd_set_backend("auto")  # auto, scalar, sse2, sse41, avx2, avx512, neon
-simd_backend()            # selected backend
-simd_info()               # compiled/supported/selected backend info
-use_simd_dispatch(path)   # copy the C template into another package
-```
-
-`simd_set_backend()` rejects uncompiled or CPU-unsupported backends.
-There is no unsafe override.
-
-## Demo
 
 ``` r
 library(RsimdDispatch)
 
 x <- as.raw(c(0, 1, 2, 0, 255))
+
 count_nonzero(x)
 #> [1] 3
-
 simd_backend()
 #> [1] "avx2"
+simd_set_backend("scalar")
+simd_backend()
+#> [1] "scalar"
+simd_set_backend("avx2")
+simd_backend()
+#> [1] "avx2"
+simd_set_backend("auto")
 simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends")]
 #> $compiled_backends
-#> [1] "scalar,sse2,sse41,avx2,avx512"
+#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $cpu_supported_backends
-#> [1] "scalar,sse2,sse41,avx2"
+#> [1] "scalar" "sse2"   "sse41"  "avx2"  
 #> 
 #> $available_backends
-#> [1] "scalar,sse2,sse41,avx2"
+#> [1] "scalar" "sse2"   "sse41"  "avx2"
+simd_dispatch_template_path()
+#> [1] "/usr/local/lib/R/site-library/RsimdDispatch/templates/dispatch-c"
+```
+
+`simd_set_backend()` rejects uncompiled or CPU-unsupported backends.
+There is no unsafe override.
+
+## Example
+
+``` r
+count_nonzero(x)
+#> [1] 3
+simd_info()[c("selected_backend", "available_backends")]
+#> $selected_backend
+#> [1] "avx2"
+#> 
+#> $available_backends
+#> [1] "scalar" "sse2"   "sse41"  "avx2"
 ```
 
 Switching backends is same-process because all variants are linked into
@@ -100,10 +97,42 @@ data.frame(
 
 ## Scalar vs AVX2 benchmark
 
-| backend | scanned_mb | seconds | mb_per_second | speedup_vs_scalar |
-|:--------|-----------:|--------:|--------------:|------------------:|
-| scalar  |   1048.576 |   0.229 |      4578.934 |             1.000 |
-| avx2    |   1048.576 |   0.044 |     23831.273 |             5.205 |
+``` r
+set.seed(1)
+x <- as.raw(sample.int(256L, 50 * 1024 * 1024, replace = TRUE) - 1L)
+
+mark <- bench::mark(
+  scalar = {
+    simd_set_backend("scalar")
+    count_nonzero(x)
+  },
+  avx2 = {
+    simd_set_backend("avx2")
+    count_nonzero(x)
+  },
+  iterations = 20,
+  check = TRUE,
+  memory = FALSE
+)
+
+simd_set_backend("auto")
+
+bench <- data.frame(
+  backend = as.character(mark$expression),
+  median_ms = as.numeric(mark$median) * 1000,
+  mb_per_second = length(x) * as.numeric(mark$`itr/sec`) / 1e6,
+  iterations = mark$n_itr,
+  row.names = NULL
+)
+bench$speedup_vs_scalar <- bench$mb_per_second / bench$mb_per_second[bench$backend == "scalar"]
+
+knitr::kable(bench, digits = 3)
+```
+
+| backend | median_ms | mb_per_second | iterations | speedup_vs_scalar |
+|:--------|----------:|--------------:|-----------:|------------------:|
+| scalar  |    11.251 |      4653.029 |         20 |             1.000 |
+| avx2    |     2.146 |     24305.763 |         20 |             5.224 |
 
 ## Vendoring flow
 

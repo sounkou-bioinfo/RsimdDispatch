@@ -10,14 +10,17 @@ expect_true(all(c(
   "compiled_backends", "cpu_supported_backends", "available_backends",
   "cpu_avx2", "target_arch", "simde_commit"
 ) %in% names(info)))
-expect_true(grepl("scalar", info$compiled_backends, fixed = TRUE))
-expect_true(grepl("scalar", info$available_backends, fixed = TRUE))
+expect_true(is.character(info$compiled_backends))
+expect_true(is.character(info$cpu_supported_backends))
+expect_true(is.character(info$available_backends))
+expect_true("scalar" %in% info$compiled_backends)
+expect_true("scalar" %in% info$available_backends)
 
 expect_silent(simd_set_backend("scalar"))
 expect_equal(simd_backend(), "scalar")
 expect_equal(count_nonzero(x), 4)
 
-available <- strsplit(simd_info()$available_backends, ",", fixed = TRUE)[[1]]
+available <- simd_info()$available_backends
 for (backend in setdiff(available, "scalar")) {
   expect_silent(simd_set_backend(backend))
   expect_equal(simd_backend(), backend)

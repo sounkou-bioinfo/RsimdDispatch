@@ -7,7 +7,8 @@
 simd_info()
 }
 \value{
-A named list of dispatch and CPU feature diagnostics.
+A named list of dispatch and CPU feature diagnostics. Backend-set
+entries are character vectors, not comma-separated strings.
 }
 \description{
 Returns the requested backend, selected backend, compiled backends,

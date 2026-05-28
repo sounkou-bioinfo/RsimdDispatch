@@ -22,7 +22,7 @@ count_nonzero <- function(x) {
 
 #' Select the runtime SIMD backend
 #'
-#' Select the backend used by subsequent calls to [count_nonzero()]. Unlike
+#' Select the backend used by subsequent calls to `count_nonzero()`. Unlike
 #' loader-based systems that open one backend shared library per process,
 #' `RsimdDispatch` keeps all compiled variants in one shared object and switches
 #' guarded function pointers. This makes same-process benchmarking possible.
@@ -57,7 +57,8 @@ simd_backend <- function() {
 #' CPU-supported backends, and target information. Calling this initializes the
 #' lazy auto-dispatch selection if it has not already been initialized.
 #'
-#' @return A named list of dispatch and CPU feature diagnostics.
+#' @return A named list of dispatch and CPU feature diagnostics. Backend-set
+#'   entries are character vectors, not comma-separated strings.
 #' @examples
 #' names(simd_info())
 #' @export

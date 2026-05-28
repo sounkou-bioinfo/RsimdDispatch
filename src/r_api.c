@@ -41,6 +41,35 @@ SEXP RC_simd_backend(void) {
     return Rf_mkString(rsd_selected_backend());
 }
 
+/* Returns a protected STRSXP; caller must UNPROTECT. */
+static SEXP rsd_backend_character_vector(int mode) {
+    const char *backends[] = {"scalar", "sse2", "sse41", "avx2", "avx512", "neon"};
+    const int n_backends = (int)(sizeof(backends) / sizeof(backends[0]));
+    int include[6] = {0, 0, 0, 0, 0, 0};
+    int n = 0;
+
+    for (int i = 0; i < n_backends; ++i) {
+        if (mode == 0) {
+            include[i] = rsd_backend_compiled(backends[i]);
+        } else if (mode == 1) {
+            include[i] = rsd_backend_cpu_supported(backends[i]);
+        } else {
+            include[i] = rsd_backend_available(backends[i]);
+        }
+        n += include[i] != 0;
+    }
+
+    SEXP out = PROTECT(Rf_allocVector(STRSXP, n));
+    int j = 0;
+    for (int i = 0; i < n_backends; ++i) {
+        if (include[i]) {
+            SET_STRING_ELT(out, j, Rf_mkChar(backends[i]));
+            ++j;
+        }
+    }
+    return out;
+}
+
 SEXP RC_simd_info(void) {
     const char *names[] = {
         "dispatch_mode",
@@ -68,9 +97,9 @@ SEXP RC_simd_info(void) {
     SET_VECTOR_ELT(out, 0, Rf_mkString(rsd_dispatch_mode()));
     SET_VECTOR_ELT(out, 1, Rf_mkString(rsd_requested_backend()));
     SET_VECTOR_ELT(out, 2, Rf_mkString(rsd_selected_backend()));
-    SET_VECTOR_ELT(out, 3, Rf_mkString(rsd_compiled_backends_csv()));
-    SET_VECTOR_ELT(out, 4, Rf_mkString(rsd_cpu_supported_backends_csv()));
-    SET_VECTOR_ELT(out, 5, Rf_mkString(rsd_available_backends_csv()));
+    SET_VECTOR_ELT(out, 3, rsd_backend_character_vector(0)); UNPROTECT(1);
+    SET_VECTOR_ELT(out, 4, rsd_backend_character_vector(1)); UNPROTECT(1);
+    SET_VECTOR_ELT(out, 5, rsd_backend_character_vector(2)); UNPROTECT(1);
     SET_VECTOR_ELT(out, 6, Rf_ScalarLogical(rsd_cpu_has_sse2() != 0));
     SET_VECTOR_ELT(out, 7, Rf_ScalarLogical(rsd_cpu_has_sse41() != 0));
     SET_VECTOR_ELT(out, 8, Rf_ScalarLogical(rsd_cpu_has_avx2() != 0));

@@ -17,19 +17,9 @@ knitr::opts_chunk$set(
 [![R-universe](https://sounkou-bioinfo.r-universe.dev/badges/RsimdDispatch)](https://sounkou-bioinfo.r-universe.dev/RsimdDispatch)
 <!-- badges: end -->
 
-Pure-C runtime SIMD dispatch templates for R packages. Compile several kernel
-variants, then select only a backend that is both compiled and supported by the
-current CPU.
-
-```r
-simd_set_backend("scalar")
-count_nonzero(x)
-
-simd_set_backend("avx2")
-count_nonzero(x)
-
-simd_set_backend("auto")
-```
+Pure-C runtime SIMD dispatch templates for R packages. Compile scalar, SSE,
+AVX, AVX-512, and NEON C translation units separately; switch among the compiled
+and CPU-supported implementations at runtime without unsafe overrides.
 
 ## Install
 
@@ -47,35 +37,32 @@ From GitHub:
 remotes::install_github("sounkou-bioinfo/RsimdDispatch")
 ```
 
-From a checkout:
-
-```sh
-R CMD INSTALL .
-```
-
 ## API
-
-```r
-count_nonzero(x)          # demo C kernel over raw vectors
-simd_set_backend("auto")  # auto, scalar, sse2, sse41, avx2, avx512, neon
-simd_backend()            # selected backend
-simd_info()               # compiled/supported/selected backend info
-use_simd_dispatch(path)   # copy the C template into another package
-```
-
-`simd_set_backend()` rejects uncompiled or CPU-unsupported backends. There is no
-unsafe override.
-
-## Demo
 
 ```{r}
 library(RsimdDispatch)
 
 x <- as.raw(c(0, 1, 2, 0, 255))
-count_nonzero(x)
 
+count_nonzero(x)
 simd_backend()
+simd_set_backend("scalar")
+simd_backend()
+simd_set_backend("avx2")
+simd_backend()
+simd_set_backend("auto")
 simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends")]
+simd_dispatch_template_path()
+```
+
+`simd_set_backend()` rejects uncompiled or CPU-unsupported backends. There is no
+unsafe override.
+
+## Example
+
+```{r}
+count_nonzero(x)
+simd_info()[c("selected_backend", "available_backends")]
 ```
 
 Switching backends is same-process because all variants are linked into one R
@@ -98,40 +85,36 @@ data.frame(
 
 ## Scalar vs AVX2 benchmark
 
-```{r, echo = FALSE, results = "asis"}
+```{r, results = "asis"}
 set.seed(1)
-n <- 50 * 1024 * 1024
-x <- as.raw(sample.int(256L, n, replace = TRUE) - 1L)
-reps <- 20L
+x <- as.raw(sample.int(256L, 50 * 1024 * 1024, replace = TRUE) - 1L)
 
-bench_backend <- function(backend, x, reps) {
-  simd_set_backend(backend)
-  invisible(count_nonzero(x))
-  invisible(gc())
-  elapsed <- system.time({
-    ans <- 0
-    for (i in seq_len(reps)) {
-      ans <- ans + count_nonzero(x)
-    }
-  })[["elapsed"]]
-  data.frame(
-    backend = simd_backend(),
-    scanned_mb = length(x) * reps / 1e6,
-    seconds = elapsed,
-    mb_per_second = length(x) * reps / 1e6 / elapsed,
-    checksum = ans,
-    row.names = NULL
-  )
-}
-
-bench <- rbind(
-  bench_backend("scalar", x, reps),
-  bench_backend("avx2", x, reps)
+mark <- bench::mark(
+  scalar = {
+    simd_set_backend("scalar")
+    count_nonzero(x)
+  },
+  avx2 = {
+    simd_set_backend("avx2")
+    count_nonzero(x)
+  },
+  iterations = 20,
+  check = TRUE,
+  memory = FALSE
 )
-stopifnot(length(unique(bench$checksum)) == 1L)
-bench$speedup_vs_scalar <- bench$seconds[bench$backend == "scalar"] / bench$seconds
+
 simd_set_backend("auto")
-knitr::kable(bench[c("backend", "scanned_mb", "seconds", "mb_per_second", "speedup_vs_scalar")], digits = 3)
+
+bench <- data.frame(
+  backend = as.character(mark$expression),
+  median_ms = as.numeric(mark$median) * 1000,
+  mb_per_second = length(x) * as.numeric(mark$`itr/sec`) / 1e6,
+  iterations = mark$n_itr,
+  row.names = NULL
+)
+bench$speedup_vs_scalar <- bench$mb_per_second / bench$mb_per_second[bench$backend == "scalar"]
+
+knitr::kable(bench, digits = 3)
 ```
 
 ## Vendoring flow
