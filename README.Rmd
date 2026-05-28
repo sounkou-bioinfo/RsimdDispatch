@@ -69,7 +69,7 @@ simd_backend()
 simd_set_backend("avx2")
 simd_backend()
 simd_set_backend("auto")
-simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends")]
+simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends", "simde_native_backends")]
 simde_info()[c("version", "commit")]
 simd_dispatch_template_path()
 ```

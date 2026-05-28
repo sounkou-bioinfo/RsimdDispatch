@@ -57,10 +57,14 @@ trap 'rm -rf "$CONFDIR"' EXIT INT HUP TERM
 check_cflag() {
     flags=$1
     header=${2:-}
+    required_macros=${3:-}
     {
         if [ -n "$header" ]; then
             printf '#include <%s>\n' "$header"
         fi
+        for macro in $required_macros; do
+            printf '#ifndef %s\n#error "%s not defined"\n#endif\n' "$macro" "$macro"
+        done
         printf 'int main(void) { return 0; }\n'
     } > "$CONFDIR/conftest.c"
     # shellcheck disable=SC2086
@@ -88,6 +92,12 @@ HAVE_AVX2=0
 HAVE_AVX512=0
 HAVE_NEON=0
 
+SIMDE_NATIVE_SSE2=0
+SIMDE_NATIVE_SSE41=0
+SIMDE_NATIVE_AVX2=0
+SIMDE_NATIVE_AVX512=0
+SIMDE_NATIVE_NEON=0
+
 machine=$(${CC} -dumpmachine 2>/dev/null || true)
 if [ -n "$machine" ]; then
     arch=$(printf '%s\n' "$machine" | sed 's/-.*//')
@@ -96,36 +106,44 @@ else
 fi
 case "$arch" in
     x86_64|amd64|i386|i686)
-        if check_cflag "-msse2" "simde/x86/sse2.h"; then
+        if check_cflag "-msse2" "simde/x86/sse2.h" "SIMDE_X86_SSE2_NATIVE"; then
             append_object kernel_sse2.o
             SSE2_CFLAGS="-msse2"
             HAVE_SSE2=1
+            SIMDE_NATIVE_SSE2=1
         fi
-        if check_cflag "-msse4.1" "simde/x86/sse4.1.h"; then
+        if check_cflag "-msse4.1" "simde/x86/sse4.1.h" "SIMDE_X86_SSE4_1_NATIVE"; then
             append_object kernel_sse41.o
             SSE41_CFLAGS="-msse4.1"
             HAVE_SSE41=1
+            SIMDE_NATIVE_SSE41=1
         fi
-        if check_cflag "-mavx2" "simde/x86/avx2.h"; then
+        if check_cflag "-mavx2" "simde/x86/avx2.h" "SIMDE_X86_AVX2_NATIVE"; then
             append_object kernel_avx2.o
             AVX2_CFLAGS="-mavx2"
             HAVE_AVX2=1
+            SIMDE_NATIVE_AVX2=1
         fi
-        if check_cflag "-mavx512f -mavx512bw -mavx512vl" "simde/x86/avx512.h"; then
+        if check_cflag "-mavx512f -mavx512bw -mavx512vl" "simde/x86/avx512.h" "SIMDE_X86_AVX512F_NATIVE SIMDE_X86_AVX512BW_NATIVE SIMDE_X86_AVX512VL_NATIVE"; then
             append_object kernel_avx512.o
             AVX512_CFLAGS="-mavx512f -mavx512bw -mavx512vl"
             HAVE_AVX512=1
+            SIMDE_NATIVE_AVX512=1
         fi
         ;;
     aarch64|arm64)
-        append_object kernel_neon.o
-        HAVE_NEON=1
+        if check_cflag "" "simde/arm/neon.h" "SIMDE_ARM_NEON_A32V7_NATIVE"; then
+            append_object kernel_neon.o
+            HAVE_NEON=1
+            SIMDE_NATIVE_NEON=1
+        fi
         ;;
     armv7l|armv7*|arm*)
-        if check_cflag "-mfpu=neon" "simde/arm/neon.h"; then
+        if check_cflag "-mfpu=neon" "simde/arm/neon.h" "SIMDE_ARM_NEON_A32V7_NATIVE"; then
             append_object kernel_neon.o
             NEON_CFLAGS="-mfpu=neon"
             HAVE_NEON=1
+            SIMDE_NATIVE_NEON=1
         fi
         ;;
 esac
@@ -161,6 +179,11 @@ cat > "$CONFIG_OUT_PATH" <<EOF
 #define RSD_HAVE_AVX2 ${HAVE_AVX2}
 #define RSD_HAVE_AVX512 ${HAVE_AVX512}
 #define RSD_HAVE_NEON ${HAVE_NEON}
+#define RSD_SIMDE_NATIVE_SSE2 ${SIMDE_NATIVE_SSE2}
+#define RSD_SIMDE_NATIVE_SSE41 ${SIMDE_NATIVE_SSE41}
+#define RSD_SIMDE_NATIVE_AVX2 ${SIMDE_NATIVE_AVX2}
+#define RSD_SIMDE_NATIVE_AVX512 ${SIMDE_NATIVE_AVX512}
+#define RSD_SIMDE_NATIVE_NEON ${SIMDE_NATIVE_NEON}
 #define RSD_SIMDE_VERSION "${SIMDE_VERSION}"
 #define RSD_SIMDE_COMMIT "${SIMDE_COMMIT}"
 

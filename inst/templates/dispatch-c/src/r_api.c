@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 
 #include "config.h"
 #include "cpu_features.h"
@@ -13,6 +14,21 @@
 #endif
 #ifndef RSD_SIMDE_COMMIT
 #define RSD_SIMDE_COMMIT "unknown"
+#endif
+#ifndef RSD_SIMDE_NATIVE_SSE2
+#define RSD_SIMDE_NATIVE_SSE2 0
+#endif
+#ifndef RSD_SIMDE_NATIVE_SSE41
+#define RSD_SIMDE_NATIVE_SSE41 0
+#endif
+#ifndef RSD_SIMDE_NATIVE_AVX2
+#define RSD_SIMDE_NATIVE_AVX2 0
+#endif
+#ifndef RSD_SIMDE_NATIVE_AVX512
+#define RSD_SIMDE_NATIVE_AVX512 0
+#endif
+#ifndef RSD_SIMDE_NATIVE_NEON
+#define RSD_SIMDE_NATIVE_NEON 0
 #endif
 
 static const char *rsd_string_scalar(SEXP x, const char *arg) {
@@ -45,6 +61,25 @@ SEXP RC_simd_backend(void) {
 }
 
 /* Returns a protected STRSXP; caller must UNPROTECT. */
+static int rsd_backend_simde_native(const char *backend) {
+    if (strcmp(backend, "sse2") == 0) {
+        return RSD_SIMDE_NATIVE_SSE2 != 0;
+    }
+    if (strcmp(backend, "sse41") == 0) {
+        return RSD_SIMDE_NATIVE_SSE41 != 0;
+    }
+    if (strcmp(backend, "avx2") == 0) {
+        return RSD_SIMDE_NATIVE_AVX2 != 0;
+    }
+    if (strcmp(backend, "avx512") == 0) {
+        return RSD_SIMDE_NATIVE_AVX512 != 0;
+    }
+    if (strcmp(backend, "neon") == 0) {
+        return RSD_SIMDE_NATIVE_NEON != 0;
+    }
+    return 0;
+}
+
 static SEXP rsd_backend_character_vector(int mode) {
     const char *backends[] = {"scalar", "sse2", "sse41", "avx2", "avx512", "neon"};
     const int n_backends = (int)(sizeof(backends) / sizeof(backends[0]));
@@ -56,8 +91,10 @@ static SEXP rsd_backend_character_vector(int mode) {
             include[i] = rsd_backend_compiled(backends[i]);
         } else if (mode == 1) {
             include[i] = rsd_backend_cpu_supported(backends[i]);
-        } else {
+        } else if (mode == 2) {
             include[i] = rsd_backend_available(backends[i]);
+        } else {
+            include[i] = rsd_backend_simde_native(backends[i]);
         }
         n += include[i] != 0;
     }
@@ -81,6 +118,7 @@ SEXP RC_simd_info(void) {
         "compiled_backends",
         "cpu_supported_backends",
         "available_backends",
+        "simde_native_backends",
         "cpu_sse2",
         "cpu_sse41",
         "cpu_avx2",
@@ -104,15 +142,16 @@ SEXP RC_simd_info(void) {
     SET_VECTOR_ELT(out, 3, rsd_backend_character_vector(0)); UNPROTECT(1);
     SET_VECTOR_ELT(out, 4, rsd_backend_character_vector(1)); UNPROTECT(1);
     SET_VECTOR_ELT(out, 5, rsd_backend_character_vector(2)); UNPROTECT(1);
-    SET_VECTOR_ELT(out, 6, Rf_ScalarLogical(rsd_cpu_has_sse2() != 0));
-    SET_VECTOR_ELT(out, 7, Rf_ScalarLogical(rsd_cpu_has_sse41() != 0));
-    SET_VECTOR_ELT(out, 8, Rf_ScalarLogical(rsd_cpu_has_avx2() != 0));
-    SET_VECTOR_ELT(out, 9, Rf_ScalarLogical(rsd_cpu_has_avx512() != 0));
-    SET_VECTOR_ELT(out, 10, Rf_ScalarLogical(rsd_cpu_has_neon() != 0));
-    SET_VECTOR_ELT(out, 11, Rf_mkString(rsd_target_arch()));
-    SET_VECTOR_ELT(out, 12, Rf_mkString(rsd_target_os()));
-    SET_VECTOR_ELT(out, 13, Rf_mkString(RSD_SIMDE_VERSION));
-    SET_VECTOR_ELT(out, 14, Rf_mkString(RSD_SIMDE_COMMIT));
+    SET_VECTOR_ELT(out, 6, rsd_backend_character_vector(3)); UNPROTECT(1);
+    SET_VECTOR_ELT(out, 7, Rf_ScalarLogical(rsd_cpu_has_sse2() != 0));
+    SET_VECTOR_ELT(out, 8, Rf_ScalarLogical(rsd_cpu_has_sse41() != 0));
+    SET_VECTOR_ELT(out, 9, Rf_ScalarLogical(rsd_cpu_has_avx2() != 0));
+    SET_VECTOR_ELT(out, 10, Rf_ScalarLogical(rsd_cpu_has_avx512() != 0));
+    SET_VECTOR_ELT(out, 11, Rf_ScalarLogical(rsd_cpu_has_neon() != 0));
+    SET_VECTOR_ELT(out, 12, Rf_mkString(rsd_target_arch()));
+    SET_VECTOR_ELT(out, 13, Rf_mkString(rsd_target_os()));
+    SET_VECTOR_ELT(out, 14, Rf_mkString(RSD_SIMDE_VERSION));
+    SET_VECTOR_ELT(out, 15, Rf_mkString(RSD_SIMDE_COMMIT));
 
     for (int i = 0; i < n; ++i) {
         SET_STRING_ELT(out_names, i, Rf_mkChar(names[i]));

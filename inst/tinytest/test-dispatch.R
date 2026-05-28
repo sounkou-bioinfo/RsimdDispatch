@@ -8,11 +8,13 @@ expect_true(is.list(info))
 expect_true(all(c(
   "dispatch_mode", "requested_backend", "selected_backend",
   "compiled_backends", "cpu_supported_backends", "available_backends",
-  "cpu_avx2", "target_arch", "simde_version", "simde_commit"
+  "simde_native_backends", "cpu_avx2", "target_arch", "simde_version", "simde_commit"
 ) %in% names(info)))
 expect_true(is.character(info$compiled_backends))
 expect_true(is.character(info$cpu_supported_backends))
 expect_true(is.character(info$available_backends))
+expect_true(is.character(info$simde_native_backends))
+expect_true(all(info$simde_native_backends %in% info$compiled_backends))
 expect_true("scalar" %in% info$compiled_backends)
 expect_true("scalar" %in% info$available_backends)
 
