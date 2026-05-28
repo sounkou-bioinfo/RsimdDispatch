@@ -73,6 +73,12 @@ writeLines(
   file.path(vendor_dest, "VERSION")
 )
 
+patches <- list.files(file.path(root, "tools", "patches"), pattern = "\\.patch$", full.names = TRUE)
+for (patch in sort(patches)) {
+  message("Applying vendor patch: ", basename(patch))
+  run("git", c("apply", "--whitespace=nowarn", patch), wd = root)
+}
+
 system2(file.path(R.home("bin"), "Rscript"), "tools/update-authors.R", stdout = "", stderr = "")
 
 message("Vendored SIMDe commit ", commit)
