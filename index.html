@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Runtime SIMD Dispatch Templates for C Code in R Packages">
-<meta name="description" content="Provides templates and a working example for runtime Single Instruction Multiple Data (SIMD) dispatch in C code used by R packages. Packages can stage scalar and architecture-specific kernel objects during configuration, then select a compiled and CPU-supported implementation at runtime through guarded function pointers. The package also vendors the header-only SIMDe library for downstream packages through the LinkingTo field.">
-<meta property="og:description" content="Provides templates and a working example for runtime Single Instruction Multiple Data (SIMD) dispatch in C code used by R packages. Packages can stage scalar and architecture-specific kernel objects during configuration, then select a compiled and CPU-supported implementation at runtime through guarded function pointers. The package also vendors the header-only SIMDe library for downstream packages through the LinkingTo field.">
+<meta name="description" content="Provides templates and a working example for runtime Single Instruction Multiple Data (SIMD) dispatch in C code used by R packages. Packages can stage scalar and architecture-specific kernel objects during configuration, then select compiled and CPU-supported implementations at runtime through guarded operation tables. The package also vendors the header-only SIMDe library for downstream packages through the LinkingTo field.">
+<meta property="og:description" content="Provides templates and a working example for runtime Single Instruction Multiple Data (SIMD) dispatch in C code used by R packages. Packages can stage scalar and architecture-specific kernel objects during configuration, then select compiled and CPU-supported implementations at runtime through guarded operation tables. The package also vendors the header-only SIMDe library for downstream packages through the LinkingTo field.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -80,7 +80,7 @@
 <p>Copy the C dispatch scaffold from your package root:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">RsimdDispatch</span><span class="fu">::</span><span class="fu"><a href="reference/simd_dispatch_template_path.html">use_simd_dispatch</a></span><span class="op">(</span>pkg <span class="op">=</span> <span class="st">"MyPackage"</span>, prefix <span class="op">=</span> <span class="st">"mypkg"</span><span class="op">)</span></span></code></pre></div>
-<p>The helper updates <code>DESCRIPTION</code> with <code>LinkingTo: RsimdDispatch</code>, writes the scaffold files, and substitutes package-specific registration and C symbol prefixes. It does not add a runtime dependency on <code>RsimdDispatch</code>. Replace the demo <code><a href="reference/count_nonzero.html">count_nonzero()</a></code> kernels under <code>tools/kernels/</code> with your own scalar/SSE/AVX/NEON/WebAssembly kernels. The generated <code>configure</code> script probes compiler support, stages selected kernel objects in <code>src/rsd-kernels/</code>, and leaves <code>src/Makevars</code> to link those objects with the baseline R API, CPU detection, and dispatcher.</p>
+<p>The helper updates <code>DESCRIPTION</code> with <code>LinkingTo: RsimdDispatch</code>, writes the scaffold files, and substitutes package-specific registration and C symbol prefixes. It does not add a runtime dependency on <code>RsimdDispatch</code>. Replace the demo <code><a href="reference/count_nonzero.html">count_nonzero()</a></code> and <code><a href="reference/convolve3.html">convolve3()</a></code> kernels under <code>tools/kernels/</code> with your own scalar/SSE/AVX/NEON/WebAssembly kernels. The generated <code>configure</code> script probes compiler support, stages selected kernel objects in <code>src/rsd-kernels/</code>, and leaves <code>src/Makevars</code> to link those objects with the baseline R API, CPU detection, and dispatcher.</p>
 <p>See the package vignettes for the downstream-package workflow and dispatch semantics.</p>
 </div>
 <div class="section level2">
@@ -90,9 +90,12 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/sounkou-bioinfo/RsimdDispatch" class="external-link">RsimdDispatch</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/raw.html" class="external-link">as.raw</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">255</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">8</span>, <span class="fl">16</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/count_nonzero.html">count_nonzero</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 3</span></span>
+<span><span class="fu"><a href="reference/convolve3.html">convolve3</a></span><span class="op">(</span><span class="va">y</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.25</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 2.25 4.50 9.00</span></span>
 <span><span class="fu"><a href="reference/simd_backend.html">simd_backend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "avx2"</span></span>
 <span><span class="fu"><a href="reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"scalar"</span><span class="op">)</span></span>
@@ -130,31 +133,36 @@
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/count_nonzero.html">count_nonzero</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 3</span></span>
+<span><span class="fu"><a href="reference/convolve3.html">convolve3</a></span><span class="op">(</span><span class="va">y</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1]  -3  -6 -12</span></span>
 <span><span class="fu"><a href="reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"selected_backend"</span>, <span class="st">"available_backends"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $selected_backend</span></span>
 <span><span class="co">#&gt; [1] "avx2"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $available_backends</span></span>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"</span></span></code></pre></div>
-<p>Switching backends is same-process because all variants are linked into one R shared library and selected through guarded function pointers.</p>
+<p>Switching backends is same-process because all variants are linked into one R shared library and selected through a guarded operation table.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"scalar"</span><span class="op">)</span></span>
 <span><span class="va">scalar_count</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/count_nonzero.html">count_nonzero</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="va">scalar_conv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/convolve3.html">convolve3</a></span><span class="op">(</span><span class="va">y</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"avx2"</span><span class="op">)</span></span>
 <span><span class="va">avx2_count</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/count_nonzero.html">count_nonzero</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="va">avx2_conv</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/convolve3.html">convolve3</a></span><span class="op">(</span><span class="va">y</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"auto"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  scalar <span class="op">=</span> <span class="va">scalar_count</span>,</span>
 <span>  avx2 <span class="op">=</span> <span class="va">avx2_count</span>,</span>
+<span>  convolution_equal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">scalar_conv</span>, <span class="va">avx2_conv</span><span class="op">)</span>,</span>
 <span>  selected_after_auto <span class="op">=</span> <span class="fu"><a href="reference/simd_backend.html">simd_backend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt;   scalar avx2 selected_after_auto</span></span>
-<span><span class="co">#&gt; 1      3    3                avx2</span></span></code></pre></div>
+<span><span class="co">#&gt;   scalar avx2 convolution_equal selected_after_auto</span></span>
+<span><span class="co">#&gt; 1      3    3              TRUE                avx2</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="scalar-vs-avx2-benchmark">Scalar vs AVX2 benchmark<a class="anchor" aria-label="anchor" href="#scalar-vs-avx2-benchmark"></a>
+<h2 id="scalar-vs-avx2-benchmarks">Scalar vs AVX2 benchmarks<a class="anchor" aria-label="anchor" href="#scalar-vs-avx2-benchmarks"></a>
 </h2>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
@@ -197,17 +205,82 @@
 <tbody>
 <tr>
 <td align="left">scalar</td>
-<td align="right">11.263</td>
-<td align="right">4652.186</td>
+<td align="right">11.395</td>
+<td align="right">4594.631</td>
 <td align="right">20</td>
 <td align="right">1.000</td>
 </tr>
 <tr>
 <td align="left">avx2</td>
-<td align="right">1.928</td>
-<td align="right">26974.586</td>
+<td align="right">2.005</td>
+<td align="right">25790.055</td>
 <td align="right">20</td>
-<td align="right">5.798</td>
+<td align="right">5.613</td>
+</tr>
+</tbody>
+</table>
+<p>The same runtime switch can benchmark a numeric three-tap convolution/FIR kernel.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="fl">1024</span> <span class="op">*</span> <span class="fl">1024</span><span class="op">)</span></span>
+<span><span class="va">k</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.25</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">conv_mark</span> <span class="op">&lt;-</span> <span class="fu">bench</span><span class="fu">::</span><span class="fu"><a href="https://bench.r-lib.org/reference/mark.html" class="external-link">mark</a></span><span class="op">(</span></span>
+<span>  scalar <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"scalar"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="reference/convolve3.html">convolve3</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">k</span><span class="op">)</span></span>
+<span>  <span class="op">}</span>,</span>
+<span>  avx2 <span class="op">=</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"avx2"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="reference/convolve3.html">convolve3</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">k</span><span class="op">)</span></span>
+<span>  <span class="op">}</span>,</span>
+<span>  iterations <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  check <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  memory <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"auto"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">conv_bench</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  backend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">conv_mark</span><span class="op">$</span><span class="va">expression</span><span class="op">)</span>,</span>
+<span>  median_ms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">conv_mark</span><span class="op">$</span><span class="va">median</span><span class="op">)</span> <span class="op">*</span> <span class="fl">1000</span>,</span>
+<span>  million_outputs_per_second <span class="op">=</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="op">-</span> <span class="fl">2</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">conv_mark</span><span class="op">$</span><span class="va">`itr/sec`</span><span class="op">)</span> <span class="op">/</span> <span class="fl">1e6</span>,</span>
+<span>  iterations <span class="op">=</span> <span class="va">conv_mark</span><span class="op">$</span><span class="va">n_itr</span>,</span>
+<span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">conv_bench</span><span class="op">$</span><span class="va">speedup_vs_scalar</span> <span class="op">&lt;-</span> <span class="va">conv_bench</span><span class="op">$</span><span class="va">million_outputs_per_second</span> <span class="op">/</span></span>
+<span>  <span class="va">conv_bench</span><span class="op">$</span><span class="va">million_outputs_per_second</span><span class="op">[</span><span class="va">conv_bench</span><span class="op">$</span><span class="va">backend</span> <span class="op">==</span> <span class="st">"scalar"</span><span class="op">]</span></span>
+<span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">conv_bench</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="11%">
+<col width="13%">
+<col width="35%">
+<col width="15%">
+<col width="24%">
+</colgroup>
+<thead><tr>
+<th align="left">backend</th>
+<th align="right">median_ms</th>
+<th align="right">million_outputs_per_second</th>
+<th align="right">iterations</th>
+<th align="right">speedup_vs_scalar</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left">scalar</td>
+<td align="right">4.453</td>
+<td align="right">473.137</td>
+<td align="right">9</td>
+<td align="right">1.000</td>
+</tr>
+<tr>
+<td align="left">avx2</td>
+<td align="right">4.408</td>
+<td align="right">475.333</td>
+<td align="right">9</td>
+<td align="right">1.005</td>
 </tr>
 </tbody>
 </table>
@@ -220,19 +293,19 @@
 </h3>
 <p>This is a maintainer workflow for <code>RsimdDispatch</code> itself, not something downstream packages need to run. Downstream packages use <code>LinkingTo: RsimdDispatch</code> and the copied dispatch template; they do not re-vendor SIMDe.</p>
 <p><code>RsimdDispatch</code> vendors the full SIMDe header tree under <code>inst/include/simde</code>. To update the pinned checkout and regenerate bundled-code notices:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="ex">Rscript</span> tools/vendor-simde.R</span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="ex">Rscript</span> tools/update-authors.R</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="ex">Rscript</span> tools/vendor-simde.R</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="ex">Rscript</span> tools/update-authors.R</span></code></pre></div>
 <p>Provenance lives in <code>inst/vendor/simde/VERSION</code>, <code>inst/AUTHORS</code>, and <code>inst/LICENCE.note</code>.</p>
 </div>
 <div class="section level3">
 <h3 id="package-maintenance">Package maintenance<a class="anchor" aria-label="anchor" href="#package-maintenance"></a>
 </h3>
 <p>The top-level Makefile uses GNU make.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">make</span> rd       <span class="co"># roxygen docs and NAMESPACE</span></span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">make</span> readme   <span class="co"># evaluate README.Rmd and write README.md</span></span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="fu">make</span> test</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="fu">make</span> check</span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="fu">bash</span> tools/webr-build-check.sh  <span class="co"># build and check the webR/WebAssembly package</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">make</span> rd       <span class="co"># roxygen docs and NAMESPACE</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="fu">make</span> readme   <span class="co"># evaluate README.Rmd and write README.md</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="fu">make</span> test</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="fu">make</span> check</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="fu">bash</span> tools/webr-build-check.sh  <span class="co"># build and check the webR/WebAssembly package</span></span></code></pre></div>
 </div>
 </div>
 </div>

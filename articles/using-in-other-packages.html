@@ -72,8 +72,8 @@
 header provider. The usual workflow is:</p>
 <ol style="list-style-type: decimal">
 <li>call <code><a href="../reference/simd_dispatch_template_path.html">use_simd_dispatch()</a></code> from the package root;</li>
-<li>replace the demo <code><a href="../reference/count_nonzero.html">count_nonzero()</a></code> kernels with
-package-specific kernels;</li>
+<li>replace the demo <code><a href="../reference/count_nonzero.html">count_nonzero()</a></code> and
+<code><a href="../reference/convolve3.html">convolve3()</a></code> kernels with package-specific kernels;</li>
 <li>keep CPU detection, dispatch, and R API files compiled by R’s
 ordinary <code>src/Makevars</code> path;</li>
 <li>let <code>configure</code> stage scalar and ISA-specific kernel
@@ -116,12 +116,15 @@ performs the important substitutions, including <code>@useDynLib</code>,
 <span><span class="va">src</span><span class="op">/</span><span class="va">simd_dispatch.c</span></span></code></pre>
 </div>
 <div class="section level2">
-<h2 id="replace-the-demo-kernel">Replace the demo kernel<a class="anchor" aria-label="anchor" href="#replace-the-demo-kernel"></a>
+<h2 id="replace-the-demo-kernels">Replace the demo kernels<a class="anchor" aria-label="anchor" href="#replace-the-demo-kernels"></a>
 </h2>
-<p>The demo kernel has this shape:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="kw">typedef</span> <span class="dt">size_t</span> <span class="op">(*</span>rsd_count_nonzero_fn<span class="op">)(</span><span class="dt">const</span> <span class="dt">uint8_t</span> <span class="op">*</span>x<span class="op">,</span> <span class="dt">size_t</span> n<span class="op">);</span></span></code></pre></div>
-<p>For a real package, replace the demo kernel signature with your own
-and keep the same structure:</p>
+<p>The demo operations are collected in a backend operation table:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> RsdOps <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    rsd_count_nonzero_fn count_nonzero<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    rsd_convolve3_fn convolve3<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="op">}</span> RsdOps<span class="op">;</span></span></code></pre></div>
+<p>For a real package, replace the demo operation signatures with your
+own and keep the same structure:</p>
 <pre class="text"><code>R API wrapper        ordinary src/Makevars compilation
 CPU feature checks   ordinary src/Makevars compilation
 dispatch table       ordinary src/Makevars compilation

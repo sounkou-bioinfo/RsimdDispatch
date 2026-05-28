@@ -1,8 +1,8 @@
 # Runtime Dispatch Semantics
 
 `RsimdDispatch` uses a single R shared library. All compiled variants
-are linked into that shared object, and a function pointer selects the
-active implementation.
+are linked into that shared object, and an operation-table pointer
+selects the active implementation set.
 
 This means backend switching is safe in one R process:
 
@@ -10,17 +10,21 @@ This means backend switching is safe in one R process:
 
 library(RsimdDispatch)
 x <- as.raw(c(0, 1, 2, 3))
+y <- c(1, 2, 4, 8, 16)
 
 simd_set_backend("scalar")
 count_nonzero(x)
 #> [1] 3
+convolve3(y, c(1, 0, -1))
+#> [1]  -3  -6 -12
 
 candidate <- setdiff(simd_info()$available_backends, "scalar")[1]
 if (!is.na(candidate)) {
   simd_set_backend(candidate)
   count_nonzero(x)
+  convolve3(y, c(1, 0, -1))
 }
-#> [1] 3
+#> [1]  -3  -6 -12
 
 simd_set_backend("auto")
 simd_backend()
@@ -37,7 +41,11 @@ performs two checks for explicit choices:
 
 There is intentionally no unsafe force mode. If a backend is not
 available, the setter errors before any SIMD-only instruction can
-execute.
+execute. Backend selection is a process-global operation-table pointer:
+initialize or change it from ordinary R code, and do not call
+[`simd_set_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_set_backend.md)
+concurrently with active native worker threads that are executing
+dispatched kernels.
 
 ``` r
 
@@ -122,8 +130,39 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar      475.2µs     2085.
-#> 2 auto         55.4µs    17450.
+#> 1 scalar      466.1µs     2124.
+#> 2 auto         54.3µs    17576.
+```
+
+The same switch applies to the numeric three-tap convolution demo:
+
+``` r
+
+if (requireNamespace("bench", quietly = TRUE)) {
+  bench_y <- runif(2^18)
+  bench_k <- c(0.25, 0.5, 0.25)
+
+  conv_bench <- bench::mark(
+    scalar = {
+      simd_set_backend("scalar")
+      convolve3(bench_y, bench_k)
+    },
+    auto = {
+      simd_set_backend("auto")
+      convolve3(bench_y, bench_k)
+    },
+    iterations = 5,
+    check = TRUE
+  )
+
+  simd_set_backend("auto")
+  conv_bench[, c("expression", "median", "itr/sec", "n_itr")]
+}
+#> # A tibble: 2 × 3
+#>   expression   median `itr/sec`
+#>   <bch:expr> <bch:tm>     <dbl>
+#> 1 scalar       1.25ms      800.
+#> 2 auto         1.01ms      997.
 ```
 
 `"auto"` selects the best backend from the compiled and supported

@@ -8,6 +8,8 @@ provider. The usual workflow is:
     from the package root;
 2.  replace the demo
     [`count_nonzero()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/count_nonzero.md)
+    and
+    [`convolve3()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/convolve3.md)
     kernels with package-specific kernels;
 3.  keep CPU detection, dispatch, and R API files compiled by R’s
     ordinary `src/Makevars` path;
@@ -59,16 +61,19 @@ src/cpu_features.c
 src/simd_dispatch.c
 ```
 
-## Replace the demo kernel
+## Replace the demo kernels
 
-The demo kernel has this shape:
+The demo operations are collected in a backend operation table:
 
 ``` c
-typedef size_t (*rsd_count_nonzero_fn)(const uint8_t *x, size_t n);
+typedef struct RsdOps {
+    rsd_count_nonzero_fn count_nonzero;
+    rsd_convolve3_fn convolve3;
+} RsdOps;
 ```
 
-For a real package, replace the demo kernel signature with your own and
-keep the same structure:
+For a real package, replace the demo operation signatures with your own
+and keep the same structure:
 
 ``` text
 R API wrapper        ordinary src/Makevars compilation
