@@ -62,7 +62,7 @@
       <h1>Runtime Dispatch Semantics</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/v0.1.0/vignettes/runtime-dispatch-semantics.Rmd" class="external-link"><code>vignettes/runtime-dispatch-semantics.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/main/vignettes/runtime-dispatch-semantics.Rmd" class="external-link"><code>vignettes/runtime-dispatch-semantics.Rmd</code></a></small>
       <div class="d-none name"><code>runtime-dispatch-semantics.Rmd</code></div>
     </div>
 
@@ -89,7 +89,7 @@ pointer selects the active implementation.</p>
 <span></span>
 <span><span class="fu"><a href="../reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"auto"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/simd_backend.html">simd_backend</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "avx2"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "avx512"</span></span></code></pre></div>
 <p><code><a href="../reference/simd_set_backend.html">simd_set_backend()</a></code> performs two checks for explicit
 choices:</p>
 <ul>
@@ -106,10 +106,10 @@ execute.</p>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $cpu_supported_backends</span></span>
-<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"  </span></span>
+<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $available_backends</span></span>
-<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="simde-and-native-isa-compilation">SIMDe and native ISA compilation<a class="anchor" aria-label="anchor" href="#simde-and-native-isa-compilation"></a>
 </h2>
@@ -172,8 +172,8 @@ same-process backend switching through the public API.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      476.6µs     <span style="text-decoration: underline;">2</span>103.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         53.8µs    <span style="text-decoration: underline;">17</span>326.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        466µs     <span style="text-decoration: underline;">2</span>140.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto           41µs    <span style="text-decoration: underline;">17</span>218.</span></span></code></pre></div>
 <p><code>"auto"</code> selects the best backend from the compiled and
 supported intersection. The current ranking is:</p>
 <pre class="text"><code>avx512 &gt; avx2 &gt; sse41 &gt; sse2 &gt; neon &gt; scalar</code></pre>

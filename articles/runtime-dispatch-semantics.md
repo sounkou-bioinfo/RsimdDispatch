@@ -24,7 +24,7 @@ if (!is.na(candidate)) {
 
 simd_set_backend("auto")
 simd_backend()
-#> [1] "avx2"
+#> [1] "avx512"
 ```
 
 [`simd_set_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_set_backend.md)
@@ -45,10 +45,10 @@ simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $cpu_supported_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"  
+#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $available_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"
+#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 ```
 
 ## SIMDe and native ISA compilation
@@ -117,8 +117,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar      476.6µs     2103.
-#> 2 auto         53.8µs    17326.
+#> 1 scalar        466µs     2140.
+#> 2 auto           41µs    17218.
 ```
 
 `"auto"` selects the best backend from the compiled and supported
