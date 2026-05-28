@@ -1,4 +1,4 @@
-/* Compile this translation unit only with SSE2 enabled. */
+/* Staged by configure with SSE2 enabled. */
 
 #include <stddef.h>
 #include <stdint.h>

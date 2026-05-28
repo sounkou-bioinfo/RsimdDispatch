@@ -1,4 +1,4 @@
-/* Compile this translation unit only for NEON-capable targets. */
+/* Staged by configure for NEON-capable targets. */
 
 #include <stddef.h>
 #include <stdint.h>

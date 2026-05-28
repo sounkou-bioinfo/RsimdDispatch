@@ -5,9 +5,13 @@
 ^src/Makevars$
 ^src/Makevars\.win$
 ^src/config\.h$
+^src/.*\.o$
+^src/rsd-kernels$
+^src/rsd-kernels/.*$
 ^config\.log$
 ^Makefile$
 ^README\.Rmd$
+^README\.html$
 ^REVIEW\.md$
 ^cran-comments\.md$
 ^\.github$

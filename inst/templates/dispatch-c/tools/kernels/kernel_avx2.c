@@ -1,4 +1,4 @@
-/* Compile this translation unit only with AVX2 enabled. */
+/* Staged by configure with AVX2 enabled. */
 
 #include <stddef.h>
 #include <stdint.h>

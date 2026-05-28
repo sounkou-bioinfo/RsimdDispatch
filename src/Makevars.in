@@ -1,26 +1,11 @@
-OBJECTS = registration.o r_api.o cpu_features.o simd_dispatch.o kernel_scalar.o @RSD_OBJECTS@
+BASE_OBJECTS = registration.o r_api.o cpu_features.o simd_dispatch.o
+KERNEL_OBJECTS = @RSD_OBJECTS@
+OBJECTS = $(BASE_OBJECTS)
 
 PKG_CPPFLAGS = -I../inst/include
+PKG_LIBS = $(KERNEL_OBJECTS)
 
 all: $(SHLIB)
 
-kernel_scalar.o: kernel_scalar.c
-	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c $< -o $@
-
-kernel_sse2.o: kernel_sse2.c kernel_common.h
-	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) @RSD_SSE2_CFLAGS@ -c $< -o $@
-
-kernel_sse41.o: kernel_sse41.c kernel_common.h
-	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) @RSD_SSE41_CFLAGS@ -c $< -o $@
-
-kernel_avx2.o: kernel_avx2.c kernel_common.h
-	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) @RSD_AVX2_CFLAGS@ -c $< -o $@
-
-kernel_avx512.o: kernel_avx512.c kernel_common.h
-	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) @RSD_AVX512_CFLAGS@ -c $< -o $@
-
-kernel_neon.o: kernel_neon.c
-	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) @RSD_NEON_CFLAGS@ -c $< -o $@
-
 clean:
-	rm -f $(SHLIB) $(OBJECTS) symbols.rds
+	rm -f $(SHLIB) $(BASE_OBJECTS) symbols.rds

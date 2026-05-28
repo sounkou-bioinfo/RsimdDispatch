@@ -33,8 +33,10 @@ authors: update-authors
 check-template-sync:
 	@diff -rq src inst/templates/dispatch-c/src \
 		--exclude='*.o' --exclude='*.so' --exclude='*.dll' --exclude='*.dylib' \
-		--exclude='Makevars' --exclude='Makevars.win' --exclude='config.h' \
+		--exclude='Makevars' --exclude='Makevars.win' --exclude='config.h' --exclude='rsd-kernels' \
 		|| (echo 'ERROR: template/src drift detected' && exit 1)
+	@diff -rq tools/kernels inst/templates/dispatch-c/tools/kernels \
+		|| (echo 'ERROR: template kernel drift detected' && exit 1)
 	@for f in cleanup configure configure.win src/Makevars.in src/Makevars.win.in tools/configure-simd-dispatch.sh; do \
 		diff -q "$$f" "inst/templates/dispatch-c/$$f" >/dev/null || \
 			(echo "ERROR: template file drift detected: $$f" && exit 1); \
@@ -61,7 +63,7 @@ install3:
 	R CMD INSTALL .
 
 clean:
-	@rm -rf $(PKGNAME)_$(PKGVERS).tar.gz $(PKGNAME).Rcheck src/Makevars src/Makevars.win src/config.h config.log src/*.o src/*.so src/*.dll src/*.dylib
+	@rm -rf $(PKGNAME)_$(PKGVERS).tar.gz $(PKGNAME).Rcheck src/Makevars src/Makevars.win src/config.h src/rsd-kernels config.log src/*.o src/*.so src/*.dll src/*.dylib
 
 # Development targets
 dev-install:

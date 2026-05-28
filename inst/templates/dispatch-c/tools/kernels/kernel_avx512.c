@@ -1,4 +1,4 @@
-/* Compile this translation unit only with AVX-512F/BW/VL enabled. */
+/* Staged by configure with AVX-512F/BW/VL enabled. */
 
 #include <stddef.h>
 #include <stdint.h>

@@ -1,4 +1,4 @@
-/* Compile this translation unit only with SSE4.1 enabled. */
+/* Staged by configure with SSE4.1 enabled. */
 
 #include <stddef.h>
 #include <stdint.h>
