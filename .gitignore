@@ -14,3 +14,4 @@ src/*.so
 src/*.dll
 src/*.dylib
 config.log
+docs

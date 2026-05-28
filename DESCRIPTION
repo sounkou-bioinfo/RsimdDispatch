@@ -28,5 +28,5 @@ VignetteBuilder: knitr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-URL: https://github.com/sounkou-bioinfo/RsimdDispatch
+URL: https://github.com/sounkou-bioinfo/RsimdDispatch, https://sounkou-bioinfo.github.io/RsimdDispatch/
 BugReports: https://github.com/sounkou-bioinfo/RsimdDispatch/issues

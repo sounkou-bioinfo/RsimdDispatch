@@ -13,6 +13,15 @@ rd:
 readme:
 	R -e 'rmarkdown::render("README.Rmd", output_format = rmarkdown::github_document(), output_file = "README.md")'
 
+vig:
+	R -e "tools::buildVignettes(dir = '.')"
+
+vig-md:
+	R -e "for (f in Sys.glob('vignettes/*.Rmd')) { out <- sub('\\\\.Rmd$$', '.md', f); rmarkdown::render(f, output_format = rmarkdown::md_document(variant = 'gfm'), output_file = basename(out), output_dir = dirname(out), quiet = FALSE, envir = new.env(parent = globalenv())) }"
+
+pkgdown:
+	R -e 'pkgdown::build_site()'
+
 vendor:
 	Rscript tools/vendor-simde.R
 
@@ -58,4 +67,4 @@ test0:
 test: install
 	R -e "tinytest::test_package('$(PKGNAME)', testdir = 'inst/tinytest')"
 
-.PHONY: all rd readme vendor update-authors build check install_deps install install2 install3 clean dev-install test1 test2 test0 test
+.PHONY: all rd readme vig vig-md pkgdown vendor update-authors build check install_deps install install2 install3 clean dev-install test1 test2 test0 test

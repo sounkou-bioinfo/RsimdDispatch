@@ -1,0 +1,91 @@
+---
+title: "Using RsimdDispatch in Other Packages"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using RsimdDispatch in Other Packages}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Downstream packages use `RsimdDispatch` as a template and header provider. The
+usual workflow is:
+
+1. add `RsimdDispatch` to `LinkingTo`;
+2. copy the dispatch scaffold;
+3. replace the demo `count_nonzero()` kernels with package-specific kernels;
+4. keep CPU detection and dispatch files compiled with baseline flags;
+5. compile each ISA file with only the flags it needs.
+
+## DESCRIPTION
+
+Add the header provider:
+
+```text
+LinkingTo: RsimdDispatch
+```
+
+This makes bundled SIMDe headers available to C code:
+
+```c
+#include <simde/x86/avx2.h>
+#include <simde/arm/neon.h>
+```
+
+## Copy the scaffold
+
+From the downstream package root:
+
+```{r, eval = FALSE}
+RsimdDispatch::use_simd_dispatch(".")
+```
+
+The copied scaffold includes:
+
+```text
+configure
+configure.win
+cleanup
+tools/configure-simd-dispatch.sh
+src/Makevars.in
+src/cpu_features.c
+src/simd_dispatch.c
+src/kernel_scalar.c
+src/kernel_avx2.c
+src/kernel_avx512.c
+src/kernel_neon.c
+```
+
+## Replace the demo kernel
+
+The demo kernel has this shape:
+
+```c
+typedef size_t (*rsd_count_nonzero_fn)(const uint8_t *x, size_t n);
+```
+
+For a real package, rename the `rsd_` and `RC_` symbols and replace the kernel
+signature with your own. Keep the same structure:
+
+```text
+R API wrapper        baseline flags
+CPU feature checks   baseline flags
+dispatch table       baseline flags
+scalar kernel        baseline flags
+SSE/AVX/NEON files   per-file ISA flags
+```
+
+Do not put `-mavx2`, `-mavx512*`, or `-march=native` in global package flags.
+The dispatcher must remain safe on baseline CPUs.
+
+## Build
+
+The generated `configure` checks compiler support and writes `src/config.h` plus
+`src/Makevars`. Runtime CPU support is checked later by the installed package:
+
+```sh
+R CMD INSTALL .
+```

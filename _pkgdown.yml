@@ -1,0 +1,18 @@
+url: https://sounkou-bioinfo.github.io/RsimdDispatch/
+template:
+  bootstrap: 5
+
+articles:
+  - title: Getting Started
+    navbar: ~
+    contents:
+      - getting-started
+  - title: Package Templates
+    navbar: ~
+    contents:
+      - using-in-other-packages
+      - runtime-dispatch-semantics
+  - title: Maintainer Workflows
+    navbar: ~
+    contents:
+      - vendoring-simde

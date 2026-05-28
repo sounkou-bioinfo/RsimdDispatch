@@ -28,6 +28,28 @@ From GitHub:
 remotes::install_github("sounkou-bioinfo/RsimdDispatch")
 ```
 
+## Use in other packages
+
+Add `RsimdDispatch` as a header/template provider:
+
+``` text
+LinkingTo: RsimdDispatch
+```
+
+Then copy the C dispatch scaffold from your package root:
+
+``` r
+RsimdDispatch::use_simd_dispatch(".")
+```
+
+Replace the demo `count_nonzero()` kernels with your own
+scalar/SSE/AVX/NEON kernels. Keep the R API, CPU detection, and
+dispatcher at baseline compiler flags; only ISA-specific translation
+units get flags such as `-mavx2` or `-mavx512f -mavx512bw -mavx512vl`.
+
+See the package vignettes for the downstream-package workflow and
+dispatch semantics.
+
 ## API
 
 ``` r
@@ -131,26 +153,21 @@ knitr::kable(bench, digits = 3)
 
 | backend | median_ms | mb_per_second | iterations | speedup_vs_scalar |
 |:--------|----------:|--------------:|-----------:|------------------:|
-| scalar  |    11.251 |      4653.029 |         20 |             1.000 |
-| avx2    |     2.146 |     24305.763 |         20 |             5.224 |
+| scalar  |    11.623 |      4527.086 |         20 |             1.000 |
+| avx2    |     2.171 |     23935.872 |         20 |             5.287 |
 
-## Vendoring flow
+## Development
 
-SIMDe is vendored as full header tree under `inst/include/simde`.
-Downstream packages can use:
+### Updating bundled SIMDe
 
-``` text
-LinkingTo: RsimdDispatch
-```
+This is a maintainer workflow for `RsimdDispatch` itself, not something
+downstream packages need to run. Downstream packages use
+`LinkingTo: RsimdDispatch` and the copied dispatch template; they do not
+re-vendor SIMDe.
 
-and include headers such as:
-
-``` c
-#include <simde/x86/avx2.h>
-#include <simde/arm/neon.h>
-```
-
-Update the vendored checkout and generated notices with:
+`RsimdDispatch` vendors the full SIMDe header tree under
+`inst/include/simde`. To update the pinned checkout and regenerate
+bundled-code notices:
 
 ``` sh
 Rscript tools/vendor-simde.R
@@ -160,7 +177,7 @@ Rscript tools/update-authors.R
 Provenance lives in `inst/vendor/simde/VERSION`, `inst/AUTHORS`, and
 `inst/LICENCE.note`.
 
-## Development
+### Package maintenance
 
 The top-level Makefile uses GNU make.
 

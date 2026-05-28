@@ -7,3 +7,6 @@
 ^src/config\.h$
 ^config\.log$
 ^\.github$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
