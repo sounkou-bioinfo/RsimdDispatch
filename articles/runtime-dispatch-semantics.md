@@ -24,7 +24,7 @@ if (!is.na(candidate)) {
 
 simd_set_backend("auto")
 simd_backend()
-#> [1] "avx512"
+#> [1] "avx2"
 ```
 
 [`simd_set_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_set_backend.md)
@@ -45,10 +45,10 @@ simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $cpu_supported_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
+#> [1] "scalar" "sse2"   "sse41"  "avx2"  
 #> 
 #> $available_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
+#> [1] "scalar" "sse2"   "sse41"  "avx2"
 ```
 
 `"auto"` selects the best backend from the compiled and supported
