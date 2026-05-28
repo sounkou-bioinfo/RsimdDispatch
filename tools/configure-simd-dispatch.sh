@@ -1,0 +1,140 @@
+#!/bin/sh
+# Configure helper for R packages that compile several SIMD translation units
+# and select one at runtime. It checks compiler flag support, writes src/config.h,
+# and substitutes src/Makevars.in into src/Makevars or src/Makevars.win.
+
+set -eu
+
+ROOT=${RSD_PACKAGE_ROOT:-$(pwd)}
+MAKEVARS_IN=${RSD_MAKEVARS_IN:-src/Makevars.in}
+MAKEVARS_OUT=${RSD_MAKEVARS_OUT:-src/Makevars}
+CONFIG_OUT=${RSD_CONFIG_OUT:-src/config.h}
+
+MAKEVARS_IN_PATH="$ROOT/$MAKEVARS_IN"
+MAKEVARS_OUT_PATH="$ROOT/$MAKEVARS_OUT"
+CONFIG_OUT_PATH="$ROOT/$CONFIG_OUT"
+
+if [ ! -f "$MAKEVARS_IN_PATH" ]; then
+    echo "ERROR: cannot find Makevars template: $MAKEVARS_IN_PATH" >&2
+    exit 1
+fi
+
+if [ -z "${CC:-}" ]; then
+    if [ -n "${R_HOME:-}" ] && [ -x "${R_HOME}/bin/R" ]; then
+        CC=$("${R_HOME}/bin/R" CMD config CC)
+    else
+        CC=cc
+    fi
+fi
+
+if [ -z "${CFLAGS:-}" ] && [ -n "${R_HOME:-}" ] && [ -x "${R_HOME}/bin/R" ]; then
+    CFLAGS=$("${R_HOME}/bin/R" CMD config CFLAGS)
+fi
+if [ -z "${CPPFLAGS:-}" ] && [ -n "${R_HOME:-}" ] && [ -x "${R_HOME}/bin/R" ]; then
+    CPPFLAGS=$("${R_HOME}/bin/R" CMD config CPPFLAGS 2>/dev/null || true)
+fi
+
+SIMDE_INCLUDE="-I$ROOT/inst/include"
+TMPDIR=${TMPDIR:-/tmp}
+CONFDIR=$(mktemp -d "$TMPDIR/rsd-conf-XXXXXX")
+trap 'rm -rf "$CONFDIR"' EXIT INT HUP TERM
+
+check_cflag() {
+    flags=$1
+    cat > "$CONFDIR/conftest.c" <<'EOF'
+int main(void) { return 0; }
+EOF
+    # shellcheck disable=SC2086
+    ${CC} ${CPPFLAGS:-} ${CFLAGS:-} ${SIMDE_INCLUDE} ${flags} -c "$CONFDIR/conftest.c" -o "$CONFDIR/conftest.o" >/dev/null 2>&1
+}
+
+append_object() {
+    if [ -z "$RSD_OBJECTS" ]; then
+        RSD_OBJECTS=$1
+    else
+        RSD_OBJECTS="$RSD_OBJECTS $1"
+    fi
+}
+
+RSD_OBJECTS=""
+SSE2_CFLAGS=""
+SSE41_CFLAGS=""
+AVX2_CFLAGS=""
+AVX512_CFLAGS=""
+NEON_CFLAGS=""
+
+HAVE_SSE2=0
+HAVE_SSE41=0
+HAVE_AVX2=0
+HAVE_AVX512=0
+HAVE_NEON=0
+
+arch=$(uname -m 2>/dev/null || echo unknown)
+case "$arch" in
+    x86_64|amd64|i386|i686)
+        if check_cflag "-msse2"; then
+            append_object kernel_sse2.o
+            SSE2_CFLAGS="-msse2"
+            HAVE_SSE2=1
+        fi
+        if check_cflag "-msse4.1"; then
+            append_object kernel_sse41.o
+            SSE41_CFLAGS="-msse4.1"
+            HAVE_SSE41=1
+        fi
+        if check_cflag "-mavx2"; then
+            append_object kernel_avx2.o
+            AVX2_CFLAGS="-mavx2"
+            HAVE_AVX2=1
+        fi
+        if check_cflag "-mavx512f -mavx512bw -mavx512vl"; then
+            append_object kernel_avx512.o
+            AVX512_CFLAGS="-mavx512f -mavx512bw -mavx512vl"
+            HAVE_AVX512=1
+        fi
+        ;;
+    aarch64|arm64)
+        append_object kernel_neon.o
+        HAVE_NEON=1
+        ;;
+    armv7l|armv7*|arm*)
+        if check_cflag "-mfpu=neon"; then
+            append_object kernel_neon.o
+            NEON_CFLAGS="-mfpu=neon"
+            HAVE_NEON=1
+        fi
+        ;;
+esac
+
+SIMDE_COMMIT="unknown"
+if [ -f "$ROOT/inst/vendor/simde/VERSION" ]; then
+    SIMDE_COMMIT=$(sed -n 's/^Commit: //p' "$ROOT/inst/vendor/simde/VERSION" | head -n 1)
+fi
+[ -n "$SIMDE_COMMIT" ] || SIMDE_COMMIT="unknown"
+
+mkdir -p "$(dirname "$CONFIG_OUT_PATH")"
+cat > "$CONFIG_OUT_PATH" <<EOF
+#ifndef RSD_CONFIG_H
+#define RSD_CONFIG_H
+
+#define RSD_HAVE_SSE2 ${HAVE_SSE2}
+#define RSD_HAVE_SSE41 ${HAVE_SSE41}
+#define RSD_HAVE_AVX2 ${HAVE_AVX2}
+#define RSD_HAVE_AVX512 ${HAVE_AVX512}
+#define RSD_HAVE_NEON ${HAVE_NEON}
+#define RSD_SIMDE_COMMIT "${SIMDE_COMMIT}"
+
+#endif
+EOF
+
+sed \
+    -e "s|@RSD_OBJECTS@|${RSD_OBJECTS}|g" \
+    -e "s|@RSD_SSE2_CFLAGS@|${SSE2_CFLAGS}|g" \
+    -e "s|@RSD_SSE41_CFLAGS@|${SSE41_CFLAGS}|g" \
+    -e "s|@RSD_AVX2_CFLAGS@|${AVX2_CFLAGS}|g" \
+    -e "s|@RSD_AVX512_CFLAGS@|${AVX512_CFLAGS}|g" \
+    -e "s|@RSD_NEON_CFLAGS@|${NEON_CFLAGS}|g" \
+    "$MAKEVARS_IN_PATH" > "$MAKEVARS_OUT_PATH"
+
+echo "RsimdDispatch configure: objects='kernel_scalar.o ${RSD_OBJECTS}'"
+echo "RsimdDispatch configure: wrote ${CONFIG_OUT} and ${MAKEVARS_OUT}"

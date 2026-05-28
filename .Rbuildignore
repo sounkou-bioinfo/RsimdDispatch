@@ -1,0 +1,8 @@
+^\.git$
+^\.gitignore$
+^RsimdDispatch.*\.tar\.gz$
+^RsimdDispatch\.Rcheck$
+^src/Makevars$
+^src/Makevars\.win$
+^src/config\.h$
+^config\.log$

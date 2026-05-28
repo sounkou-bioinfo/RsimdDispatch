@@ -1,0 +1,6 @@
+Component: SIMDe
+Repository: https://github.com/simd-everywhere/simde
+Commit: f3e8262173b7089db9a9d57a9ecef8dd07ad9c97
+Date: 2026-05-10
+Vendored-include-tree: inst/include/simde
+License-file: inst/vendor/simde/COPYING

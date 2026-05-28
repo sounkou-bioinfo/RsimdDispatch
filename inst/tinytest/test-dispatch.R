@@ -1,0 +1,35 @@
+x <- as.raw(c(0, 1, 2, 0, 255, 0, 7))
+expect_equal(count_nonzero(x), 4)
+expect_equal(count_nonzero(raw()), 0)
+expect_error(count_nonzero(1:3), "raw vector")
+
+info <- simd_info()
+expect_true(is.list(info))
+expect_true(all(c(
+  "dispatch_mode", "requested_backend", "selected_backend",
+  "compiled_backends", "cpu_supported_backends", "available_backends",
+  "cpu_avx2", "target_arch", "simde_commit"
+) %in% names(info)))
+expect_true(grepl("scalar", info$compiled_backends, fixed = TRUE))
+expect_true(grepl("scalar", info$available_backends, fixed = TRUE))
+
+expect_silent(simd_set_backend("scalar"))
+expect_equal(simd_backend(), "scalar")
+expect_equal(count_nonzero(x), 4)
+
+available <- strsplit(simd_info()$available_backends, ",", fixed = TRUE)[[1]]
+for (backend in setdiff(available, "scalar")) {
+  expect_silent(simd_set_backend(backend))
+  expect_equal(simd_backend(), backend)
+  expect_equal(count_nonzero(x), 4)
+}
+
+expect_silent(simd_set_backend("auto"))
+expect_true(simd_backend() %in% available)
+
+if (!("avx512" %in% available)) {
+  expect_error(simd_set_backend("avx512"))
+}
+expect_error(simd_set_backend("nonsense"))
+
+expect_true(dir.exists(simd_dispatch_template_path()))
