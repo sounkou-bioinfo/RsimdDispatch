@@ -118,8 +118,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar      474.2µs     2177.
-#> 2 auto         57.1µs    16265.
+#> 1 scalar      341.8µs     2880.
+#> 2 auto         51.4µs    16784.
 ```
 
 `"auto"` selects the best backend from the compiled and supported
