@@ -25,7 +25,7 @@ jobs:
       - name: Install OS dependencies
         run: |
           dnf install -y --setopt=install_weak_deps=False \
-            diffutils make pandoc qpdf texlive-scheme-medium
+            diffutils libuv-devel make pandoc qpdf texlive-scheme-medium
 
       - name: Cache R library
         uses: actions/cache@v4
@@ -45,6 +45,8 @@ jobs:
               rownames(installed.packages(lib.loc = "/root/R-libs")))
             if (length(need)) install.packages(need, lib = "/root/R-libs",
               repos = "https://cloud.r-project.org")
+            missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
+            if (length(missing)) stop("missing package dependencies: ", paste(missing, collapse = ", "))
           '
 
       - name: Check template sync
