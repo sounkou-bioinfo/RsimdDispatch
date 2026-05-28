@@ -15,3 +15,5 @@ src/*.dll
 src/*.dylib
 config.log
 docs
+
+vignettes/*.html
