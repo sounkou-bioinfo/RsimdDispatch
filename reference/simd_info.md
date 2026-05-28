@@ -25,6 +25,6 @@ names(simd_info())
 #>  [4] "compiled_backends"      "cpu_supported_backends" "available_backends"    
 #>  [7] "simde_native_backends"  "cpu_sse2"               "cpu_sse41"             
 #> [10] "cpu_avx2"               "cpu_avx512"             "cpu_neon"              
-#> [13] "target_arch"            "target_os"              "simde_version"         
-#> [16] "simde_commit"          
+#> [13] "cpu_wasm_simd128"       "target_arch"            "target_os"             
+#> [16] "simde_version"          "simde_commit"          
 ```

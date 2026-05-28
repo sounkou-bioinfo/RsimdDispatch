@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">RsimdDispatch</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,7 @@
       <h1>Using RsimdDispatch in Other Packages</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/v0.1.1/vignettes/using-in-other-packages.Rmd" class="external-link"><code>vignettes/using-in-other-packages.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/main/vignettes/using-in-other-packages.Rmd" class="external-link"><code>vignettes/using-in-other-packages.Rmd</code></a></small>
       <div class="d-none name"><code>using-in-other-packages.Rmd</code></div>
     </div>
 
@@ -109,6 +109,7 @@ performs the important substitutions, including <code>@useDynLib</code>,
 <span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_avx2.c</span></span>
 <span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_avx512.c</span></span>
 <span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_neon.c</span></span>
+<span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_wasm_simd128.c</span></span>
 <span><span class="va">src</span><span class="op">/</span><span class="va">Makevars.in</span></span>
 <span><span class="va">src</span><span class="op">/</span><span class="va">Makevars.win.in</span></span>
 <span><span class="va">src</span><span class="op">/</span><span class="va">cpu_features.c</span></span>
@@ -125,11 +126,11 @@ and keep the same structure:</p>
 CPU feature checks   ordinary src/Makevars compilation
 dispatch table       ordinary src/Makevars compilation
 scalar kernel        staged by configure under src/rsd-kernels/
-SSE/AVX/NEON files   staged by configure as optional objects under src/rsd-kernels/</code></pre>
-<p>Do not put <code>-mavx2</code>, <code>-mavx512*</code>, or
-<code>-march=native</code> in global package flags. The configure helper
-keeps ISA flags local to optional staged kernel objects, and the
-dispatcher remains safe on baseline CPUs.</p>
+SSE/AVX/NEON/wasm files   staged by configure as optional objects under src/rsd-kernels/</code></pre>
+<p>Do not put <code>-mavx2</code>, <code>-mavx512*</code>,
+<code>-msimd128</code>, or <code>-march=native</code> in global package
+flags. The configure helper keeps ISA flags local to optional staged
+kernel objects, and the dispatcher remains safe on baseline CPUs.</p>
 </div>
 <div class="section level2">
 <h2 id="build">Build<a class="anchor" aria-label="anchor" href="#build"></a>

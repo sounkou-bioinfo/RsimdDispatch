@@ -32,7 +32,8 @@ performs two checks for explicit choices:
 
 - the backend was compiled into this package build;
 - the current CPU/runtime supports the backend, including OS support for
-  AVX and AVX-512 register state on x86.
+  AVX and AVX-512 register state on x86 and module-level SIMD128 support
+  on WebAssembly.
 
 There is intentionally no unsafe force mode. If a backend is not
 available, the setter errors before any SIMD-only instruction can
@@ -59,15 +60,18 @@ configuration, each optional backend is accepted only if the compiler
 flag and SIMDe header together define the expected native SIMDe macro.
 For example, the AVX2 probe compiles with `-mavx2`, includes
 `<simde/x86/avx2.h>`, and requires `SIMDE_X86_AVX2_NATIVE`. AVX-512
-similarly requires the native F, BW, and VL macros.
+similarly requires the native F, BW, and VL macros. On Emscripten/webR,
+the WebAssembly SIMD128 probe compiles with `-msimd128`, includes
+`<simde/wasm/simd128.h>`, and requires `SIMDE_WASM_SIMD128_NATIVE`.
 
-Those flags make the compiler define target macros such as `__AVX2__` or
-`__AVX512BW__`. SIMDe maps those to `SIMDE_ARCH_*` and then to
-`SIMDE_*_NATIVE`; the SIMDe function bodies use native intrinsics under
-those macros and fall back only when the native macro is absent. The
-generated `src/Makevars` links the staged objects into the package
-shared library while the dispatcher, CPU feature detection, and R API
-are compiled by R’s ordinary `src/Makevars` path.
+Those flags make the compiler define target macros such as `__AVX2__`,
+`__AVX512BW__`, or `__wasm_simd128__`. SIMDe maps those to
+`SIMDE_ARCH_*` and then to `SIMDE_*_NATIVE`; the SIMDe function bodies
+use native intrinsics under those macros and fall back only when the
+native macro is absent. The generated `src/Makevars` links the staged
+objects into the package shared library while the dispatcher, CPU
+feature detection, and R API are compiled by R’s ordinary `src/Makevars`
+path.
 
 The installed diagnostics report the backends that passed the
 SIMDe-native compile probe:
@@ -118,16 +122,17 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar        471µs     2114.
-#> 2 auto         55.6µs    18691.
+#> 1 scalar      475.2µs     2085.
+#> 2 auto         55.4µs    17450.
 ```
 
 `"auto"` selects the best backend from the compiled and supported
 intersection. The current ranking is:
 
 ``` text
-avx512 > avx2 > sse41 > sse2 > neon > scalar
+avx512 > avx2 > sse41 > sse2 > neon > wasm_simd128 > scalar
 ```
 
-Architecture guards mean x86 systems normally consider x86 backends and
-ARM systems normally consider NEON. Scalar is always available.
+Architecture guards mean x86 systems normally consider x86 backends, ARM
+systems normally consider NEON, and webR/Emscripten builds can consider
+WebAssembly SIMD128. Scalar is always available.

@@ -52,6 +52,7 @@ tools/kernels/kernel_sse41.c
 tools/kernels/kernel_avx2.c
 tools/kernels/kernel_avx512.c
 tools/kernels/kernel_neon.c
+tools/kernels/kernel_wasm_simd128.c
 src/Makevars.in
 src/Makevars.win.in
 src/cpu_features.c
@@ -74,12 +75,13 @@ R API wrapper        ordinary src/Makevars compilation
 CPU feature checks   ordinary src/Makevars compilation
 dispatch table       ordinary src/Makevars compilation
 scalar kernel        staged by configure under src/rsd-kernels/
-SSE/AVX/NEON files   staged by configure as optional objects under src/rsd-kernels/
+SSE/AVX/NEON/wasm files   staged by configure as optional objects under src/rsd-kernels/
 ```
 
-Do not put `-mavx2`, `-mavx512*`, or `-march=native` in global package
-flags. The configure helper keeps ISA flags local to optional staged
-kernel objects, and the dispatcher remains safe on baseline CPUs.
+Do not put `-mavx2`, `-mavx512*`, `-msimd128`, or `-march=native` in
+global package flags. The configure helper keeps ISA flags local to
+optional staged kernel objects, and the dispatcher remains safe on
+baseline CPUs.
 
 ## Build
 

@@ -10,7 +10,8 @@ possible.
 
 ``` r
 simd_set_backend(
-  backend = c("auto", "scalar", "sse2", "sse41", "avx2", "avx512", "neon")
+  backend = c("auto", "scalar", "sse2", "sse41", "avx2", "avx512", "neon",
+    "wasm_simd128")
 )
 ```
 
@@ -19,7 +20,7 @@ simd_set_backend(
 - backend:
 
   One of `"auto"`, `"scalar"`, `"sse2"`, `"sse41"`, `"avx2"`,
-  `"avx512"`, or `"neon"`.
+  `"avx512"`, `"neon"`, or `"wasm_simd128"`.
 
 ## Value
 

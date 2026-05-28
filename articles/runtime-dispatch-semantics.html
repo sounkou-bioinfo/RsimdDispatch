@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">RsimdDispatch</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,7 @@
       <h1>Runtime Dispatch Semantics</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/v0.1.1/vignettes/runtime-dispatch-semantics.Rmd" class="external-link"><code>vignettes/runtime-dispatch-semantics.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/main/vignettes/runtime-dispatch-semantics.Rmd" class="external-link"><code>vignettes/runtime-dispatch-semantics.Rmd</code></a></small>
       <div class="d-none name"><code>runtime-dispatch-semantics.Rmd</code></div>
     </div>
 
@@ -95,7 +95,8 @@ choices:</p>
 <ul>
 <li>the backend was compiled into this package build;</li>
 <li>the current CPU/runtime supports the backend, including OS support
-for AVX and AVX-512 register state on x86.</li>
+for AVX and AVX-512 register state on x86 and module-level SIMD128
+support on WebAssembly.</li>
 </ul>
 <p>There is intentionally no unsafe force mode. If a backend is not
 available, the setter errors before any SIMD-only instruction can
@@ -120,9 +121,13 @@ flag and SIMDe header together define the expected native SIMDe macro.
 For example, the AVX2 probe compiles with <code>-mavx2</code>, includes
 <code>&lt;simde/x86/avx2.h&gt;</code>, and requires
 <code>SIMDE_X86_AVX2_NATIVE</code>. AVX-512 similarly requires the
-native F, BW, and VL macros.</p>
+native F, BW, and VL macros. On Emscripten/webR, the WebAssembly SIMD128
+probe compiles with <code>-msimd128</code>, includes
+<code>&lt;simde/wasm/simd128.h&gt;</code>, and requires
+<code>SIMDE_WASM_SIMD128_NATIVE</code>.</p>
 <p>Those flags make the compiler define target macros such as
-<code>__AVX2__</code> or <code>__AVX512BW__</code>. SIMDe maps those to
+<code>__AVX2__</code>, <code>__AVX512BW__</code>, or
+<code>__wasm_simd128__</code>. SIMDe maps those to
 <code>SIMDE_ARCH_*</code> and then to <code>SIMDE_*_NATIVE</code>; the
 SIMDe function bodies use native intrinsics under those macros and fall
 back only when the native macro is absent. The generated
@@ -174,13 +179,14 @@ same-process backend switching through the public API.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        471µs     <span style="text-decoration: underline;">2</span>114.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         55.6µs    <span style="text-decoration: underline;">18</span>691.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      475.2µs     <span style="text-decoration: underline;">2</span>085.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         55.4µs    <span style="text-decoration: underline;">17</span>450.</span></span></code></pre></div>
 <p><code>"auto"</code> selects the best backend from the compiled and
 supported intersection. The current ranking is:</p>
-<pre class="text"><code>avx512 &gt; avx2 &gt; sse41 &gt; sse2 &gt; neon &gt; scalar</code></pre>
-<p>Architecture guards mean x86 systems normally consider x86 backends
-and ARM systems normally consider NEON. Scalar is always available.</p>
+<pre class="text"><code>avx512 &gt; avx2 &gt; sse41 &gt; sse2 &gt; neon &gt; wasm_simd128 &gt; scalar</code></pre>
+<p>Architecture guards mean x86 systems normally consider x86 backends,
+ARM systems normally consider NEON, and webR/Emscripten builds can
+consider WebAssembly SIMD128. Scalar is always available.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

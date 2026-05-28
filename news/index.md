@@ -1,5 +1,18 @@
 # Changelog
 
+## RsimdDispatch 0.1.2
+
+- Add WebAssembly SIMD128 (`wasm_simd128`) staged-kernel support for
+  Emscripten/webR builds using SIMDe’s `<simde/wasm/simd128.h>` backend
+  and `SIMDE_WASM_SIMD128_NATIVE` configure probing.
+- Extend
+  [`simd_info()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_info.md)
+  diagnostics with `cpu_wasm_simd128` and include `wasm_simd128` in
+  compiled, available, and SIMDe-native backend sets when built by a
+  SIMD128-capable WebAssembly toolchain.
+- Add webR check tooling based on the local `rwasm::build()` + Node
+  `webr` workflow used by related packages.
+
 ## RsimdDispatch 0.1.1 (2026-05-28)
 
 - Stage scalar and optional SIMD kernel objects during `configure`, then
