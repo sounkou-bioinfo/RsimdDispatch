@@ -35,6 +35,10 @@ check-template-sync:
 		--exclude='*.o' --exclude='*.so' --exclude='*.dll' --exclude='*.dylib' \
 		--exclude='Makevars' --exclude='Makevars.win' --exclude='config.h' \
 		|| (echo 'ERROR: template/src drift detected' && exit 1)
+	@for f in cleanup configure configure.win src/Makevars.in src/Makevars.win.in tools/configure-simd-dispatch.sh; do \
+		diff -q "$$f" "inst/templates/dispatch-c/$$f" >/dev/null || \
+			(echo "ERROR: template file drift detected: $$f" && exit 1); \
+	done
 
 build:
 	R CMD build .
