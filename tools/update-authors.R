@@ -23,6 +23,7 @@ read_field <- function(field) {
   if (is.na(value)) "unknown" else value
 }
 
+simde_version <- read_field("Version")
 simde_commit <- read_field("Commit")
 simde_url <- read_field("Repository")
 simde_date <- read_field("Date")
@@ -53,6 +54,7 @@ writeLines(
     "RsimdDispatch bundles the header-only SIMDe library in inst/include/simde.",
     "",
     sprintf("Upstream repository: %s", simde_url),
+    sprintf("Vendored version: %s", simde_version),
     sprintf("Vendored commit: %s", simde_commit),
     sprintf("Vendored commit date: %s", simde_date),
     "",
@@ -75,6 +77,7 @@ writeLines(
     "Bundled component: SIMDe",
     sprintf("Upstream repository: %s", simde_url),
     "Vendored include tree: inst/include/simde",
+    sprintf("Vendored version: %s", simde_version),
     sprintf("Vendored commit: %s", simde_commit),
     sprintf("Vendored commit date: %s", simde_date),
     "",

@@ -8,6 +8,9 @@
 #include "cpu_features.h"
 #include "simd_dispatch.h"
 
+#ifndef RSD_SIMDE_VERSION
+#define RSD_SIMDE_VERSION "unknown"
+#endif
 #ifndef RSD_SIMDE_COMMIT
 #define RSD_SIMDE_COMMIT "unknown"
 #endif
@@ -85,6 +88,7 @@ SEXP RC_simd_info(void) {
         "cpu_neon",
         "target_arch",
         "target_os",
+        "simde_version",
         "simde_commit"
     };
     const int n = (int)(sizeof(names) / sizeof(names[0]));
@@ -107,7 +111,8 @@ SEXP RC_simd_info(void) {
     SET_VECTOR_ELT(out, 10, Rf_ScalarLogical(rsd_cpu_has_neon() != 0));
     SET_VECTOR_ELT(out, 11, Rf_mkString(rsd_target_arch()));
     SET_VECTOR_ELT(out, 12, Rf_mkString(rsd_target_os()));
-    SET_VECTOR_ELT(out, 13, Rf_mkString(RSD_SIMDE_COMMIT));
+    SET_VECTOR_ELT(out, 13, Rf_mkString(RSD_SIMDE_VERSION));
+    SET_VECTOR_ELT(out, 14, Rf_mkString(RSD_SIMDE_COMMIT));
 
     for (int i = 0; i < n; ++i) {
         SET_STRING_ELT(out_names, i, Rf_mkChar(names[i]));

@@ -16,10 +16,11 @@ should normally use `LinkingTo: RsimdDispatch` and the copied dispatch template;
 they do not need to run the vendoring scripts.
 
 `RsimdDispatch` vendors the full header-only SIMDe include tree in
-`inst/include/simde`. The pinned upstream checkout is recorded in:
+`inst/include/simde`. The pinned upstream checkout is reported by
+`simde_info()` and recorded in `inst/vendor/simde/VERSION`:
 
 ```{r}
-readLines(system.file("vendor", "simde", "VERSION", package = "RsimdDispatch"))
+RsimdDispatch::simde_info()[c("version", "commit", "date", "repository")]
 ```
 
 The update flow is explicit:

@@ -74,6 +74,12 @@ simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends
 #> 
 #> $available_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"
+simde_info()[c("version", "commit")]
+#> $version
+#> [1] "0.8.4"
+#> 
+#> $commit
+#> [1] "f3e8262173b7089db9a9d57a9ecef8dd07ad9c97"
 simd_dispatch_template_path()
 #> [1] "/usr/local/lib/R/site-library/RsimdDispatch/templates/dispatch-c"
 ```
@@ -150,8 +156,8 @@ knitr::kable(bench, digits = 3)
 
 | backend | median_ms | mb_per_second | iterations | speedup_vs_scalar |
 |:--------|----------:|--------------:|-----------:|------------------:|
-| scalar  |    11.422 |      4595.952 |         20 |             1.000 |
-| avx2    |     2.000 |     26028.356 |         20 |             5.663 |
+| scalar  |    11.334 |      4600.371 |         20 |             1.000 |
+| avx2    |     1.914 |     26794.354 |         20 |             5.824 |
 
 ## Development
 

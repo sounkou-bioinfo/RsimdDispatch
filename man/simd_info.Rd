@@ -12,8 +12,9 @@ entries are character vectors, not comma-separated strings.
 }
 \description{
 Returns the requested backend, selected backend, compiled backends,
-CPU-supported backends, and target information. Calling this initializes the
-lazy auto-dispatch selection if it has not already been initialized.
+CPU-supported backends, target information, and SIMDe provenance compiled
+into the shared library. Calling this initializes the lazy auto-dispatch
+selection if it has not already been initialized.
 }
 \examples{
 names(simd_info())

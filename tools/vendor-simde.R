@@ -41,6 +41,27 @@ if (!identical(actual[[1]], commit)) {
   stop("unexpected SIMDe commit: ", actual[[1]], call. = FALSE)
 }
 
+read_simde_version <- function(header) {
+  lines <- readLines(header, warn = FALSE)
+  read_macro <- function(name) {
+    pattern <- paste0("^#define[[:space:]]+", name, "[[:space:]]+([0-9]+)\\b")
+    hit <- grep(pattern, lines, value = TRUE)
+    if (!length(hit)) {
+      return(NA_character_)
+    }
+    sub(pattern, "\\1", hit[[1L]])
+  }
+  parts <- vapply(
+    c("SIMDE_VERSION_MAJOR", "SIMDE_VERSION_MINOR", "SIMDE_VERSION_MICRO"),
+    read_macro,
+    character(1L)
+  )
+  if (any(is.na(parts)) || any(!nzchar(parts))) {
+    return("unknown")
+  }
+  paste(parts, collapse = ".")
+}
+
 include_dest <- file.path(root, "inst", "include", "simde")
 vendor_dest <- file.path(root, "inst", "vendor", "simde")
 unlink(include_dest, recursive = TRUE, force = TRUE)
@@ -61,9 +82,12 @@ for (file in c("COPYING", "README.md", ".all-contributorsrc")) {
   }
 }
 
+simde_version <- read_simde_version(file.path(include_dest, "simde-common.h"))
+
 writeLines(
   c(
     "Component: SIMDe",
+    paste0("Version: ", simde_version),
     paste0("Repository: ", sub("\\.git$", "", repo)),
     paste0("Commit: ", commit),
     paste0("Date: ", commit_date),

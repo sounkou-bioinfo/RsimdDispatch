@@ -5,6 +5,7 @@ RsimdDispatch bundles SIMDe as a vendored, header-only third-party component.
 Bundled component: SIMDe
 Upstream repository: https://github.com/simd-everywhere/simde
 Vendored include tree: inst/include/simde
+Vendored version: 0.8.4
 Vendored commit: f3e8262173b7089db9a9d57a9ecef8dd07ad9c97
 Vendored commit date: 2026-05-10
 
