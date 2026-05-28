@@ -62,7 +62,7 @@
       <h1>Runtime Dispatch Semantics</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/main/vignettes/runtime-dispatch-semantics.Rmd" class="external-link"><code>vignettes/runtime-dispatch-semantics.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/v0.1.1/vignettes/runtime-dispatch-semantics.Rmd" class="external-link"><code>vignettes/runtime-dispatch-semantics.Rmd</code></a></small>
       <div class="d-none name"><code>runtime-dispatch-semantics.Rmd</code></div>
     </div>
 
@@ -174,8 +174,8 @@ same-process backend switching through the public API.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      341.8µs     <span style="text-decoration: underline;">2</span>880.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         51.4µs    <span style="text-decoration: underline;">16</span>784.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        471µs     <span style="text-decoration: underline;">2</span>114.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         55.6µs    <span style="text-decoration: underline;">18</span>691.</span></span></code></pre></div>
 <p><code>"auto"</code> selects the best backend from the compiled and
 supported intersection. The current ranking is:</p>
 <pre class="text"><code>avx512 &gt; avx2 &gt; sse41 &gt; sse2 &gt; neon &gt; scalar</code></pre>

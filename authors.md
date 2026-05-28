@@ -13,7 +13,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/sounkou-bioinfo/RsimdDispatch/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/sounkou-bioinfo/RsimdDispatch/blob/v0.1.1/DESCRIPTION)
 
 Toure S (2026). *RsimdDispatch: Runtime 'SIMD' Dispatch Templates for
 'C' Code in 'R' Packages*. R package version 0.1.1,
