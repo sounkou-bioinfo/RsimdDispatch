@@ -10,25 +10,26 @@ This means backend switching is safe in one R process:
 
 library(RsimdDispatch)
 x <- as.raw(c(0, 1, 2, 3))
-y <- c(1, 2, 4, 8, 16)
+a <- c(1, 2, 3)
+b <- c(10, 100)
 
 simd_set_backend("scalar")
 count_nonzero(x)
 #> [1] 3
-convolve3(y, c(1, 0, -1))
-#> [1]  -3  -6 -12
+convolve1d(a, b)
+#> [1]  10 120 230 300
 
 candidate <- setdiff(simd_info()$available_backends, "scalar")[1]
 if (!is.na(candidate)) {
   simd_set_backend(candidate)
   count_nonzero(x)
-  convolve3(y, c(1, 0, -1))
+  convolve1d(a, b)
 }
-#> [1]  -3  -6 -12
+#> [1]  10 120 230 300
 
 simd_set_backend("auto")
 simd_backend()
-#> [1] "avx2"
+#> [1] "avx512"
 ```
 
 [`simd_set_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_set_backend.md)
@@ -54,10 +55,10 @@ simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $cpu_supported_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"  
+#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $available_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"
+#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 ```
 
 ## SIMDe and native ISA compilation
@@ -130,26 +131,26 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar      466.1µs     2124.
-#> 2 auto         54.3µs    17576.
+#> 1 scalar      367.3µs     2771.
+#> 2 auto         26.8µs    31847.
 ```
 
-The same switch applies to the numeric three-tap convolution demo:
+The same switch applies to the full one-dimensional convolution demo:
 
 ``` r
 
 if (requireNamespace("bench", quietly = TRUE)) {
-  bench_y <- runif(2^18)
-  bench_k <- c(0.25, 0.5, 0.25)
+  bench_a <- runif(10000)
+  bench_b <- runif(100)
 
   conv_bench <- bench::mark(
     scalar = {
       simd_set_backend("scalar")
-      convolve3(bench_y, bench_k)
+      convolve1d(bench_a, bench_b)
     },
     auto = {
       simd_set_backend("auto")
-      convolve3(bench_y, bench_k)
+      convolve1d(bench_a, bench_b)
     },
     iterations = 5,
     check = TRUE
@@ -161,8 +162,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar       1.25ms      800.
-#> 2 auto         1.01ms      997.
+#> 1 scalar        330µs     3028.
+#> 2 auto          181µs     5530.
 ```
 
 `"auto"` selects the best backend from the compiled and supported

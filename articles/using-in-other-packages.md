@@ -9,7 +9,7 @@ provider. The usual workflow is:
 2.  replace the demo
     [`count_nonzero()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/count_nonzero.md)
     and
-    [`convolve3()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/convolve3.md)
+    [`convolve1d()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/convolve1d.md)
     kernels with package-specific kernels;
 3.  keep CPU detection, dispatch, and R API files compiled by R’s
     ordinary `src/Makevars` path;
@@ -68,7 +68,7 @@ The demo operations are collected in a backend operation table:
 ``` c
 typedef struct RsdOps {
     rsd_count_nonzero_fn count_nonzero;
-    rsd_convolve3_fn convolve3;
+    rsd_convolve1d_fn convolve1d;
 } RsdOps;
 ```
 

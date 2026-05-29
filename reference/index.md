@@ -2,8 +2,8 @@
 
 ## All functions
 
-- [`convolve3()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/convolve3.md)
-  : Three-tap numeric convolution with the selected SIMD backend
+- [`convolve1d()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/convolve1d.md)
+  : Full one-dimensional convolution with the selected SIMD backend
 - [`count_nonzero()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/count_nonzero.md)
   : Count non-zero bytes with the selected SIMD backend
 - [`simd_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_backend.md)

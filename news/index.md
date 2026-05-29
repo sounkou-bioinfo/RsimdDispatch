@@ -19,8 +19,9 @@
   runtime behavior in CI, and remove legacy comma-separated backend-list
   C helpers.
 - Add a dispatched
-  [`convolve3()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/convolve3.md)
-  numeric three-tap convolution demo and include it in tests,
+  [`convolve1d()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/convolve1d.md)
+  full one-dimensional convolution demo, using SIMDe inner-loop
+  multiply-add kernels for numeric vectors, and include it in tests,
   documentation, webR checks, and evaluated benchmarks.
 
 ## RsimdDispatch 0.1.1 (2026-05-28)

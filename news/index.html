@@ -46,7 +46,7 @@
 <li>Add webR check tooling based on the local <code>rwasm::build()</code> + Node <code>webr</code> workflow used by related packages.</li>
 <li>Generate explicit SIMDe include flags in <code>src/Makevars</code> and quote configure include paths so copied templates are more robust in downstream libraries.</li>
 <li>Eagerly initialize dispatch at package load, exercise copied-template runtime behavior in CI, and remove legacy comma-separated backend-list C helpers.</li>
-<li>Add a dispatched <code><a href="../reference/convolve3.html">convolve3()</a></code> numeric three-tap convolution demo and include it in tests, documentation, webR checks, and evaluated benchmarks.</li>
+<li>Add a dispatched <code><a href="../reference/convolve1d.html">convolve1d()</a></code> full one-dimensional convolution demo, using SIMDe inner-loop multiply-add kernels for numeric vectors, and include it in tests, documentation, webR checks, and evaluated benchmarks.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.1" id="rsimddispatch-011-2026-05-28">RsimdDispatch 0.1.1 (2026-05-28)<a class="anchor" aria-label="anchor" href="#rsimddispatch-011-2026-05-28"></a></h2>
