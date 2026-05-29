@@ -117,6 +117,21 @@ families, and a `find_kernel(kind, dtype, capabilities, ...)` API. That would le
 many wrappers share one lookup path while keeping this package's R-friendly
 configure-time staged object model.
 
+If this route is taken, the catalog should not stop at native dispatch metadata.
+The same source of truth should describe enough of each public operation to
+generate:
+
+* C operation/dtype/capability declarations and finder tables;
+* punned native signatures and typed adapter declarations;
+* `.Call` entry points and their native registration entries;
+* ordinary R wrappers, including argument names and basic coercion policy;
+* roxygen documentation skeletons and scalar-equivalence test skeletons.
+
+The actual optimized kernels can remain hand-written per backend, because that
+is where algorithmic care belongs. The repetitive API plumbing should be
+generated; otherwise the error surface is only moved from backend selection into
+duplicated `.Call` and R-wrapper glue.
+
 ## Build
 
 The generated `configure` checks compiler support, writes `src/config.h` plus

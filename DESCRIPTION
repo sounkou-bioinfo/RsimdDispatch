@@ -1,6 +1,6 @@
 Package: RsimdDispatch
 Title: Runtime 'SIMD' Dispatch Templates for 'C' Code in 'R' Packages
-Version: 0.1.2
+Version: 0.1.2.9000
 Authors@R: c(
     person(given = "Sounkou Mahamane", family = "Toure",
       email = "sounkoutoure@gmail.com", role = c("aut", "cre")),
