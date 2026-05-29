@@ -12,18 +12,15 @@ possible.
 ## Usage
 
 ``` r
-simd_set_backend(
-  backend = c("auto", "scalar", "sse2", "sse41", "avx2", "avx512", "neon",
-    "wasm_simd128")
-)
+simd_set_backend(backend = "auto")
 ```
 
 ## Arguments
 
 - backend:
 
-  One of `"auto"`, `"scalar"`, `"sse2"`, `"sse41"`, `"avx2"`,
-  `"avx512"`, `"neon"`, or `"wasm_simd128"`.
+  Character scalar. Use `"auto"` to select the best available backend,
+  or one of `simd_info()$available_backends` for an explicit choice.
 
 ## Value
 

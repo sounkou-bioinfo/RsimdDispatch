@@ -141,26 +141,31 @@ kernel objects, and the dispatcher remains safe on baseline CPUs.</p>
 <p>The staged build model already scales across operations: if you add
 another function to each existing <code>tools/kernels/kernel_*.c</code>
 file, the same staged object for that backend contains the new
-implementation. Adding a small number of operations now mainly means
-updating the dispatch surface:</p>
+implementation. The dispatch surface is now macro-assisted, so adding a
+small number of operations mainly means:</p>
 <ol style="list-style-type: decimal">
-<li>add a function-pointer typedef and field to <code>RsdOps</code> in
-<code>src/simd_dispatch.h</code>;</li>
+<li>add one <code>RSD_DISPATCH_OPS()</code> entry in
+<code>src/simd_dispatch.h</code> with the operation name, return type,
+argument list, call argument list, and optional <code>return</code>
+token;</li>
 <li>add one implementation per backend file under
-<code>tools/kernels/</code>;</li>
-<li>add the corresponding extern declarations and backend table entries
-in <code>src/simd_dispatch.c</code>;</li>
-<li>add the small public dispatched C wrapper in
-<code>src/simd_dispatch.c</code>;</li>
+<code>tools/kernels/</code>, following the naming convention
+<code>rsd_&lt;operation&gt;_&lt;backend&gt;()</code>;</li>
 <li>add the <code>.Call</code> wrapper in <code>src/r_api.c</code>;</li>
 <li>add the routine once to <code>RSD_CALL_METHODS()</code> in
 <code>src/registration.c</code>;</li>
 <li>add the R wrapper, tests, and documentation.</li>
 </ol>
-<p>That is easy for a handful of operations and avoids duplicating
-backend-selection logic. For a large operation catalog, the next step
-should be a NumKong-style layer: operation enum, dtype enum,
-backend/capability bitmask, punned signature families, and a
+<p>The <code>RSD_DISPATCH_OPS()</code> entry generates the typedef,
+<code>RsdOps</code> field, public C wrapper declaration, backend extern
+declarations, backend table initializers, and dispatched C wrapper.
+Backend metadata is also table-driven, so diagnostics and auto-selection
+do not need a second hand-maintained backend-name list. This is easy for
+a handful of operations and avoids duplicating backend-selection
+logic.</p>
+<p>For a large operation catalog, the next step should be a
+NumKong-style layer: operation enum, dtype enum, backend/capability
+bitmask, punned signature families, and a
 <code>find_kernel(kind, dtype, capabilities, ...)</code> API. That would
 let many wrappers share one lookup path while keeping this package’s
 R-friendly configure-time staged object model.</p>

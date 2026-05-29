@@ -19,9 +19,12 @@
   runtime behavior in CI, and remove legacy comma-separated backend-list
   C helpers.
 - Switch dispatch from one function pointer per operation to a backend
-  `RsdOps` operation table, and use an X-macro list for `.Call` routine
-  registration. This makes adding several dispatched operations
-  substantially less brittle.
+  `RsdOps` operation table, use `RSD_DISPATCH_OPS()` to generate
+  operation typedefs, fields, backend declarations, table initializers,
+  and wrappers, and use an X-macro list for `.Call` routine
+  registration. Backend diagnostics now reuse the C backend metadata
+  table, and the R setter no longer hardcodes backend names. This makes
+  adding several dispatched operations substantially less brittle.
 - Add a dispatched
   [`convolve1d()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/convolve1d.md)
   full one-dimensional convolution demo, using SIMDe inner-loop

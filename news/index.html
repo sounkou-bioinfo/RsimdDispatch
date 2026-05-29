@@ -46,7 +46,7 @@
 <li>Add webR check tooling based on the local <code>rwasm::build()</code> + Node <code>webr</code> workflow used by related packages.</li>
 <li>Generate explicit SIMDe include flags in <code>src/Makevars</code> and quote configure include paths so copied templates are more robust in downstream libraries.</li>
 <li>Eagerly initialize dispatch at package load, exercise copied-template runtime behavior in CI, and remove legacy comma-separated backend-list C helpers.</li>
-<li>Switch dispatch from one function pointer per operation to a backend <code>RsdOps</code> operation table, and use an X-macro list for <code>.Call</code> routine registration. This makes adding several dispatched operations substantially less brittle.</li>
+<li>Switch dispatch from one function pointer per operation to a backend <code>RsdOps</code> operation table, use <code>RSD_DISPATCH_OPS()</code> to generate operation typedefs, fields, backend declarations, table initializers, and wrappers, and use an X-macro list for <code>.Call</code> routine registration. Backend diagnostics now reuse the C backend metadata table, and the R setter no longer hardcodes backend names. This makes adding several dispatched operations substantially less brittle.</li>
 <li>Add a dispatched <code><a href="../reference/convolve1d.html">convolve1d()</a></code> full one-dimensional convolution demo, using SIMDe inner-loop multiply-add kernels for numeric vectors, and include it in tests, documentation, webR checks, and evaluated benchmarks.</li>
 <li>Document the current extension path and the next scalable step for many operations: a NumKong-style operation/dtype/capability finder while retaining RsimdDispatch’s staged-object R package build model.</li>
 </ul></div>
