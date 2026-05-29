@@ -18,11 +18,18 @@
 - Eagerly initialize dispatch at package load, exercise copied-template
   runtime behavior in CI, and remove legacy comma-separated backend-list
   C helpers.
+- Switch dispatch from one function pointer per operation to a backend
+  `RsdOps` operation table, and use an X-macro list for `.Call` routine
+  registration. This makes adding several dispatched operations
+  substantially less brittle.
 - Add a dispatched
   [`convolve1d()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/convolve1d.md)
   full one-dimensional convolution demo, using SIMDe inner-loop
   multiply-add kernels for numeric vectors, and include it in tests,
   documentation, webR checks, and evaluated benchmarks.
+- Document the current extension path and the next scalable step for
+  many operations: a NumKong-style operation/dtype/capability finder
+  while retaining RsimdDispatch’s staged-object R package build model.
 
 ## RsimdDispatch 0.1.1 (2026-05-28)
 

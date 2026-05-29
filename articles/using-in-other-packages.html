@@ -136,6 +136,36 @@ flags. The configure helper keeps ISA flags local to optional staged
 kernel objects, and the dispatcher remains safe on baseline CPUs.</p>
 </div>
 <div class="section level2">
+<h2 id="extending-the-number-of-operations">Extending the number of operations<a class="anchor" aria-label="anchor" href="#extending-the-number-of-operations"></a>
+</h2>
+<p>The staged build model already scales across operations: if you add
+another function to each existing <code>tools/kernels/kernel_*.c</code>
+file, the same staged object for that backend contains the new
+implementation. Adding a small number of operations now mainly means
+updating the dispatch surface:</p>
+<ol style="list-style-type: decimal">
+<li>add a function-pointer typedef and field to <code>RsdOps</code> in
+<code>src/simd_dispatch.h</code>;</li>
+<li>add one implementation per backend file under
+<code>tools/kernels/</code>;</li>
+<li>add the corresponding extern declarations and backend table entries
+in <code>src/simd_dispatch.c</code>;</li>
+<li>add the small public dispatched C wrapper in
+<code>src/simd_dispatch.c</code>;</li>
+<li>add the <code>.Call</code> wrapper in <code>src/r_api.c</code>;</li>
+<li>add the routine once to <code>RSD_CALL_METHODS()</code> in
+<code>src/registration.c</code>;</li>
+<li>add the R wrapper, tests, and documentation.</li>
+</ol>
+<p>That is easy for a handful of operations and avoids duplicating
+backend-selection logic. For a large operation catalog, the next step
+should be a NumKong-style layer: operation enum, dtype enum,
+backend/capability bitmask, punned signature families, and a
+<code>find_kernel(kind, dtype, capabilities, ...)</code> API. That would
+let many wrappers share one lookup path while keeping this package’s
+R-friendly configure-time staged object model.</p>
+</div>
+<div class="section level2">
 <h2 id="build">Build<a class="anchor" aria-label="anchor" href="#build"></a>
 </h2>
 <p>The generated <code>configure</code> checks compiler support, writes
