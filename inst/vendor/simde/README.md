@@ -1,6 +1,6 @@
 # SIMD Everywhere
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-78-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-78-orange.svg)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![Chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://matrix.to/#/#simd-everywhere_community:gitter.im)
 [![codecov](https://codecov.io/gh/simd-everywhere/simde/branch/master/graph/badge.svg?token=jcMBoRk0ui)](https://codecov.io/gh/simd-everywhere/simde)
@@ -399,7 +399,7 @@ development in any way.
 
 ## License
 
-SIMDe is distributed under an MIT-style license; see COPYING for
+SIMDe is distributed under the MIT license; see COPYING for
 details.
 
 ## Contributors ✨

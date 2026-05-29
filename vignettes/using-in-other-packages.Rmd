@@ -111,26 +111,10 @@ and auto-selection do not need a second hand-maintained backend-name list. This
 is easy for a handful of operations and avoids duplicating backend-selection
 logic.
 
-For a large operation catalog, the next step should be a NumKong-style layer:
-operation enum, dtype enum, backend/capability bitmask, punned signature
-families, and a `find_kernel(kind, dtype, capabilities, ...)` API. That would let
-many wrappers share one lookup path while keeping this package's R-friendly
-configure-time staged object model.
-
-If this route is taken, the catalog should not stop at native dispatch metadata.
-The same source of truth should describe enough of each public operation to
-generate:
-
-* C operation/dtype/capability declarations and finder tables;
-* punned native signatures and typed adapter declarations;
-* `.Call` entry points and their native registration entries;
-* ordinary R wrappers, including argument names and basic coercion policy;
-* roxygen documentation skeletons and scalar-equivalence test skeletons.
-
-The actual optimized kernels can remain hand-written per backend, because that
-is where algorithmic care belongs. The repetitive API plumbing should be
-generated; otherwise the error surface is only moved from backend selection into
-duplicated `.Call` and R-wrapper glue.
+For packages with many public operations, keep a single operation catalog that
+can generate the repetitive dispatch metadata, `.Call` registration, and R
+wrappers. Optimized backend kernels can remain hand-written, but operation names,
+argument lists, and exported wrapper metadata should not be duplicated by hand.
 
 ## Build
 

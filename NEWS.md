@@ -1,12 +1,11 @@
 # RsimdDispatch 0.1.2.9000
 
 * Open the post-0.1.2 development cycle.
-* Record the large-operation-catalog direction: if RsimdDispatch adds a
-  NumKong-style operation/dtype/capability finder, the same source catalog and
-  generator should own the native dispatch metadata, C `.Call` API glue,
-  registration entries, ordinary R wrappers, and documentation/test skeletons.
-  The actual kernels can remain hand-written, but the public API plumbing
-  should not become the new duplication point.
+* Clarify many-operation maintenance guidance: repetitive dispatch metadata,
+  C registration, and R wrapper metadata should come from one source of truth;
+  hand-written code should focus on backend kernels.
+* Move the downstream-use vignette after runtime dispatch semantics in the
+  pkgdown article order and shorten its many-operation guidance.
 
 # RsimdDispatch 0.1.2
 
@@ -32,8 +31,7 @@
 * Add a dispatched `convolve1d()` full one-dimensional convolution demo, using
   SIMDe inner-loop multiply-add kernels for numeric vectors, and include it in
   tests, documentation, webR checks, and evaluated benchmarks.
-* Document the current extension path and the next scalable step for many
-  operations: a NumKong-style operation/dtype/capability finder while retaining
+* Document the current extension path for adding operations while retaining
   RsimdDispatch's staged-object R package build model.
 
 # RsimdDispatch 0.1.1 (2026-05-28)

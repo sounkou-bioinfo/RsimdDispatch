@@ -10,8 +10,8 @@ articles:
   - title: Package Templates
     navbar: ~
     contents:
-      - using-in-other-packages
       - runtime-dispatch-semantics
+      - using-in-other-packages
   - title: Maintainer Workflows
     navbar: ~
     contents:

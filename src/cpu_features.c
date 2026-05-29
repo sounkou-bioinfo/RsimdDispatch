@@ -238,8 +238,8 @@ int rsd_cpu_has_neon(void) {
 int rsd_cpu_has_wasm_simd128(void) {
 #if defined(__wasm__) || defined(__wasm32__) || defined(__wasm64__) || defined(__EMSCRIPTEN__)
     /* A module containing a staged SIMD128 object can only load on a runtime
-       with WebAssembly SIMD128 support. There is no in-process CPUID-style
-       feature check for the already-instantiated module. */
+       with WebAssembly SIMD128 support. There is no in-process CPUID feature
+       check for the already-instantiated module. */
     return 1;
 #else
     return 0;
