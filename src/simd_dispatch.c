@@ -7,66 +7,67 @@
 #include <stdio.h>
 #include <string.h>
 
-#define RSD_DECLARE_BACKEND_OP(suffix, name, ret, args, call_args, return_stmt) extern ret rsd_##name##_##suffix args;
-#define RSD_DECLARE_BACKEND(suffix) RSD_DISPATCH_OPS(RSD_DECLARE_BACKEND_OP, suffix)
-#define RSD_INIT_BACKEND_OP(suffix, name, ret, args, call_args, return_stmt) rsd_##name##_##suffix,
-#define RSD_DEFINE_BACKEND_OPS(suffix) static const RsdOps rsd_ops_##suffix = { RSD_DISPATCH_OPS(RSD_INIT_BACKEND_OP, suffix) };
+extern size_t rsd_count_nonzero_scalar(const uint8_t *x, size_t n);
+extern void rsd_convolve1d_scalar(const double *a, size_t na, const double *b, size_t nb, double *out);
 
-RSD_DECLARE_BACKEND(scalar)
-RSD_DEFINE_BACKEND_OPS(scalar)
+static const RsdOps rsd_ops_scalar = {
+    rsd_count_nonzero_scalar,
+    rsd_convolve1d_scalar
+};
 
 #if RSD_HAVE_SSE2
-RSD_DECLARE_BACKEND(sse2)
-RSD_DEFINE_BACKEND_OPS(sse2)
-#define RSD_OPS_SSE2 (&rsd_ops_sse2)
-#else
-#define RSD_OPS_SSE2 NULL
+extern size_t rsd_count_nonzero_sse2(const uint8_t *x, size_t n);
+extern void rsd_convolve1d_sse2(const double *a, size_t na, const double *b, size_t nb, double *out);
+static const RsdOps rsd_ops_sse2 = {
+    rsd_count_nonzero_sse2,
+    rsd_convolve1d_sse2
+};
 #endif
 
 #if RSD_HAVE_SSE41
-RSD_DECLARE_BACKEND(sse41)
-RSD_DEFINE_BACKEND_OPS(sse41)
-#define RSD_OPS_SSE41 (&rsd_ops_sse41)
-#else
-#define RSD_OPS_SSE41 NULL
+extern size_t rsd_count_nonzero_sse41(const uint8_t *x, size_t n);
+extern void rsd_convolve1d_sse41(const double *a, size_t na, const double *b, size_t nb, double *out);
+static const RsdOps rsd_ops_sse41 = {
+    rsd_count_nonzero_sse41,
+    rsd_convolve1d_sse41
+};
 #endif
 
 #if RSD_HAVE_AVX2
-RSD_DECLARE_BACKEND(avx2)
-RSD_DEFINE_BACKEND_OPS(avx2)
-#define RSD_OPS_AVX2 (&rsd_ops_avx2)
-#else
-#define RSD_OPS_AVX2 NULL
+extern size_t rsd_count_nonzero_avx2(const uint8_t *x, size_t n);
+extern void rsd_convolve1d_avx2(const double *a, size_t na, const double *b, size_t nb, double *out);
+static const RsdOps rsd_ops_avx2 = {
+    rsd_count_nonzero_avx2,
+    rsd_convolve1d_avx2
+};
 #endif
 
 #if RSD_HAVE_AVX512
-RSD_DECLARE_BACKEND(avx512)
-RSD_DEFINE_BACKEND_OPS(avx512)
-#define RSD_OPS_AVX512 (&rsd_ops_avx512)
-#else
-#define RSD_OPS_AVX512 NULL
+extern size_t rsd_count_nonzero_avx512(const uint8_t *x, size_t n);
+extern void rsd_convolve1d_avx512(const double *a, size_t na, const double *b, size_t nb, double *out);
+static const RsdOps rsd_ops_avx512 = {
+    rsd_count_nonzero_avx512,
+    rsd_convolve1d_avx512
+};
 #endif
 
 #if RSD_HAVE_NEON
-RSD_DECLARE_BACKEND(neon)
-RSD_DEFINE_BACKEND_OPS(neon)
-#define RSD_OPS_NEON (&rsd_ops_neon)
-#else
-#define RSD_OPS_NEON NULL
+extern size_t rsd_count_nonzero_neon(const uint8_t *x, size_t n);
+extern void rsd_convolve1d_neon(const double *a, size_t na, const double *b, size_t nb, double *out);
+static const RsdOps rsd_ops_neon = {
+    rsd_count_nonzero_neon,
+    rsd_convolve1d_neon
+};
 #endif
 
 #if RSD_HAVE_WASM_SIMD128
-RSD_DECLARE_BACKEND(wasm_simd128)
-RSD_DEFINE_BACKEND_OPS(wasm_simd128)
-#define RSD_OPS_WASM_SIMD128 (&rsd_ops_wasm_simd128)
-#else
-#define RSD_OPS_WASM_SIMD128 NULL
+extern size_t rsd_count_nonzero_wasm_simd128(const uint8_t *x, size_t n);
+extern void rsd_convolve1d_wasm_simd128(const double *a, size_t na, const double *b, size_t nb, double *out);
+static const RsdOps rsd_ops_wasm_simd128 = {
+    rsd_count_nonzero_wasm_simd128,
+    rsd_convolve1d_wasm_simd128
+};
 #endif
-
-#undef RSD_DEFINE_BACKEND_OPS
-#undef RSD_INIT_BACKEND_OP
-#undef RSD_DECLARE_BACKEND
-#undef RSD_DECLARE_BACKEND_OP
 
 static int rsd_cpu_has_scalar_backend(void) {
     return 1;
@@ -80,20 +81,39 @@ typedef struct RsdBackendEntry {
     int priority;
 } RsdBackendEntry;
 
-#define RSD_BACKENDS(X) \
-    X(scalar, "scalar", 1, rsd_cpu_has_scalar_backend, &rsd_ops_scalar, 70) \
-    X(sse2, "sse2", RSD_HAVE_SSE2, rsd_cpu_has_sse2, RSD_OPS_SSE2, 40) \
-    X(sse41, "sse41", RSD_HAVE_SSE41, rsd_cpu_has_sse41, RSD_OPS_SSE41, 30) \
-    X(avx2, "avx2", RSD_HAVE_AVX2, rsd_cpu_has_avx2, RSD_OPS_AVX2, 20) \
-    X(avx512, "avx512", RSD_HAVE_AVX512, rsd_cpu_has_avx512, RSD_OPS_AVX512, 10) \
-    X(neon, "neon", RSD_HAVE_NEON, rsd_cpu_has_neon, RSD_OPS_NEON, 50) \
-    X(wasm_simd128, "wasm_simd128", RSD_HAVE_WASM_SIMD128, rsd_cpu_has_wasm_simd128, RSD_OPS_WASM_SIMD128, 60)
-
-#define RSD_BACKEND_ENTRY(suffix, name, compiled, supported, ops, priority) {name, (compiled) != 0, supported, ops, priority},
 static const RsdBackendEntry rsd_backend_entries[] = {
-    RSD_BACKENDS(RSD_BACKEND_ENTRY)
+    {"scalar", 1, rsd_cpu_has_scalar_backend, &rsd_ops_scalar, 70},
+#if RSD_HAVE_SSE2
+    {"sse2", 1, rsd_cpu_has_sse2, &rsd_ops_sse2, 40},
+#else
+    {"sse2", 0, rsd_cpu_has_sse2, NULL, 40},
+#endif
+#if RSD_HAVE_SSE41
+    {"sse41", 1, rsd_cpu_has_sse41, &rsd_ops_sse41, 30},
+#else
+    {"sse41", 0, rsd_cpu_has_sse41, NULL, 30},
+#endif
+#if RSD_HAVE_AVX2
+    {"avx2", 1, rsd_cpu_has_avx2, &rsd_ops_avx2, 20},
+#else
+    {"avx2", 0, rsd_cpu_has_avx2, NULL, 20},
+#endif
+#if RSD_HAVE_AVX512
+    {"avx512", 1, rsd_cpu_has_avx512, &rsd_ops_avx512, 10},
+#else
+    {"avx512", 0, rsd_cpu_has_avx512, NULL, 10},
+#endif
+#if RSD_HAVE_NEON
+    {"neon", 1, rsd_cpu_has_neon, &rsd_ops_neon, 50},
+#else
+    {"neon", 0, rsd_cpu_has_neon, NULL, 50},
+#endif
+#if RSD_HAVE_WASM_SIMD128
+    {"wasm_simd128", 1, rsd_cpu_has_wasm_simd128, &rsd_ops_wasm_simd128, 60}
+#else
+    {"wasm_simd128", 0, rsd_cpu_has_wasm_simd128, NULL, 60}
+#endif
 };
-#undef RSD_BACKEND_ENTRY
 
 static const RsdOps *rsd_ops = &rsd_ops_scalar;
 static int rsd_dispatch_initialized = 0;
@@ -200,15 +220,19 @@ void rsd_set_backend(const char *backend) {
     rsd_select_backend_unchecked(backend);
 }
 
-#define RSD_DEFINE_DISPATCH_WRAPPER(data, name, ret, args, call_args, return_stmt) \
-    ret rsd_##name args { \
-        if (!rsd_dispatch_initialized) { \
-            rsd_init_dispatch(); \
-        } \
-        return_stmt rsd_ops->name call_args; \
+size_t rsd_count_nonzero(const uint8_t *x, size_t n) {
+    if (!rsd_dispatch_initialized) {
+        rsd_init_dispatch();
     }
-RSD_DISPATCH_OPS(RSD_DEFINE_DISPATCH_WRAPPER, _)
-#undef RSD_DEFINE_DISPATCH_WRAPPER
+    return rsd_ops->count_nonzero(x, n);
+}
+
+void rsd_convolve1d(const double *a, size_t na, const double *b, size_t nb, double *out) {
+    if (!rsd_dispatch_initialized) {
+        rsd_init_dispatch();
+    }
+    rsd_ops->convolve1d(a, na, b, nb, out);
+}
 
 const char *rsd_requested_backend(void) {
     return rsd_requested_backend_buf;

@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 Pure-C runtime SIMD dispatch templates for R packages. Stage scalar, SSE,
 AVX, AVX-512, NEON, and WebAssembly SIMD128 kernel objects during
 configuration; link one shared library and switch among compiled and
-CPU-supported implementations at runtime without unsafe overrides.
+CPU-supported implementations at runtime.
 
 ## Install
 
@@ -79,8 +79,7 @@ simde_info()[c("version", "commit")]
 simd_dispatch_template_path()
 ```
 
-`simd_set_backend()` rejects uncompiled or CPU-unsupported backends. There is no
-unsafe override.
+`simd_set_backend()` rejects uncompiled or CPU-unsupported backends.
 
 ## Example
 

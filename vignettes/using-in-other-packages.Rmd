@@ -56,6 +56,7 @@ tools/kernels/kernel_avx2.c
 tools/kernels/kernel_avx512.c
 tools/kernels/kernel_neon.c
 tools/kernels/kernel_wasm_simd128.c
+tools/kernels/kernel_common.h
 src/Makevars.in
 src/Makevars.win.in
 src/cpu_features.c
@@ -92,24 +93,21 @@ the dispatcher remains safe on baseline CPUs.
 
 The staged build model already scales across operations: if you add another
 function to each existing `tools/kernels/kernel_*.c` file, the same staged object
-for that backend contains the new implementation. The dispatch surface is now
-macro-assisted, so adding a small number of operations mainly means:
+for that backend contains the new implementation. For a small number of
+operations, keep the dispatch code explicit and add:
 
-1. add one `RSD_DISPATCH_OPS()` entry in `src/simd_dispatch.h` with the operation
-   name, return type, argument list, call argument list, and optional `return`
-   token;
-2. add one implementation per backend file under `tools/kernels/`, following the
+1. a function-pointer typedef and `RsdOps` field in `src/simd_dispatch.h`;
+2. one implementation per backend file under `tools/kernels/`, following the
    naming convention `rsd_<operation>_<backend>()`;
-3. add the `.Call` wrapper in `src/r_api.c`;
-4. add the routine once to `RSD_CALL_METHODS()` in `src/registration.c`;
-5. add the R wrapper, tests, and documentation.
+3. backend declarations, `RsdOps` initializers, and the dispatched wrapper in
+   `src/simd_dispatch.c`;
+4. the `.Call` wrapper in `src/r_api.c`;
+5. the native registration entry in `src/registration.c`;
+6. the R wrapper, tests, and documentation.
 
-The `RSD_DISPATCH_OPS()` entry generates the typedef, `RsdOps` field, public
-C wrapper declaration, backend extern declarations, backend table initializers,
-and dispatched C wrapper. Backend metadata is also table-driven, so diagnostics
-and auto-selection do not need a second hand-maintained backend-name list. This
-is easy for a handful of operations and avoids duplicating backend-selection
-logic.
+Backend metadata is table-driven, so diagnostics and auto-selection do not need
+a second hand-maintained backend-name list. This explicit layout is easier to
+read for the template and still keeps backend-selection logic centralized.
 
 For packages with many public operations, keep a single operation catalog that
 can generate the repetitive dispatch metadata, `.Call` registration, and R

@@ -44,11 +44,11 @@ simd_backend()
 - the current CPU/runtime supports the backend, including OS support for AVX and
   AVX-512 register state on x86 and module-level SIMD128 support on WebAssembly.
 
-There is intentionally no unsafe force mode. If a backend is not available, the
-setter errors before any SIMD-only instruction can execute. Backend selection is
-a process-global operation-table pointer: initialize or change it from ordinary
-R code, and do not call `simd_set_backend()` concurrently with active native
-worker threads that are executing dispatched kernels.
+If a backend is not available, the setter errors before any SIMD-only
+instruction can execute. Backend selection is a process-global operation-table
+pointer: initialize or change it from ordinary R code, and do not call
+`simd_set_backend()` concurrently with active native worker threads that are
+executing dispatched kernels.
 
 ```{r}
 simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends")]

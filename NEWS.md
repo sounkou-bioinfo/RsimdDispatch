@@ -6,6 +6,14 @@
   hand-written code should focus on backend kernels.
 * Move the downstream-use vignette after runtime dispatch semantics in the
   pkgdown article order and shorten its many-operation guidance.
+* Trim redundant backend-selection wording from README and dispatch semantics
+  documentation.
+* Move the staged-kernel-only `kernel_common.h` helper from `src/` into
+  `tools/kernels/` and the copied template kernel directory, and update
+  downstream-template docs for that layout.
+* Replace short-lived C preprocessor expansion blocks in `src/` with explicit
+  operation-table declarations, dispatch wrappers, and native registration
+  entries.
 
 # RsimdDispatch 0.1.2
 
@@ -22,12 +30,8 @@
 * Eagerly initialize dispatch at package load, exercise copied-template runtime
   behavior in CI, and remove legacy comma-separated backend-list C helpers.
 * Switch dispatch from one function pointer per operation to a backend `RsdOps`
-  operation table, use `RSD_DISPATCH_OPS()` to generate operation typedefs,
-  fields, backend declarations, table initializers, and wrappers, and use an
-  X-macro list for `.Call` routine registration. Backend diagnostics now reuse
-  the C backend metadata table, and the R setter no longer hardcodes backend
-  names. This makes adding several dispatched operations substantially less
-  brittle.
+  operation table. Backend diagnostics now reuse the C backend metadata table,
+  and the R setter no longer hardcodes backend names.
 * Add a dispatched `convolve1d()` full one-dimensional convolution demo, using
   SIMDe inner-loop multiply-add kernels for numeric vectors, and include it in
   tests, documentation, webR checks, and evaluated benchmarks.

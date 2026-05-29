@@ -10,7 +10,7 @@
 Pure-C runtime SIMD dispatch templates for R packages. Stage scalar,
 SSE, AVX, AVX-512, NEON, and WebAssembly SIMD128 kernel objects during
 configuration; link one shared library and switch among compiled and
-CPU-supported implementations at runtime without unsafe overrides.
+CPU-supported implementations at runtime.
 
 ## Install
 
@@ -94,7 +94,6 @@ simd_dispatch_template_path()
 ```
 
 `simd_set_backend()` rejects uncompiled or CPU-unsupported backends.
-There is no unsafe override.
 
 ## Example
 
@@ -170,8 +169,8 @@ knitr::kable(bench, digits = 3)
 
 | backend | median_ms | mb_per_second | iterations | speedup_vs_scalar |
 |:--------|----------:|--------------:|-----------:|------------------:|
-| scalar  |    11.413 |      4573.997 |         20 |             1.000 |
-| avx2    |     2.050 |     25258.295 |         20 |             5.522 |
+| scalar  |    11.431 |      4557.942 |         20 |             1.000 |
+| avx2    |     1.874 |     27731.329 |         20 |             6.084 |
 
 The same runtime switch can benchmark a full one-dimensional
 convolution: the classic nested-loop `out[i + j - 1] += a[i] * b[j]`
@@ -213,8 +212,8 @@ knitr::kable(conv_bench, digits = 3)
 
 | backend | median_ms | million_multiply_adds_per_second | iterations | speedup_vs_scalar |
 |:--------|----------:|---------------------------------:|-----------:|------------------:|
-| scalar  |     4.143 |                         2488.659 |         20 |             1.000 |
-| avx2    |     1.254 |                         7949.090 |         20 |             3.194 |
+| scalar  |     2.966 |                         3328.908 |         20 |             1.000 |
+| avx2    |     1.211 |                         8259.988 |         20 |             2.481 |
 
 ## Development
 
