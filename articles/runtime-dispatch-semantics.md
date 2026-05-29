@@ -19,7 +19,7 @@ count_nonzero(x)
 convolve1d(a, b)
 #> [1]  10 120 230 300
 
-candidate <- setdiff(simd_info()$available_backends, "scalar")[1]
+candidate <- setdiff(simd_info()$operation_backends$convolve1d, "scalar")[1]
 if (!is.na(candidate)) {
   simd_set_backend(candidate)
   count_nonzero(x)
@@ -29,7 +29,7 @@ if (!is.na(candidate)) {
 
 simd_set_backend("auto")
 simd_backend()
-#> [1] "avx512"
+#> [1] "avx2"
 ```
 
 [`simd_set_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_set_backend.md)
@@ -41,7 +41,11 @@ performs two checks for explicit choices:
   on WebAssembly.
 
 If a backend is not available, the setter errors before any SIMD-only
-instruction can execute. Backend selection is a process-global
+instruction can execute. Individual operation slots may also be `NULL`
+for a backend. Explicitly selecting such a backend is allowed, but
+calling an unsupported operation errors clearly. With `"auto"`, each
+operation resolves to the best available backend that has a non-`NULL`
+slot for that operation. Backend selection is a process-global
 operation-table pointer: initialize or change it from ordinary R code,
 and do not call
 [`simd_set_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_set_backend.md)
@@ -50,15 +54,22 @@ dispatched kernels.
 
 ``` r
 
-simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends")]
+simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends", "operation_backends")]
 #> $compiled_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $cpu_supported_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
+#> [1] "scalar" "sse2"   "sse41"  "avx2"  
 #> 
 #> $available_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
+#> [1] "scalar" "sse2"   "sse41"  "avx2"  
+#> 
+#> $operation_backends
+#> $operation_backends$count_nonzero
+#> [1] "scalar" "sse2"   "sse41"  "avx2"  
+#> 
+#> $operation_backends$convolve1d
+#> [1] "scalar" "avx2"
 ```
 
 ## SIMDe and native ISA compilation
@@ -131,8 +142,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar      358.6µs     2757.
-#> 2 auto         25.5µs    34289.
+#> 1 scalar      330.4µs     2984.
+#> 2 auto         59.4µs    15254.
 ```
 
 The same switch applies to the full one-dimensional convolution demo:
@@ -162,12 +173,13 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar        593µs     1686.
-#> 2 auto          193µs     5140.
+#> 1 scalar        431µs     2313.
+#> 2 auto          190µs     5215.
 ```
 
 `"auto"` selects the best backend from the compiled and supported
-intersection. The current ranking is:
+intersection that also supports the operation being called. The current
+ranking is:
 
 ``` text
 avx512 > avx2 > sse41 > sse2 > neon > wasm_simd128 > scalar

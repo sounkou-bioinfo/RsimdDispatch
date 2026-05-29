@@ -106,27 +106,24 @@
 <span><span class="fu"><a href="reference/simd_backend.html">simd_backend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "avx2"</span></span>
 <span><span class="fu"><a href="reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"auto"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"cpu_supported_backends"</span>, <span class="st">"available_backends"</span>, <span class="st">"simde_native_backends"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"available_backends"</span>, <span class="st">"simde_native_backends"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $compiled_backends</span></span>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $cpu_supported_backends</span></span>
-<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"  </span></span>
-<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;</span></span>
 <span><span class="co">#&gt; $available_backends</span></span>
-<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"  </span></span>
-<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"</span></span>
+<span><span class="co">#&gt;</span></span>
 <span><span class="co">#&gt; $simde_native_backends</span></span>
 <span><span class="co">#&gt; [1] "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="fu"><a href="reference/simde_info.html">simde_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"version"</span>, <span class="st">"commit"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $version</span></span>
 <span><span class="co">#&gt; [1] "0.8.4"</span></span>
-<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;</span></span>
 <span><span class="co">#&gt; $commit</span></span>
 <span><span class="co">#&gt; [1] "f3e8262173b7089db9a9d57a9ecef8dd07ad9c97"</span></span>
 <span><span class="fu"><a href="reference/simd_dispatch_template_path.html">simd_dispatch_template_path</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RsimdDispatch/templates/dispatch-c"</span></span></code></pre></div>
-<p><code><a href="reference/simd_set_backend.html">simd_set_backend()</a></code> rejects uncompiled or CPU-unsupported backends.</p>
+<p><code><a href="reference/simd_set_backend.html">simd_set_backend()</a></code> rejects uncompiled or CPU-unsupported backends. Operation-level backend availability is reported in <code>simd_info()$operation_backends</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
@@ -139,7 +136,7 @@
 <span><span class="fu"><a href="reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"selected_backend"</span>, <span class="st">"available_backends"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $selected_backend</span></span>
 <span><span class="co">#&gt; [1] "avx2"</span></span>
-<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;</span></span>
 <span><span class="co">#&gt; $available_backends</span></span>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"</span></span></code></pre></div>
 <p>Switching backends is same-process because all variants are linked into one R shared library and selected through a guarded operation table.</p>
@@ -206,17 +203,17 @@
 <tbody>
 <tr>
 <td align="left">scalar</td>
-<td align="right">11.431</td>
-<td align="right">4557.942</td>
+<td align="right">11.522</td>
+<td align="right">4559.696</td>
 <td align="right">20</td>
 <td align="right">1.000</td>
 </tr>
 <tr>
 <td align="left">avx2</td>
-<td align="right">1.874</td>
-<td align="right">27731.329</td>
+<td align="right">1.853</td>
+<td align="right">27697.757</td>
 <td align="right">20</td>
-<td align="right">6.084</td>
+<td align="right">6.074</td>
 </tr>
 </tbody>
 </table>
@@ -271,17 +268,17 @@
 <tbody>
 <tr>
 <td align="left">scalar</td>
-<td align="right">2.966</td>
-<td align="right">3328.908</td>
+<td align="right">3.069</td>
+<td align="right">3271.550</td>
 <td align="right">20</td>
 <td align="right">1.000</td>
 </tr>
 <tr>
 <td align="left">avx2</td>
-<td align="right">1.211</td>
-<td align="right">8259.988</td>
+<td align="right">1.232</td>
+<td align="right">8092.049</td>
 <td align="right">20</td>
-<td align="right">2.481</td>
+<td align="right">2.473</td>
 </tr>
 </tbody>
 </table>

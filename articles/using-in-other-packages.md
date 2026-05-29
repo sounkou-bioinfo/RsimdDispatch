@@ -74,7 +74,11 @@ typedef struct RsdOps {
 ```
 
 For a real package, replace the demo operation signatures with your own
-and keep the same structure:
+and keep the same structure. A backend may set an operation slot to
+`NULL` when that operation is deliberately unsupported for that backend;
+the dispatched wrapper then reports a clear error for explicit backend
+selection, while `"auto"` skips that backend for the unsupported
+operation.
 
 ``` text
 R API wrapper        ordinary src/Makevars compilation
@@ -100,8 +104,9 @@ a small number of operations, keep the dispatch code explicit and add:
     `src/simd_dispatch.h`;
 2.  one implementation per backend file under `tools/kernels/`,
     following the naming convention `rsd_<operation>_<backend>()`;
-3.  backend declarations, `RsdOps` initializers, and the dispatched
-    wrapper in `src/simd_dispatch.c`;
+3.  backend declarations, `RsdOps` initializers using function pointers
+    or explicit `NULL` slots, and the dispatched wrapper in
+    `src/simd_dispatch.c`;
 4.  the `.Call` wrapper in `src/r_api.c`;
 5.  the native registration entry in `src/registration.c`;
 6.  the R wrapper, tests, and documentation.

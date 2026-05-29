@@ -125,7 +125,11 @@ performs the important substitutions, including <code>@useDynLib</code>,
 <span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    rsd_convolve1d_fn convolve1d<span class="op">;</span></span>
 <span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="op">}</span> RsdOps<span class="op">;</span></span></code></pre></div>
 <p>For a real package, replace the demo operation signatures with your
-own and keep the same structure:</p>
+own and keep the same structure. A backend may set an operation slot to
+<code>NULL</code> when that operation is deliberately unsupported for
+that backend; the dispatched wrapper then reports a clear error for
+explicit backend selection, while <code>"auto"</code> skips that backend
+for the unsupported operation.</p>
 <pre class="text"><code>R API wrapper        ordinary src/Makevars compilation
 CPU feature checks   ordinary src/Makevars compilation
 dispatch table       ordinary src/Makevars compilation
@@ -150,7 +154,8 @@ explicit and add:</p>
 <li>one implementation per backend file under
 <code>tools/kernels/</code>, following the naming convention
 <code>rsd_&lt;operation&gt;_&lt;backend&gt;()</code>;</li>
-<li>backend declarations, <code>RsdOps</code> initializers, and the
+<li>backend declarations, <code>RsdOps</code> initializers using
+function pointers or explicit <code>NULL</code> slots, and the
 dispatched wrapper in <code>src/simd_dispatch.c</code>;</li>
 <li>the <code>.Call</code> wrapper in <code>src/r_api.c</code>;</li>
 <li>the native registration entry in

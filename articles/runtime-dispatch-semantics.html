@@ -84,7 +84,7 @@ operation-table pointer selects the active implementation set.</p>
 <span><span class="fu"><a href="../reference/convolve1d.html">convolve1d</a></span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1]  10 120 230 300</span></span>
 <span></span>
-<span><span class="va">candidate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="../reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">available_backends</span>, <span class="st">"scalar"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">candidate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="../reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">operation_backends</span><span class="op">$</span><span class="va">convolve1d</span>, <span class="st">"scalar"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">candidate</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="../reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="va">candidate</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="../reference/count_nonzero.html">count_nonzero</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
@@ -94,7 +94,7 @@ operation-table pointer selects the active implementation set.</p>
 <span></span>
 <span><span class="fu"><a href="../reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"auto"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/simd_backend.html">simd_backend</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "avx512"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "avx2"</span></span></code></pre></div>
 <p><code><a href="../reference/simd_set_backend.html">simd_set_backend()</a></code> performs two checks for explicit
 choices:</p>
 <ul>
@@ -104,20 +104,32 @@ for AVX and AVX-512 register state on x86 and module-level SIMD128
 support on WebAssembly.</li>
 </ul>
 <p>If a backend is not available, the setter errors before any SIMD-only
-instruction can execute. Backend selection is a process-global
-operation-table pointer: initialize or change it from ordinary R code,
-and do not call <code><a href="../reference/simd_set_backend.html">simd_set_backend()</a></code> concurrently with active
-native worker threads that are executing dispatched kernels.</p>
+instruction can execute. Individual operation slots may also be
+<code>NULL</code> for a backend. Explicitly selecting such a backend is
+allowed, but calling an unsupported operation errors clearly. With
+<code>"auto"</code>, each operation resolves to the best available
+backend that has a non-<code>NULL</code> slot for that operation.
+Backend selection is a process-global operation-table pointer:
+initialize or change it from ordinary R code, and do not call
+<code><a href="../reference/simd_set_backend.html">simd_set_backend()</a></code> concurrently with active native worker
+threads that are executing dispatched kernels.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"cpu_supported_backends"</span>, <span class="st">"available_backends"</span><span class="op">)</span><span class="op">]</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"cpu_supported_backends"</span>, <span class="st">"available_backends"</span>, <span class="st">"operation_backends"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $compiled_backends</span></span>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $cpu_supported_backends</span></span>
-<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
+<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $available_backends</span></span>
-<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"  </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $operation_backends</span></span>
+<span><span class="co">#&gt; $operation_backends$count_nonzero</span></span>
+<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"  </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $operation_backends$convolve1d</span></span>
+<span><span class="co">#&gt; [1] "scalar" "avx2"</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="simde-and-native-isa-compilation">SIMDe and native ISA compilation<a class="anchor" aria-label="anchor" href="#simde-and-native-isa-compilation"></a>
 </h2>
@@ -186,8 +198,8 @@ same-process backend switching through the public API.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      358.6µs     <span style="text-decoration: underline;">2</span>757.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         25.5µs    <span style="text-decoration: underline;">34</span>289.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      330.4µs     <span style="text-decoration: underline;">2</span>984.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         59.4µs    <span style="text-decoration: underline;">15</span>254.</span></span></code></pre></div>
 <p>The same switch applies to the full one-dimensional convolution
 demo:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -214,10 +226,11 @@ demo:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        593µs     <span style="text-decoration: underline;">1</span>686.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto          193µs     <span style="text-decoration: underline;">5</span>140.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        431µs     <span style="text-decoration: underline;">2</span>313.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto          190µs     <span style="text-decoration: underline;">5</span>215.</span></span></code></pre></div>
 <p><code>"auto"</code> selects the best backend from the compiled and
-supported intersection. The current ranking is:</p>
+supported intersection that also supports the operation being called.
+The current ranking is:</p>
 <pre class="text"><code>avx512 &gt; avx2 &gt; sse41 &gt; sse2 &gt; neon &gt; wasm_simd128 &gt; scalar</code></pre>
 <p>Architecture guards mean x86 systems normally consider x86 backends,
 ARM systems normally consider NEON, and webR/Emscripten builds can
