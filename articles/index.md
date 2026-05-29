@@ -7,10 +7,10 @@
 
 ### Package Templates
 
-- [Using RsimdDispatch in Other
-  Packages](https://sounkou-bioinfo.github.io/RsimdDispatch/articles/using-in-other-packages.md):
 - [Runtime Dispatch
   Semantics](https://sounkou-bioinfo.github.io/RsimdDispatch/articles/runtime-dispatch-semantics.md):
+- [Using RsimdDispatch in Other
+  Packages](https://sounkou-bioinfo.github.io/RsimdDispatch/articles/using-in-other-packages.md):
 
 ### Maintainer Workflows
 

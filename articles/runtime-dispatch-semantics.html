@@ -34,8 +34,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with RsimdDispatch</a></li>
-    <li><a class="dropdown-item" href="../articles/using-in-other-packages.html">Using RsimdDispatch in Other Packages</a></li>
     <li><a class="dropdown-item" href="../articles/runtime-dispatch-semantics.html">Runtime Dispatch Semantics</a></li>
+    <li><a class="dropdown-item" href="../articles/using-in-other-packages.html">Using RsimdDispatch in Other Packages</a></li>
     <li><a class="dropdown-item" href="../articles/vendoring-simde.html">Maintainer Workflow: Vendoring SIMDe</a></li>
   </ul>
 </li>
@@ -94,7 +94,7 @@ operation-table pointer selects the active implementation set.</p>
 <span></span>
 <span><span class="fu"><a href="../reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"auto"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/simd_backend.html">simd_backend</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "avx2"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "avx512"</span></span></code></pre></div>
 <p><code><a href="../reference/simd_set_backend.html">simd_set_backend()</a></code> performs two checks for explicit
 choices:</p>
 <ul>
@@ -115,10 +115,10 @@ threads that are executing dispatched kernels.</p>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $cpu_supported_backends</span></span>
-<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"  </span></span>
+<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $available_backends</span></span>
-<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="simde-and-native-isa-compilation">SIMDe and native ISA compilation<a class="anchor" aria-label="anchor" href="#simde-and-native-isa-compilation"></a>
 </h2>
@@ -187,8 +187,8 @@ same-process backend switching through the public API.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        329µs     <span style="text-decoration: underline;">2</span>997.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         44.5µs    <span style="text-decoration: underline;">19</span>647.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      458.7µs     <span style="text-decoration: underline;">2</span>168.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         36.8µs    <span style="text-decoration: underline;">15</span>853.</span></span></code></pre></div>
 <p>The same switch applies to the full one-dimensional convolution
 demo:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -215,8 +215,8 @@ demo:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        717µs     <span style="text-decoration: underline;">1</span>393.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto          184µs     <span style="text-decoration: underline;">5</span>312.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        622µs     <span style="text-decoration: underline;">1</span>604.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto          301µs     <span style="text-decoration: underline;">3</span>317.</span></span></code></pre></div>
 <p><code>"auto"</code> selects the best backend from the compiled and
 supported intersection. The current ranking is:</p>
 <pre class="text"><code>avx512 &gt; avx2 &gt; sse41 &gt; sse2 &gt; neon &gt; wasm_simd128 &gt; scalar</code></pre>

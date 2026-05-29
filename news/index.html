@@ -19,8 +19,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with RsimdDispatch</a></li>
-    <li><a class="dropdown-item" href="../articles/using-in-other-packages.html">Using RsimdDispatch in Other Packages</a></li>
     <li><a class="dropdown-item" href="../articles/runtime-dispatch-semantics.html">Runtime Dispatch Semantics</a></li>
+    <li><a class="dropdown-item" href="../articles/using-in-other-packages.html">Using RsimdDispatch in Other Packages</a></li>
     <li><a class="dropdown-item" href="../articles/vendoring-simde.html">Maintainer Workflow: Vendoring SIMDe</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -42,7 +42,8 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.2.9000" id="rsimddispatch-0129000">RsimdDispatch 0.1.2.9000<a class="anchor" aria-label="anchor" href="#rsimddispatch-0129000"></a></h2>
 <ul><li>Open the post-0.1.2 development cycle.</li>
-<li>Record the large-operation-catalog direction: if RsimdDispatch adds a NumKong-style operation/dtype/capability finder, the same source catalog and generator should own the native dispatch metadata, C <code>.Call</code> API glue, registration entries, ordinary R wrappers, and documentation/test skeletons. The actual kernels can remain hand-written, but the public API plumbing should not become the new duplication point.</li>
+<li>Clarify many-operation maintenance guidance: repetitive dispatch metadata, C registration, and R wrapper metadata should come from one source of truth; hand-written code should focus on backend kernels.</li>
+<li>Move the downstream-use vignette after runtime dispatch semantics in the pkgdown article order and shorten its many-operation guidance.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.2" id="rsimddispatch-012">RsimdDispatch 0.1.2<a class="anchor" aria-label="anchor" href="#rsimddispatch-012"></a></h2>
@@ -53,7 +54,7 @@
 <li>Eagerly initialize dispatch at package load, exercise copied-template runtime behavior in CI, and remove legacy comma-separated backend-list C helpers.</li>
 <li>Switch dispatch from one function pointer per operation to a backend <code>RsdOps</code> operation table, use <code>RSD_DISPATCH_OPS()</code> to generate operation typedefs, fields, backend declarations, table initializers, and wrappers, and use an X-macro list for <code>.Call</code> routine registration. Backend diagnostics now reuse the C backend metadata table, and the R setter no longer hardcodes backend names. This makes adding several dispatched operations substantially less brittle.</li>
 <li>Add a dispatched <code><a href="../reference/convolve1d.html">convolve1d()</a></code> full one-dimensional convolution demo, using SIMDe inner-loop multiply-add kernels for numeric vectors, and include it in tests, documentation, webR checks, and evaluated benchmarks.</li>
-<li>Document the current extension path and the next scalable step for many operations: a NumKong-style operation/dtype/capability finder while retaining RsimdDispatch’s staged-object R package build model.</li>
+<li>Document the current extension path for adding operations while retaining RsimdDispatch’s staged-object R package build model.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.1" id="rsimddispatch-011-2026-05-28">RsimdDispatch 0.1.1 (2026-05-28)<a class="anchor" aria-label="anchor" href="#rsimddispatch-011-2026-05-28"></a></h2>

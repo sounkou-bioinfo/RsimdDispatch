@@ -34,8 +34,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started with RsimdDispatch</a></li>
-    <li><a class="dropdown-item" href="../articles/using-in-other-packages.html">Using RsimdDispatch in Other Packages</a></li>
     <li><a class="dropdown-item" href="../articles/runtime-dispatch-semantics.html">Runtime Dispatch Semantics</a></li>
+    <li><a class="dropdown-item" href="../articles/using-in-other-packages.html">Using RsimdDispatch in Other Packages</a></li>
     <li><a class="dropdown-item" href="../articles/vendoring-simde.html">Maintainer Workflow: Vendoring SIMDe</a></li>
   </ul>
 </li>
@@ -163,31 +163,11 @@ Backend metadata is also table-driven, so diagnostics and auto-selection
 do not need a second hand-maintained backend-name list. This is easy for
 a handful of operations and avoids duplicating backend-selection
 logic.</p>
-<p>For a large operation catalog, the next step should be a
-NumKong-style layer: operation enum, dtype enum, backend/capability
-bitmask, punned signature families, and a
-<code>find_kernel(kind, dtype, capabilities, ...)</code> API. That would
-let many wrappers share one lookup path while keeping this package’s
-R-friendly configure-time staged object model.</p>
-<p>If this route is taken, the catalog should not stop at native
-dispatch metadata. The same source of truth should describe enough of
-each public operation to generate:</p>
-<ul>
-<li>C operation/dtype/capability declarations and finder tables;</li>
-<li>punned native signatures and typed adapter declarations;</li>
-<li>
-<code>.Call</code> entry points and their native registration
-entries;</li>
-<li>ordinary R wrappers, including argument names and basic coercion
-policy;</li>
-<li>roxygen documentation skeletons and scalar-equivalence test
-skeletons.</li>
-</ul>
-<p>The actual optimized kernels can remain hand-written per backend,
-because that is where algorithmic care belongs. The repetitive API
-plumbing should be generated; otherwise the error surface is only moved
-from backend selection into duplicated <code>.Call</code> and R-wrapper
-glue.</p>
+<p>For packages with many public operations, keep a single operation
+catalog that can generate the repetitive dispatch metadata,
+<code>.Call</code> registration, and R wrappers. Optimized backend
+kernels can remain hand-written, but operation names, argument lists,
+and exported wrapper metadata should not be duplicated by hand.</p>
 </div>
 <div class="section level2">
 <h2 id="build">Build<a class="anchor" aria-label="anchor" href="#build"></a>
