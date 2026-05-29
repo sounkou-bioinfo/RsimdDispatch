@@ -106,12 +106,16 @@
 <span><span class="fu"><a href="reference/simd_backend.html">simd_backend</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "avx2"</span></span>
 <span><span class="fu"><a href="reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"auto"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"available_backends"</span>, <span class="st">"simde_native_backends"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"available_backends"</span>, <span class="st">"operation_selected_backends"</span>, <span class="st">"simde_native_backends"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $compiled_backends</span></span>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="co">#&gt;</span></span>
 <span><span class="co">#&gt; $available_backends</span></span>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"</span></span>
+<span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt; $operation_selected_backends</span></span>
+<span><span class="co">#&gt; count_nonzero    convolve1d</span></span>
+<span><span class="co">#&gt;        "avx2"        "avx2"</span></span>
 <span><span class="co">#&gt;</span></span>
 <span><span class="co">#&gt; $simde_native_backends</span></span>
 <span><span class="co">#&gt; [1] "sse2"   "sse41"  "avx2"   "avx512"</span></span>
@@ -123,7 +127,7 @@
 <span><span class="co">#&gt; [1] "f3e8262173b7089db9a9d57a9ecef8dd07ad9c97"</span></span>
 <span><span class="fu"><a href="reference/simd_dispatch_template_path.html">simd_dispatch_template_path</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RsimdDispatch/templates/dispatch-c"</span></span></code></pre></div>
-<p><code><a href="reference/simd_set_backend.html">simd_set_backend()</a></code> rejects uncompiled or CPU-unsupported backends. Operation-level backend availability is reported in <code>simd_info()$operation_backends</code>.</p>
+<p><code><a href="reference/simd_set_backend.html">simd_set_backend()</a></code> rejects uncompiled or CPU-unsupported backends. Operation-level backend availability is reported in <code>simd_info()$operation_backends</code>, and the active resolved backend for each operation is reported in <code>simd_info()$operation_selected_backends</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
@@ -133,13 +137,17 @@
 <span><span class="co">#&gt; [1] 3</span></span>
 <span><span class="fu"><a href="reference/convolve1d.html">convolve1d</a></span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1]  10 120 230 300</span></span>
-<span><span class="fu"><a href="reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"selected_backend"</span>, <span class="st">"available_backends"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"selected_backend"</span>, <span class="st">"operation_selected_backends"</span>, <span class="st">"available_backends"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $selected_backend</span></span>
 <span><span class="co">#&gt; [1] "avx2"</span></span>
 <span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt; $operation_selected_backends</span></span>
+<span><span class="co">#&gt; count_nonzero    convolve1d</span></span>
+<span><span class="co">#&gt;        "avx2"        "avx2"</span></span>
+<span><span class="co">#&gt;</span></span>
 <span><span class="co">#&gt; $available_backends</span></span>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"</span></span></code></pre></div>
-<p>Switching backends is same-process because all variants are linked into one R shared library and selected through a guarded operation table.</p>
+<p>Switching backends is same-process because all variants are linked into one R shared library and selected through a guarded resolved operation table.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"scalar"</span><span class="op">)</span></span>
 <span><span class="va">scalar_count</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/count_nonzero.html">count_nonzero</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
@@ -203,17 +211,17 @@
 <tbody>
 <tr>
 <td align="left">scalar</td>
-<td align="right">11.522</td>
-<td align="right">4559.696</td>
+<td align="right">11.562</td>
+<td align="right">4532.502</td>
 <td align="right">20</td>
 <td align="right">1.000</td>
 </tr>
 <tr>
 <td align="left">avx2</td>
-<td align="right">1.853</td>
-<td align="right">27697.757</td>
+<td align="right">2.034</td>
+<td align="right">25619.186</td>
 <td align="right">20</td>
-<td align="right">6.074</td>
+<td align="right">5.652</td>
 </tr>
 </tbody>
 </table>
@@ -268,17 +276,17 @@
 <tbody>
 <tr>
 <td align="left">scalar</td>
-<td align="right">3.069</td>
-<td align="right">3271.550</td>
+<td align="right">4.401</td>
+<td align="right">2344.666</td>
 <td align="right">20</td>
 <td align="right">1.000</td>
 </tr>
 <tr>
 <td align="left">avx2</td>
-<td align="right">1.232</td>
-<td align="right">8092.049</td>
+<td align="right">1.247</td>
+<td align="right">7962.353</td>
 <td align="right">20</td>
-<td align="right">2.473</td>
+<td align="right">3.396</td>
 </tr>
 </tbody>
 </table>

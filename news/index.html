@@ -47,7 +47,8 @@
 <li>Trim redundant backend-selection wording from README and dispatch semantics documentation.</li>
 <li>Move the staged-kernel-only <code>kernel_common.h</code> helper from <code>src/</code> into <code>tools/kernels/</code> and the copied template kernel directory, and update downstream-template docs for that layout.</li>
 <li>Replace short-lived C preprocessor expansion blocks in <code>src/</code> with explicit operation-table declarations, dispatch wrappers, and native registration entries.</li>
-<li>Support explicit <code>NULL</code> operation slots for backend/operation combinations that are deliberately unsupported, report operation-level backend availability in <code><a href="../reference/simd_info.html">simd_info()</a></code>, and make <code>"auto"</code> skip unsupported slots for the operation being called.</li>
+<li>Move dispatch to a NumKong-inspired resolved operation table: backend files register the operation slots they implement, <code>"auto"</code> resolves the best backend per operation, and <code><a href="../reference/simd_info.html">simd_info()</a></code> reports both operation-level backend availability and the selected backend for each operation.</li>
+<li>Add <code>Dockerfile.musl-check</code> for Alpine Linux / musl <code>R CMD check</code> smoke testing in repository-specific CI.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.2" id="rsimddispatch-012">RsimdDispatch 0.1.2<a class="anchor" aria-label="anchor" href="#rsimddispatch-012"></a></h2>

@@ -6,8 +6,8 @@ such as
 and
 [`convolve1d()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/convolve1d.md).
 `RsimdDispatch` keeps all compiled variants in one shared object and
-switches guarded operation tables. This makes same-process benchmarking
-possible.
+switches a guarded resolved operation table. This makes same-process
+benchmarking possible.
 
 ## Usage
 
@@ -24,8 +24,9 @@ simd_set_backend(backend = "auto")
 
 ## Value
 
-The selected backend, invisibly. For `"auto"`, this is the backend
-chosen from the compiled and CPU-supported set.
+The selected backend summary, invisibly. For `"auto"`, operations
+resolve independently and the summary may be `"mixed"` when different
+operations choose different backends.
 
 ## Examples
 

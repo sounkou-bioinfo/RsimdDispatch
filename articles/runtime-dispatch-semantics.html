@@ -69,8 +69,8 @@
     
     
 <p><code>RsimdDispatch</code> uses a single R shared library. All
-compiled variants are linked into that shared object, and an
-operation-table pointer selects the active implementation set.</p>
+compiled variants are linked into that shared object, and the active
+dispatch table stores the resolved backend for each operation slot.</p>
 <p>This means backend switching is safe in one R process:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/sounkou-bioinfo/RsimdDispatch" class="external-link">RsimdDispatch</a></span><span class="op">)</span></span>
@@ -104,17 +104,20 @@ for AVX and AVX-512 register state on x86 and module-level SIMD128
 support on WebAssembly.</li>
 </ul>
 <p>If a backend is not available, the setter errors before any SIMD-only
-instruction can execute. Individual operation slots may also be
-<code>NULL</code> for a backend. Explicitly selecting such a backend is
-allowed, but calling an unsupported operation errors clearly. With
-<code>"auto"</code>, each operation resolves to the best available
-backend that has a non-<code>NULL</code> slot for that operation.
-Backend selection is a process-global operation-table pointer:
-initialize or change it from ordinary R code, and do not call
-<code><a href="../reference/simd_set_backend.html">simd_set_backend()</a></code> concurrently with active native worker
-threads that are executing dispatched kernels.</p>
+instruction can execute. Backend files register only the operation slots
+they implement, so a backend may deliberately omit an operation.
+Explicitly selecting such a backend is allowed, but calling an
+unsupported operation errors clearly. With <code>"auto"</code>, each
+operation resolves independently to the best available backend that
+registered that operation. The summary <code>selected_backend</code> is
+a single backend when all resolved slots agree and <code>"mixed"</code>
+when different operations resolve to different backends.</p>
+<p>Backend selection is process-global: initialize or change it from
+ordinary R code, and do not call <code><a href="../reference/simd_set_backend.html">simd_set_backend()</a></code>
+concurrently with active native worker threads that are executing
+dispatched kernels.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"cpu_supported_backends"</span>, <span class="st">"available_backends"</span>, <span class="st">"operation_backends"</span><span class="op">)</span><span class="op">]</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"cpu_supported_backends"</span>, <span class="st">"available_backends"</span>, <span class="st">"operation_backends"</span>, <span class="st">"operation_selected_backends"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $compiled_backends</span></span>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -129,7 +132,12 @@ threads that are executing dispatched kernels.</p>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $operation_backends$convolve1d</span></span>
-<span><span class="co">#&gt; [1] "scalar" "avx2"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "scalar" "avx2"  </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $operation_selected_backends</span></span>
+<span><span class="co">#&gt; count_nonzero    convolve1d </span></span>
+<span><span class="co">#&gt;        "avx2"        "avx2"</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="simde-and-native-isa-compilation">SIMDe and native ISA compilation<a class="anchor" aria-label="anchor" href="#simde-and-native-isa-compilation"></a>
 </h2>
@@ -198,8 +206,8 @@ same-process backend switching through the public API.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      330.4µs     <span style="text-decoration: underline;">2</span>984.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         59.4µs    <span style="text-decoration: underline;">15</span>254.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      335.3µs     <span style="text-decoration: underline;">2</span>933.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         46.5µs    <span style="text-decoration: underline;">18</span>412.</span></span></code></pre></div>
 <p>The same switch applies to the full one-dimensional convolution
 demo:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -226,8 +234,8 @@ demo:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        431µs     <span style="text-decoration: underline;">2</span>313.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto          190µs     <span style="text-decoration: underline;">5</span>215.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        489µs     <span style="text-decoration: underline;">2</span>077.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto          182µs     <span style="text-decoration: underline;">5</span>468.</span></span></code></pre></div>
 <p><code>"auto"</code> selects the best backend from the compiled and
 supported intersection that also supports the operation being called.
 The current ranking is:</p>

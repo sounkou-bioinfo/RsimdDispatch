@@ -71,8 +71,8 @@
 <p><code>RsimdDispatch</code> demonstrates a single-shared-library
 runtime dispatch pattern for C code in R packages. The package stages
 scalar and SIMD kernel objects during configuration and switches among
-compiled, CPU-supported implementations through a guarded operation
-table.</p>
+compiled, CPU-supported implementations through a guarded resolved
+operation table.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/sounkou-bioinfo/RsimdDispatch" class="external-link">RsimdDispatch</a></span><span class="op">)</span></span>
 <span></span>
@@ -87,15 +87,16 @@ table.</p>
 <span><span class="co">#&gt; [1] "avx2"</span></span></code></pre></div>
 <p>Inspect the installed build:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"cpu_supported_backends"</span>, <span class="st">"available_backends"</span><span class="op">)</span><span class="op">]</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"available_backends"</span>, <span class="st">"operation_selected_backends"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $compiled_backends</span></span>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $cpu_supported_backends</span></span>
+<span><span class="co">#&gt; $available_backends</span></span>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"  </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $available_backends</span></span>
-<span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"</span></span></code></pre></div>
+<span><span class="co">#&gt; $operation_selected_backends</span></span>
+<span><span class="co">#&gt; count_nonzero    convolve1d </span></span>
+<span><span class="co">#&gt;        "avx2"        "avx2"</span></span></code></pre></div>
 <p>Switching is allowed in the same R process:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/simd_set_backend.html">simd_set_backend</a></span><span class="op">(</span><span class="st">"scalar"</span><span class="op">)</span></span>

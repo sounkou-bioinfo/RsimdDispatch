@@ -71,12 +71,16 @@ simd_set_backend("avx2")
 simd_backend()
 #> [1] "avx2"
 simd_set_backend("auto")
-simd_info()[c("compiled_backends", "available_backends", "simde_native_backends")]
+simd_info()[c("compiled_backends", "available_backends", "operation_selected_backends", "simde_native_backends")]
 #> $compiled_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #>
 #> $available_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"
+#>
+#> $operation_selected_backends
+#> count_nonzero    convolve1d
+#>        "avx2"        "avx2"
 #>
 #> $simde_native_backends
 #> [1] "sse2"   "sse41"  "avx2"   "avx512"
@@ -92,7 +96,9 @@ simd_dispatch_template_path()
 
 [`simd_set_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_set_backend.md)
 rejects uncompiled or CPU-unsupported backends. Operation-level backend
-availability is reported in `simd_info()$operation_backends`.
+availability is reported in `simd_info()$operation_backends`, and the
+active resolved backend for each operation is reported in
+`simd_info()$operation_selected_backends`.
 
 ## Example
 
@@ -102,16 +108,21 @@ count_nonzero(x)
 #> [1] 3
 convolve1d(a, b)
 #> [1]  10 120 230 300
-simd_info()[c("selected_backend", "available_backends")]
+simd_info()[c("selected_backend", "operation_selected_backends", "available_backends")]
 #> $selected_backend
 #> [1] "avx2"
+#>
+#> $operation_selected_backends
+#> count_nonzero    convolve1d
+#>        "avx2"        "avx2"
 #>
 #> $available_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"
 ```
 
 Switching backends is same-process because all variants are linked into
-one R shared library and selected through a guarded operation table.
+one R shared library and selected through a guarded resolved operation
+table.
 
 ``` r
 
@@ -171,8 +182,8 @@ knitr::kable(bench, digits = 3)
 
 | backend | median_ms | mb_per_second | iterations | speedup_vs_scalar |
 |:--------|----------:|--------------:|-----------:|------------------:|
-| scalar  |    11.522 |      4559.696 |         20 |             1.000 |
-| avx2    |     1.853 |     27697.757 |         20 |             6.074 |
+| scalar  |    11.562 |      4532.502 |         20 |             1.000 |
+| avx2    |     2.034 |     25619.186 |         20 |             5.652 |
 
 The same runtime switch can benchmark a full one-dimensional
 convolution: the classic nested-loop `out[i + j - 1] += a[i] * b[j]`
@@ -215,8 +226,8 @@ knitr::kable(conv_bench, digits = 3)
 
 | backend | median_ms | million_multiply_adds_per_second | iterations | speedup_vs_scalar |
 |:---|---:|---:|---:|---:|
-| scalar | 3.069 | 3271.550 | 20 | 1.000 |
-| avx2 | 1.232 | 8092.049 | 20 | 2.473 |
+| scalar | 4.401 | 2344.666 | 20 | 1.000 |
+| avx2 | 1.247 | 7962.353 | 20 | 3.396 |
 
 ## Development
 

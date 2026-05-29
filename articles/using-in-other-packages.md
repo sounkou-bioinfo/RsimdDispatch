@@ -64,21 +64,26 @@ src/simd_dispatch.c
 
 ## Replace the demo kernels
 
-The demo operations are collected in a backend operation table:
+The demo operations are registered by each backend file. For example,
+the AVX2 staged source registers both demo operations:
 
 ``` c
-typedef struct RsdOps {
-    rsd_count_nonzero_fn count_nonzero;
-    rsd_convolve1d_fn convolve1d;
-} RsdOps;
+void rsd_register_avx2(RsdDispatchBuilder *builder) {
+    rsd_register_count_nonzero(builder, rsd_count_nonzero_avx2);
+    rsd_register_convolve1d(builder, rsd_convolve1d_avx2);
+}
 ```
 
+SSE2 and SSE4.1 currently register only
+[`count_nonzero()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/count_nonzero.md),
+which demonstrates operation-level backend support. A backend
+intentionally omits an operation by not registering that slot.
+Explicitly selecting such a backend is allowed, but calling the
+unsupported operation errors clearly; `"auto"` skips that backend for
+the unsupported operation.
+
 For a real package, replace the demo operation signatures with your own
-and keep the same structure. A backend may set an operation slot to
-`NULL` when that operation is deliberately unsupported for that backend;
-the dispatched wrapper then reports a clear error for explicit backend
-selection, while `"auto"` skips that backend for the unsupported
-operation.
+and keep the same structure:
 
 ``` text
 R API wrapper        ordinary src/Makevars compilation
@@ -100,21 +105,21 @@ another function to each existing `tools/kernels/kernel_*.c` file, the
 same staged object for that backend contains the new implementation. For
 a small number of operations, keep the dispatch code explicit and add:
 
-1.  a function-pointer typedef and `RsdOps` field in
-    `src/simd_dispatch.h`;
+1.  a function-pointer typedef and typed registration helper in
+    `src/simd_dispatch.h` and `src/simd_dispatch.c`;
 2.  one implementation per backend file under `tools/kernels/`,
     following the naming convention `rsd_<operation>_<backend>()`;
-3.  backend declarations, `RsdOps` initializers using function pointers
-    or explicit `NULL` slots, and the dispatched wrapper in
-    `src/simd_dispatch.c`;
-4.  the `.Call` wrapper in `src/r_api.c`;
-5.  the native registration entry in `src/registration.c`;
-6.  the R wrapper, tests, and documentation.
+3.  a call to the typed registration helper in each backend file that
+    implements the operation;
+4.  the resolved dispatch slot and wrapper in `src/simd_dispatch.c`;
+5.  the `.Call` wrapper in `src/r_api.c`;
+6.  the native registration entry in `src/registration.c`;
+7.  the R wrapper, tests, and documentation.
 
-Backend metadata is table-driven, so diagnostics and auto-selection do
-not need a second hand-maintained backend-name list. This explicit
-layout is easier to read for the template and still keeps
-backend-selection logic centralized.
+Backend metadata is table-driven, while operation implementation
+ownership stays close to each backend source file. This explicit layout
+is easier to read for the template and still keeps backend-selection
+logic centralized.
 
 For packages with many public operations, keep a single operation
 catalog that can generate the repetitive dispatch metadata, `.Call`

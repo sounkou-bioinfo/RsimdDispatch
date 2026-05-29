@@ -3,7 +3,8 @@
 `RsimdDispatch` demonstrates a single-shared-library runtime dispatch
 pattern for C code in R packages. The package stages scalar and SIMD
 kernel objects during configuration and switches among compiled,
-CPU-supported implementations through a guarded operation table.
+CPU-supported implementations through a guarded resolved operation
+table.
 
 ``` r
 
@@ -24,15 +25,16 @@ Inspect the installed build:
 
 ``` r
 
-simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends")]
+simd_info()[c("compiled_backends", "available_backends", "operation_selected_backends")]
 #> $compiled_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
-#> $cpu_supported_backends
+#> $available_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"  
 #> 
-#> $available_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"
+#> $operation_selected_backends
+#> count_nonzero    convolve1d 
+#>        "avx2"        "avx2"
 ```
 
 Switching is allowed in the same R process:

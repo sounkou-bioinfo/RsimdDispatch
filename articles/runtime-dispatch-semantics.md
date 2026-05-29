@@ -1,8 +1,8 @@
 # Runtime Dispatch Semantics
 
 `RsimdDispatch` uses a single R shared library. All compiled variants
-are linked into that shared object, and an operation-table pointer
-selects the active implementation set.
+are linked into that shared object, and the active dispatch table stores
+the resolved backend for each operation slot.
 
 This means backend switching is safe in one R process:
 
@@ -41,20 +41,24 @@ performs two checks for explicit choices:
   on WebAssembly.
 
 If a backend is not available, the setter errors before any SIMD-only
-instruction can execute. Individual operation slots may also be `NULL`
-for a backend. Explicitly selecting such a backend is allowed, but
-calling an unsupported operation errors clearly. With `"auto"`, each
-operation resolves to the best available backend that has a non-`NULL`
-slot for that operation. Backend selection is a process-global
-operation-table pointer: initialize or change it from ordinary R code,
-and do not call
+instruction can execute. Backend files register only the operation slots
+they implement, so a backend may deliberately omit an operation.
+Explicitly selecting such a backend is allowed, but calling an
+unsupported operation errors clearly. With `"auto"`, each operation
+resolves independently to the best available backend that registered
+that operation. The summary `selected_backend` is a single backend when
+all resolved slots agree and `"mixed"` when different operations resolve
+to different backends.
+
+Backend selection is process-global: initialize or change it from
+ordinary R code, and do not call
 [`simd_set_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_set_backend.md)
 concurrently with active native worker threads that are executing
 dispatched kernels.
 
 ``` r
 
-simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends", "operation_backends")]
+simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends", "operation_backends", "operation_selected_backends")]
 #> $compiled_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
@@ -69,7 +73,12 @@ simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"  
 #> 
 #> $operation_backends$convolve1d
-#> [1] "scalar" "avx2"
+#> [1] "scalar" "avx2"  
+#> 
+#> 
+#> $operation_selected_backends
+#> count_nonzero    convolve1d 
+#>        "avx2"        "avx2"
 ```
 
 ## SIMDe and native ISA compilation
@@ -142,8 +151,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar      330.4µs     2984.
-#> 2 auto         59.4µs    15254.
+#> 1 scalar      335.3µs     2933.
+#> 2 auto         46.5µs    18412.
 ```
 
 The same switch applies to the full one-dimensional convolution demo:
@@ -173,8 +182,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar        431µs     2313.
-#> 2 auto          190µs     5215.
+#> 1 scalar        489µs     2077.
+#> 2 auto          182µs     5468.
 ```
 
 `"auto"` selects the best backend from the compiled and supported

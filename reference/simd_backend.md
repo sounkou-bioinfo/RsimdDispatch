@@ -10,7 +10,7 @@ simd_backend()
 
 ## Value
 
-A character scalar naming the selected backend.
+A character scalar naming the selected backend summary.
 
 ## Examples
 

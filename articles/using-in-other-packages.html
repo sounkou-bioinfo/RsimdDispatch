@@ -119,17 +119,20 @@ performs the important substitutions, including <code>@useDynLib</code>,
 <div class="section level2">
 <h2 id="replace-the-demo-kernels">Replace the demo kernels<a class="anchor" aria-label="anchor" href="#replace-the-demo-kernels"></a>
 </h2>
-<p>The demo operations are collected in a backend operation table:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">struct</span> RsdOps <span class="op">{</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    rsd_count_nonzero_fn count_nonzero<span class="op">;</span></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    rsd_convolve1d_fn convolve1d<span class="op">;</span></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="op">}</span> RsdOps<span class="op">;</span></span></code></pre></div>
+<p>The demo operations are registered by each backend file. For example,
+the AVX2 staged source registers both demo operations:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="dt">void</span> rsd_register_avx2<span class="op">(</span>RsdDispatchBuilder <span class="op">*</span>builder<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    rsd_register_count_nonzero<span class="op">(</span>builder<span class="op">,</span> rsd_count_nonzero_avx2<span class="op">);</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    rsd_register_convolve1d<span class="op">(</span>builder<span class="op">,</span> rsd_convolve1d_avx2<span class="op">);</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>SSE2 and SSE4.1 currently register only <code><a href="../reference/count_nonzero.html">count_nonzero()</a></code>,
+which demonstrates operation-level backend support. A backend
+intentionally omits an operation by not registering that slot.
+Explicitly selecting such a backend is allowed, but calling the
+unsupported operation errors clearly; <code>"auto"</code> skips that
+backend for the unsupported operation.</p>
 <p>For a real package, replace the demo operation signatures with your
-own and keep the same structure. A backend may set an operation slot to
-<code>NULL</code> when that operation is deliberately unsupported for
-that backend; the dispatched wrapper then reports a clear error for
-explicit backend selection, while <code>"auto"</code> skips that backend
-for the unsupported operation.</p>
+own and keep the same structure:</p>
 <pre class="text"><code>R API wrapper        ordinary src/Makevars compilation
 CPU feature checks   ordinary src/Makevars compilation
 dispatch table       ordinary src/Makevars compilation
@@ -149,23 +152,25 @@ file, the same staged object for that backend contains the new
 implementation. For a small number of operations, keep the dispatch code
 explicit and add:</p>
 <ol style="list-style-type: decimal">
-<li>a function-pointer typedef and <code>RsdOps</code> field in
-<code>src/simd_dispatch.h</code>;</li>
+<li>a function-pointer typedef and typed registration helper in
+<code>src/simd_dispatch.h</code> and
+<code>src/simd_dispatch.c</code>;</li>
 <li>one implementation per backend file under
 <code>tools/kernels/</code>, following the naming convention
 <code>rsd_&lt;operation&gt;_&lt;backend&gt;()</code>;</li>
-<li>backend declarations, <code>RsdOps</code> initializers using
-function pointers or explicit <code>NULL</code> slots, and the
-dispatched wrapper in <code>src/simd_dispatch.c</code>;</li>
+<li>a call to the typed registration helper in each backend file that
+implements the operation;</li>
+<li>the resolved dispatch slot and wrapper in
+<code>src/simd_dispatch.c</code>;</li>
 <li>the <code>.Call</code> wrapper in <code>src/r_api.c</code>;</li>
 <li>the native registration entry in
 <code>src/registration.c</code>;</li>
 <li>the R wrapper, tests, and documentation.</li>
 </ol>
-<p>Backend metadata is table-driven, so diagnostics and auto-selection
-do not need a second hand-maintained backend-name list. This explicit
-layout is easier to read for the template and still keeps
-backend-selection logic centralized.</p>
+<p>Backend metadata is table-driven, while operation implementation
+ownership stays close to each backend source file. This explicit layout
+is easier to read for the template and still keeps backend-selection
+logic centralized.</p>
 <p>For packages with many public operations, keep a single operation
 catalog that can generate the repetitive dispatch metadata,
 <code>.Call</code> registration, and R wrappers. Optimized backend
