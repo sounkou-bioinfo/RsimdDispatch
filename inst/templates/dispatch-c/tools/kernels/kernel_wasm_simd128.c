@@ -25,23 +25,32 @@ size_t rsd_count_nonzero_wasm_simd128(const uint8_t *x, size_t n) {
     return acc;
 }
 
-void rsd_convolve3_wasm_simd128(const double *x, size_t n, const double kernel[3], double *out) {
-    size_t i = 0;
-    size_t out_n = n >= 3 ? n - 2 : 0;
-    const simde_v128_t k0 = simde_wasm_f64x2_splat(kernel[0]);
-    const simde_v128_t k1 = simde_wasm_f64x2_splat(kernel[1]);
-    const simde_v128_t k2 = simde_wasm_f64x2_splat(kernel[2]);
-
-    for (; i + 2 <= out_n; i += 2) {
-        simde_v128_t x0 = simde_wasm_v128_load((const void *)(x + i));
-        simde_v128_t x1 = simde_wasm_v128_load((const void *)(x + i + 1));
-        simde_v128_t x2 = simde_wasm_v128_load((const void *)(x + i + 2));
-        simde_v128_t y = simde_wasm_f64x2_add(
-            simde_wasm_f64x2_add(simde_wasm_f64x2_mul(k0, x0), simde_wasm_f64x2_mul(k1, x1)),
-            simde_wasm_f64x2_mul(k2, x2)
-        );
-        simde_wasm_v128_store((void *)(out + i), y);
+void rsd_convolve1d_wasm_simd128(const double *a, size_t na, const double *b, size_t nb, double *out) {
+    if (na == 0 || nb == 0) {
+        return;
     }
 
-    rsd_convolve3_scalar_range(x, n, kernel, out, i);
+    const size_t nab = na + nb - 1;
+    size_t k = 0;
+    const simde_v128_t zero = simde_wasm_f64x2_splat(0.0);
+    for (; k + 2 <= nab; k += 2) {
+        simde_wasm_v128_store((void *)(out + k), zero);
+    }
+    for (; k < nab; ++k) {
+        out[k] = 0.0;
+    }
+
+    for (size_t i = 0; i < na; ++i) {
+        const simde_v128_t ai = simde_wasm_f64x2_splat(a[i]);
+        size_t j = 0;
+        for (; j + 2 <= nb; j += 2) {
+            simde_v128_t bv = simde_wasm_v128_load((const void *)(b + j));
+            simde_v128_t ov = simde_wasm_v128_load((const void *)(out + i + j));
+            ov = simde_wasm_f64x2_add(ov, simde_wasm_f64x2_mul(ai, bv));
+            simde_wasm_v128_store((void *)(out + i + j), ov);
+        }
+        for (; j < nb; ++j) {
+            out[i + j] += a[i] * b[j];
+        }
+    }
 }

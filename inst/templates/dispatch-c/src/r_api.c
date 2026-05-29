@@ -53,21 +53,28 @@ SEXP RC_count_nonzero(SEXP x) {
     return Rf_ScalarReal((double)count);
 }
 
-SEXP RC_convolve3(SEXP x, SEXP kernel) {
-    if (TYPEOF(x) != REALSXP) {
-        Rf_error("x must be a numeric vector");
+SEXP RC_convolve1d(SEXP a, SEXP b) {
+    if (TYPEOF(a) != REALSXP) {
+        Rf_error("a must be a numeric vector");
     }
-    if (TYPEOF(kernel) != REALSXP || XLENGTH(kernel) != 3) {
-        Rf_error("kernel must be a numeric vector of length 3");
+    if (TYPEOF(b) != REALSXP) {
+        Rf_error("b must be a numeric vector");
     }
-    R_xlen_t len = XLENGTH(x);
-    if ((uint64_t)len > (uint64_t)SIZE_MAX) {
-        Rf_error("x is too large for this platform");
+    R_xlen_t na = XLENGTH(a);
+    R_xlen_t nb = XLENGTH(b);
+    if ((uint64_t)na > (uint64_t)SIZE_MAX || (uint64_t)nb > (uint64_t)SIZE_MAX) {
+        Rf_error("input is too large for this platform");
     }
-    R_xlen_t out_len = len >= 3 ? len - 2 : 0;
-    SEXP out = PROTECT(Rf_allocVector(REALSXP, out_len));
-    if (out_len > 0) {
-        rsd_convolve3_valid(REAL(x), (size_t)len, REAL(kernel), REAL(out));
+    R_xlen_t nab = 0;
+    if (na > 0 && nb > 0) {
+        if (na > R_XLEN_T_MAX - nb + 1) {
+            Rf_error("convolution output is too large");
+        }
+        nab = na + nb - 1;
+    }
+    SEXP out = PROTECT(Rf_allocVector(REALSXP, nab));
+    if (nab > 0) {
+        rsd_convolve1d(REAL(a), (size_t)na, REAL(b), (size_t)nb, REAL(out));
     }
     UNPROTECT(1);
     return out;

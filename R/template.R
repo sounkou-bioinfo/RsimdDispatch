@@ -82,7 +82,7 @@ use_simd_dispatch <- function(path = ".",
 
   if (!isTRUE(quiet)) {
     message("Configured C SIMD dispatch scaffold for package ", pkg, ".")
-    message("Next: replace the demo count_nonzero() and convolve3() kernels with your package kernels and run roxygen2.")
+    message("Next: replace the demo count_nonzero() and convolve1d() kernels with your package kernels and run roxygen2.")
   }
   invisible(copied)
 }

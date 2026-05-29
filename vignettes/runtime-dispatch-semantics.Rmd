@@ -20,17 +20,18 @@ This means backend switching is safe in one R process:
 ```{r}
 library(RsimdDispatch)
 x <- as.raw(c(0, 1, 2, 3))
-y <- c(1, 2, 4, 8, 16)
+a <- c(1, 2, 3)
+b <- c(10, 100)
 
 simd_set_backend("scalar")
 count_nonzero(x)
-convolve3(y, c(1, 0, -1))
+convolve1d(a, b)
 
 candidate <- setdiff(simd_info()$available_backends, "scalar")[1]
 if (!is.na(candidate)) {
   simd_set_backend(candidate)
   count_nonzero(x)
-  convolve3(y, c(1, 0, -1))
+  convolve1d(a, b)
 }
 
 simd_set_backend("auto")
@@ -108,21 +109,21 @@ if (requireNamespace("bench", quietly = TRUE)) {
 }
 ```
 
-The same switch applies to the numeric three-tap convolution demo:
+The same switch applies to the full one-dimensional convolution demo:
 
 ```{r}
 if (requireNamespace("bench", quietly = TRUE)) {
-  bench_y <- runif(2^18)
-  bench_k <- c(0.25, 0.5, 0.25)
+  bench_a <- runif(10000)
+  bench_b <- runif(100)
 
   conv_bench <- bench::mark(
     scalar = {
       simd_set_backend("scalar")
-      convolve3(bench_y, bench_k)
+      convolve1d(bench_a, bench_b)
     },
     auto = {
       simd_set_backend("auto")
-      convolve3(bench_y, bench_k)
+      convolve1d(bench_a, bench_b)
     },
     iterations = 5,
     check = TRUE

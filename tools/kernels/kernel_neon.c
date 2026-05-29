@@ -5,8 +5,6 @@
 
 #include <simde/arm/neon.h>
 
-#include "kernel_common.h"
-
 size_t rsd_count_nonzero_neon(const uint8_t *x, size_t n) {
     size_t i = 0;
     size_t acc = 0;
@@ -28,8 +26,36 @@ size_t rsd_count_nonzero_neon(const uint8_t *x, size_t n) {
     return acc;
 }
 
-void rsd_convolve3_neon(const double *x, size_t n, const double kernel[3], double *out) {
-    /* Keep the NEON template portable across both AArch64 and ARMv7 targets;
-       ARMv7 NEON lacks native double-precision vector arithmetic. */
-    rsd_convolve3_scalar_range(x, n, kernel, out, 0);
+void rsd_convolve1d_neon(const double *a, size_t na, const double *b, size_t nb, double *out) {
+    if (na == 0 || nb == 0) {
+        return;
+    }
+
+    const size_t nab = na + nb - 1;
+    for (size_t k = 0; k < nab; ++k) {
+        out[k] = 0.0;
+    }
+
+#if defined(SIMDE_ARCH_AARCH64)
+    for (size_t i = 0; i < na; ++i) {
+        const simde_float64x2_t ai = simde_vdupq_n_f64(a[i]);
+        size_t j = 0;
+        for (; j + 2 <= nb; j += 2) {
+            simde_float64x2_t bv = simde_vld1q_f64(b + j);
+            simde_float64x2_t ov = simde_vld1q_f64(out + i + j);
+            ov = simde_vaddq_f64(ov, simde_vmulq_f64(ai, bv));
+            simde_vst1q_f64(out + i + j, ov);
+        }
+        for (; j < nb; ++j) {
+            out[i + j] += a[i] * b[j];
+        }
+    }
+#else
+    for (size_t i = 0; i < na; ++i) {
+        const double ai = a[i];
+        for (size_t j = 0; j < nb; ++j) {
+            out[i + j] += ai * b[j];
+        }
+    }
+#endif
 }

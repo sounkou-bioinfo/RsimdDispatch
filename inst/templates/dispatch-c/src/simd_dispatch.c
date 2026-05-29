@@ -8,82 +8,82 @@
 #include <string.h>
 
 extern size_t rsd_count_nonzero_scalar(const uint8_t *x, size_t n);
-extern void rsd_convolve3_scalar(const double *x, size_t n, const double kernel[3], double *out);
+extern void rsd_convolve1d_scalar(const double *a, size_t na, const double *b, size_t nb, double *out);
 
 #if RSD_HAVE_SSE2
 extern size_t rsd_count_nonzero_sse2(const uint8_t *x, size_t n);
-extern void rsd_convolve3_sse2(const double *x, size_t n, const double kernel[3], double *out);
+extern void rsd_convolve1d_sse2(const double *a, size_t na, const double *b, size_t nb, double *out);
 #endif
 
 #if RSD_HAVE_SSE41
 extern size_t rsd_count_nonzero_sse41(const uint8_t *x, size_t n);
-extern void rsd_convolve3_sse41(const double *x, size_t n, const double kernel[3], double *out);
+extern void rsd_convolve1d_sse41(const double *a, size_t na, const double *b, size_t nb, double *out);
 #endif
 
 #if RSD_HAVE_AVX2
 extern size_t rsd_count_nonzero_avx2(const uint8_t *x, size_t n);
-extern void rsd_convolve3_avx2(const double *x, size_t n, const double kernel[3], double *out);
+extern void rsd_convolve1d_avx2(const double *a, size_t na, const double *b, size_t nb, double *out);
 #endif
 
 #if RSD_HAVE_AVX512
 extern size_t rsd_count_nonzero_avx512(const uint8_t *x, size_t n);
-extern void rsd_convolve3_avx512(const double *x, size_t n, const double kernel[3], double *out);
+extern void rsd_convolve1d_avx512(const double *a, size_t na, const double *b, size_t nb, double *out);
 #endif
 
 #if RSD_HAVE_NEON
 extern size_t rsd_count_nonzero_neon(const uint8_t *x, size_t n);
-extern void rsd_convolve3_neon(const double *x, size_t n, const double kernel[3], double *out);
+extern void rsd_convolve1d_neon(const double *a, size_t na, const double *b, size_t nb, double *out);
 #endif
 
 #if RSD_HAVE_WASM_SIMD128
 extern size_t rsd_count_nonzero_wasm_simd128(const uint8_t *x, size_t n);
-extern void rsd_convolve3_wasm_simd128(const double *x, size_t n, const double kernel[3], double *out);
+extern void rsd_convolve1d_wasm_simd128(const double *a, size_t na, const double *b, size_t nb, double *out);
 #endif
 
 static const RsdOps rsd_ops_scalar = {
     rsd_count_nonzero_scalar,
-    rsd_convolve3_scalar
+    rsd_convolve1d_scalar
 };
 
 #if RSD_HAVE_SSE2
 static const RsdOps rsd_ops_sse2 = {
     rsd_count_nonzero_sse2,
-    rsd_convolve3_sse2
+    rsd_convolve1d_sse2
 };
 #endif
 
 #if RSD_HAVE_SSE41
 static const RsdOps rsd_ops_sse41 = {
     rsd_count_nonzero_sse41,
-    rsd_convolve3_sse41
+    rsd_convolve1d_sse41
 };
 #endif
 
 #if RSD_HAVE_AVX2
 static const RsdOps rsd_ops_avx2 = {
     rsd_count_nonzero_avx2,
-    rsd_convolve3_avx2
+    rsd_convolve1d_avx2
 };
 #endif
 
 #if RSD_HAVE_AVX512
 static const RsdOps rsd_ops_avx512 = {
     rsd_count_nonzero_avx512,
-    rsd_convolve3_avx512
+    rsd_convolve1d_avx512
 };
 #endif
 
 #if RSD_HAVE_NEON
 static const RsdOps rsd_ops_neon = {
     rsd_count_nonzero_neon,
-    rsd_convolve3_neon
+    rsd_convolve1d_neon
 };
 #endif
 
 #if RSD_HAVE_WASM_SIMD128
 static const RsdOps rsd_ops_wasm_simd128 = {
     rsd_count_nonzero_wasm_simd128,
-    rsd_convolve3_wasm_simd128
+    rsd_convolve1d_wasm_simd128
 };
 #endif
 
@@ -269,11 +269,11 @@ size_t rsd_count_nonzero(const uint8_t *x, size_t n) {
     return rsd_ops->count_nonzero(x, n);
 }
 
-void rsd_convolve3_valid(const double *x, size_t n, const double kernel[3], double *out) {
+void rsd_convolve1d(const double *a, size_t na, const double *b, size_t nb, double *out) {
     if (!rsd_dispatch_initialized) {
         rsd_init_dispatch();
     }
-    rsd_ops->convolve3(x, n, kernel, out);
+    rsd_ops->convolve1d(a, na, b, nb, out);
 }
 
 const char *rsd_requested_backend(void) {

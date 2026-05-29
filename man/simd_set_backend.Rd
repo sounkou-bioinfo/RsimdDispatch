@@ -19,7 +19,7 @@ chosen from the compiled and CPU-supported set.
 }
 \description{
 Select the backend used by subsequent calls to dispatched demo kernels such
-as \code{count_nonzero()} and \code{convolve3()}. \code{RsimdDispatch} keeps all compiled
+as \code{count_nonzero()} and \code{convolve1d()}. \code{RsimdDispatch} keeps all compiled
 variants in one shared object and switches guarded operation tables. This
 makes same-process benchmarking possible.
 }

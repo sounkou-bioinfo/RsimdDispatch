@@ -12,8 +12,9 @@
   include paths so copied templates are more robust in downstream libraries.
 * Eagerly initialize dispatch at package load, exercise copied-template runtime
   behavior in CI, and remove legacy comma-separated backend-list C helpers.
-* Add a dispatched `convolve3()` numeric three-tap convolution demo and include
-  it in tests, documentation, webR checks, and evaluated benchmarks.
+* Add a dispatched `convolve1d()` full one-dimensional convolution demo, using
+  SIMDe inner-loop multiply-add kernels for numeric vectors, and include it in
+  tests, documentation, webR checks, and evaluated benchmarks.
 
 # RsimdDispatch 0.1.1 (2026-05-28)
 

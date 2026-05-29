@@ -20,33 +20,30 @@ count_nonzero <- function(x) {
   .Call(RC_count_nonzero, x)
 }
 
-#' Three-tap numeric convolution with the selected SIMD backend
+#' Full one-dimensional convolution with the selected SIMD backend
 #'
 #' Demonstration numeric kernel for the runtime dispatch template.
-#' `convolve3()` computes a valid three-tap convolution/FIR pass over a numeric
-#' vector using the currently selected backend:
-#' `out[i] = kernel[1] * x[i] + kernel[2] * x[i + 1] + kernel[3] * x[i + 2]`.
+#' `convolve1d()` computes the same full convolution as a simple nested-loop R
+#' definition. For each pair of positions it adds `a[i] * b[j]` to
+#' `out[i + j - 1]`. SIMD backends vectorize the inner multiply-add over `b`
+#' and the shifted output window.
 #'
-#' @param x A numeric vector.
-#' @param kernel Numeric vector of length 3. The default is a symmetric
-#'   smoothing kernel.
-#' @return A numeric vector of length `max(length(x) - 2, 0)`.
+#' @param a,b Numeric vectors.
+#' @return A numeric vector of length `length(a) + length(b) - 1`, or
+#'   `numeric(0)` when either input is empty.
 #' @examples
-#' convolve3(c(1, 2, 3, 4), c(1, 0, -1))
+#' convolve1d(c(1, 2, 3), c(10, 100))
 #' @export
-convolve3 <- function(x, kernel = c(0.25, 0.5, 0.25)) {
-  x <- as.double(x)
-  kernel <- as.double(kernel)
-  if (length(kernel) != 3L) {
-    stop("kernel must be a numeric vector of length 3", call. = FALSE)
-  }
-  .Call(RC_convolve3, x, kernel)
+convolve1d <- function(a, b) {
+  a <- as.double(a)
+  b <- as.double(b)
+  .Call(RC_convolve1d, a, b)
 }
 
 #' Select the runtime SIMD backend
 #'
 #' Select the backend used by subsequent calls to dispatched demo kernels such
-#' as `count_nonzero()` and `convolve3()`. `RsimdDispatch` keeps all compiled
+#' as `count_nonzero()` and `convolve1d()`. `RsimdDispatch` keeps all compiled
 #' variants in one shared object and switches guarded operation tables. This
 #' makes same-process benchmarking possible.
 #'

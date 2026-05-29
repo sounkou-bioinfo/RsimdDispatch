@@ -20,9 +20,10 @@ through a guarded operation table.
 library(RsimdDispatch)
 
 x <- as.raw(c(0, 1, 2, 0, 255))
-y <- c(1, 2, 4, 8, 16)
+a <- c(1, 2, 3)
+b <- c(10, 100)
 count_nonzero(x)
-convolve3(y, c(0.25, 0.5, 0.25))
+convolve1d(a, b)
 simd_backend()
 ```
 
@@ -37,13 +38,13 @@ Switching is allowed in the same R process:
 ```{r}
 simd_set_backend("scalar")
 count_nonzero(x)
-convolve3(y, c(1, 0, -1))
+convolve1d(a, b)
 
 candidate <- setdiff(simd_info()$available_backends, "scalar")[1]
 if (!is.na(candidate)) {
   simd_set_backend(candidate)
   count_nonzero(x)
-  convolve3(y, c(1, 0, -1))
+  convolve1d(a, b)
 }
 
 simd_set_backend("auto")

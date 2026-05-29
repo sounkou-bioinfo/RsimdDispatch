@@ -25,23 +25,32 @@ size_t rsd_count_nonzero_avx2(const uint8_t *x, size_t n) {
     return acc;
 }
 
-void rsd_convolve3_avx2(const double *x, size_t n, const double kernel[3], double *out) {
-    size_t i = 0;
-    size_t out_n = n >= 3 ? n - 2 : 0;
-    const simde__m256d k0 = simde_mm256_set1_pd(kernel[0]);
-    const simde__m256d k1 = simde_mm256_set1_pd(kernel[1]);
-    const simde__m256d k2 = simde_mm256_set1_pd(kernel[2]);
-
-    for (; i + 4 <= out_n; i += 4) {
-        simde__m256d x0 = simde_mm256_loadu_pd(x + i);
-        simde__m256d x1 = simde_mm256_loadu_pd(x + i + 1);
-        simde__m256d x2 = simde_mm256_loadu_pd(x + i + 2);
-        simde__m256d y = simde_mm256_add_pd(
-            simde_mm256_add_pd(simde_mm256_mul_pd(k0, x0), simde_mm256_mul_pd(k1, x1)),
-            simde_mm256_mul_pd(k2, x2)
-        );
-        simde_mm256_storeu_pd(out + i, y);
+void rsd_convolve1d_avx2(const double *a, size_t na, const double *b, size_t nb, double *out) {
+    if (na == 0 || nb == 0) {
+        return;
     }
 
-    rsd_convolve3_scalar_range(x, n, kernel, out, i);
+    const size_t nab = na + nb - 1;
+    size_t k = 0;
+    const simde__m256d zero = simde_mm256_setzero_pd();
+    for (; k + 4 <= nab; k += 4) {
+        simde_mm256_storeu_pd(out + k, zero);
+    }
+    for (; k < nab; ++k) {
+        out[k] = 0.0;
+    }
+
+    for (size_t i = 0; i < na; ++i) {
+        const simde__m256d ai = simde_mm256_set1_pd(a[i]);
+        size_t j = 0;
+        for (; j + 4 <= nb; j += 4) {
+            simde__m256d bv = simde_mm256_loadu_pd(b + j);
+            simde__m256d ov = simde_mm256_loadu_pd(out + i + j);
+            ov = simde_mm256_add_pd(ov, simde_mm256_mul_pd(ai, bv));
+            simde_mm256_storeu_pd(out + i + j, ov);
+        }
+        for (; j < nb; ++j) {
+            out[i + j] += a[i] * b[j];
+        }
+    }
 }

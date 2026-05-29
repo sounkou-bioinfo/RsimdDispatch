@@ -4,20 +4,23 @@
 
 #include "simd_dispatch.h"
 
-SEXP RC_count_nonzero(SEXP x);
-SEXP RC_convolve3(SEXP x, SEXP kernel);
-SEXP RC_simd_set_backend(SEXP backend_s);
-SEXP RC_simd_backend(void);
-SEXP RC_simd_info(void);
+#define RSD_CALL_METHODS(X) \
+    X(RC_count_nonzero,    (SEXP x),          1) \
+    X(RC_convolve1d,       (SEXP a, SEXP b),  2) \
+    X(RC_simd_set_backend, (SEXP backend_s),  1) \
+    X(RC_simd_backend,     (void),            0) \
+    X(RC_simd_info,        (void),            0)
 
+#define RSD_DECLARE_CALL(name, args, n_args) SEXP name args;
+RSD_CALL_METHODS(RSD_DECLARE_CALL)
+#undef RSD_DECLARE_CALL
+
+#define RSD_REGISTER_CALL(name, args, n_args) {#name, (DL_FUNC)&name, n_args},
 static const R_CallMethodDef call_methods[] = {
-    {"RC_count_nonzero",     (DL_FUNC)&RC_count_nonzero,     1},
-    {"RC_convolve3",         (DL_FUNC)&RC_convolve3,         2},
-    {"RC_simd_set_backend",  (DL_FUNC)&RC_simd_set_backend,  1},
-    {"RC_simd_backend",      (DL_FUNC)&RC_simd_backend,      0},
-    {"RC_simd_info",         (DL_FUNC)&RC_simd_info,         0},
+    RSD_CALL_METHODS(RSD_REGISTER_CALL)
     {NULL, NULL, 0}
 };
+#undef RSD_REGISTER_CALL
 
 void R_init_RsimdDispatch(DllInfo *dll) {
     rsd_init_dispatch();

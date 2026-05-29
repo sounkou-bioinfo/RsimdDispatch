@@ -129,12 +129,19 @@ simd_set_backend("wasm_simd128")
 stopifnot(identical(simd_backend(), "wasm_simd128"))
 x <- as.raw(c(0, 1, 2, 0, 255, 0, 7))
 stopifnot(identical(count_nonzero(x), 4))
-y <- seq(-2, 3, length.out = 17)
-k <- c(0.25, -0.5, 0.75)
-ref <- k[1] * y[-c(length(y) - 1L, length(y))] +
-  k[2] * y[-c(1L, length(y))] +
-  k[3] * y[-c(1L, 2L)]
-stopifnot(isTRUE(all.equal(convolve3(y, k), ref, tolerance = 1e-12)))
+slow_convolve <- function(a, b) {
+  ab <- double(length(a) + length(b) - 1L)
+  for (i in seq_along(a)) {
+    for (j in seq_along(b)) {
+      ab[i + j - 1L] <- ab[i + j - 1L] + a[i] * b[j]
+    }
+  }
+  ab
+}
+a <- seq(-2, 3, length.out = 17)
+b <- c(0.25, -0.5, 0.75, 1.25, -0.125)
+ref <- slow_convolve(a, b)
+stopifnot(isTRUE(all.equal(convolve1d(a, b), ref, tolerance = 1e-12)))
 simd_set_backend("auto")
 stopifnot(identical(simd_backend(), "wasm_simd128"))
 `, { withAutoprint: false });

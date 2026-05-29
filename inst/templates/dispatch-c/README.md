@@ -17,5 +17,5 @@ RsimdDispatch::use_simd_dispatch("/path/to/pkg", pkg = "YourPackage", prefix = "
 ```
 
 The helper substitutes the package name and C symbol prefixes. Then replace the
-example `count_nonzero()` and `convolve3()` kernels with your package-specific
+example `count_nonzero()` and `convolve1d()` kernels with your package-specific
 kernel signatures. See `CHECKLIST.md` if you copy files manually.

@@ -9,11 +9,11 @@ extern "C" {
 #endif
 
 typedef size_t (*rsd_count_nonzero_fn)(const uint8_t *x, size_t n);
-typedef void (*rsd_convolve3_fn)(const double *x, size_t n, const double kernel[3], double *out);
+typedef void (*rsd_convolve1d_fn)(const double *a, size_t na, const double *b, size_t nb, double *out);
 
 typedef struct RsdOps {
     rsd_count_nonzero_fn count_nonzero;
-    rsd_convolve3_fn convolve3;
+    rsd_convolve1d_fn convolve1d;
 } RsdOps;
 
 void rsd_init_dispatch(void);
@@ -21,7 +21,7 @@ void rsd_set_backend(const char *backend);
 const char *rsd_requested_backend(void);
 const char *rsd_selected_backend(void);
 size_t rsd_count_nonzero(const uint8_t *x, size_t n);
-void rsd_convolve3_valid(const double *x, size_t n, const double kernel[3], double *out);
+void rsd_convolve1d(const double *a, size_t na, const double *b, size_t nb, double *out);
 int rsd_backend_known(const char *backend);
 int rsd_backend_compiled(const char *backend);
 int rsd_backend_cpu_supported(const char *backend);
