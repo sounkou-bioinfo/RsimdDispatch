@@ -121,10 +121,15 @@ performs the important substitutions, including <code>@useDynLib</code>,
 </h2>
 <p>The demo operations are registered by each backend file. For example,
 the AVX2 staged source registers both demo operations:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="dt">void</span> rsd_register_avx2<span class="op">(</span>RsdDispatchBuilder <span class="op">*</span>builder<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    rsd_register_count_nonzero<span class="op">(</span>builder<span class="op">,</span> rsd_count_nonzero_avx2<span class="op">);</span></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    rsd_register_convolve1d<span class="op">(</span>builder<span class="op">,</span> rsd_convolve1d_avx2<span class="op">);</span></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="dt">static</span> <span class="dt">const</span> RsdKernelDef rsd_avx2_kernels<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    <span class="op">{</span>RSD_OP_COUNT_NONZERO<span class="op">,</span> RSD_SIG_RAW_COUNT<span class="op">,</span> rsd_count_nonzero_avx2_invoke<span class="op">},</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    <span class="op">{</span>RSD_OP_CONVOLVE1D<span class="op">,</span> RSD_SIG_F64_CONVOLVE<span class="op">,</span> rsd_convolve1d_avx2_invoke<span class="op">},</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    RSD_KERNEL_DEF_END</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="dt">void</span> rsd_register_avx2<span class="op">(</span>RsdDispatchBuilder <span class="op">*</span>builder<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>    rsd_register_kernel_table<span class="op">(</span>builder<span class="op">,</span> rsd_avx2_kernels<span class="op">);</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>SSE2 and SSE4.1 currently register only <code><a href="../reference/count_nonzero.html">count_nonzero()</a></code>,
 which demonstrates operation-level backend support. A backend
 intentionally omits an operation by not registering that slot.
@@ -132,7 +137,10 @@ Explicitly selecting such a backend is allowed, but calling the
 unsupported operation errors clearly; <code>"auto"</code> skips that
 backend for the unsupported operation.</p>
 <p>For a real package, replace the demo operation signatures with your
-own and keep the same structure:</p>
+own and keep the same structure. Staged kernel files include
+<code>tools/kernels/kernel_api.h</code>, not private headers from
+<code>src/</code>; the dispatch core implements that kernel-facing
+registration ABI.</p>
 <pre class="text"><code>R API wrapper        ordinary src/Makevars compilation
 CPU feature checks   ordinary src/Makevars compilation
 dispatch table       ordinary src/Makevars compilation
@@ -152,25 +160,26 @@ file, the same staged object for that backend contains the new
 implementation. For a small number of operations, keep the dispatch code
 explicit and add:</p>
 <ol style="list-style-type: decimal">
-<li>a function-pointer typedef and typed registration helper in
-<code>src/simd_dispatch.h</code> and
-<code>src/simd_dispatch.c</code>;</li>
-<li>one implementation per backend file under
-<code>tools/kernels/</code>, following the naming convention
-<code>rsd_&lt;operation&gt;_&lt;backend&gt;()</code>;</li>
-<li>a call to the typed registration helper in each backend file that
+<li>an operation ID, signature ID, call-frame type, and kernel
+definition entry type support in
+<code>tools/kernels/kernel_api.h</code>;</li>
+<li>one implementation plus a small <code>void *</code> call-frame thunk
+per backend file under <code>tools/kernels/</code>, following the naming
+convention <code>rsd_&lt;operation&gt;_&lt;backend&gt;()</code>;</li>
+<li>one <code>RsdKernelDef</code> row in each backend file that
 implements the operation;</li>
-<li>the resolved dispatch slot and wrapper in
-<code>src/simd_dispatch.c</code>;</li>
-<li>the <code>.Call</code> wrapper in <code>src/r_api.c</code>;</li>
+<li>the <code>.Call</code> wrapper in <code>src/r_api.c</code>, which
+marshals R objects into the operation call frame and calls
+<code>rsd_dispatch_invoke()</code>;</li>
 <li>the native registration entry in
 <code>src/registration.c</code>;</li>
 <li>the R wrapper, tests, and documentation.</li>
 </ol>
-<p>Backend metadata is table-driven, while operation implementation
-ownership stays close to each backend source file. This explicit layout
-is easier to read for the template and still keeps backend-selection
-logic centralized.</p>
+<p>Backend metadata and kernel availability are table-driven, similar in
+spirit to R’s native routine registration tables. Operation
+implementation ownership stays close to each backend source file, while
+<code>src/simd_dispatch.c</code> consumes only opaque operation IDs and
+generic kernel-definition rows.</p>
 <p>For packages with many public operations, keep a single operation
 catalog that can generate the repetitive dispatch metadata,
 <code>.Call</code> registration, and R wrappers. Optimized backend

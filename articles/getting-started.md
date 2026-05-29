@@ -18,7 +18,7 @@ count_nonzero(x)
 convolve1d(a, b)
 #> [1]  10 120 230 300
 simd_backend()
-#> [1] "avx2"
+#> [1] "avx512"
 ```
 
 Inspect the installed build:
@@ -30,11 +30,11 @@ simd_info()[c("compiled_backends", "available_backends", "operation_selected_bac
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $available_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"  
+#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $operation_selected_backends
 #> count_nonzero    convolve1d 
-#>        "avx2"        "avx2"
+#>      "avx512"      "avx512"
 ```
 
 Switching is allowed in the same R process:
@@ -57,7 +57,7 @@ if (!is.na(candidate)) {
 
 simd_set_backend("auto")
 simd_backend()
-#> [1] "avx2"
+#> [1] "avx512"
 ```
 
 An explicit backend is accepted only when it was compiled and the

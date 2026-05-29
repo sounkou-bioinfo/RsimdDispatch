@@ -29,7 +29,7 @@ if (!is.na(candidate)) {
 
 simd_set_backend("auto")
 simd_backend()
-#> [1] "avx2"
+#> [1] "avx512"
 ```
 
 [`simd_set_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_set_backend.md)
@@ -63,22 +63,22 @@ simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $cpu_supported_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"  
+#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $available_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"  
+#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $operation_backends
 #> $operation_backends$count_nonzero
-#> [1] "scalar" "sse2"   "sse41"  "avx2"  
+#> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $operation_backends$convolve1d
-#> [1] "scalar" "avx2"  
+#> [1] "scalar" "avx2"   "avx512"
 #> 
 #> 
 #> $operation_selected_backends
 #> count_nonzero    convolve1d 
-#>        "avx2"        "avx2"
+#>      "avx512"      "avx512"
 ```
 
 ## SIMDe and native ISA compilation
@@ -151,8 +151,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar      335.3µs     2933.
-#> 2 auto         46.5µs    18412.
+#> 1 scalar        467µs     2129.
+#> 2 auto         29.7µs    20083.
 ```
 
 The same switch applies to the full one-dimensional convolution demo:
@@ -182,8 +182,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar        489µs     2077.
-#> 2 auto          182µs     5468.
+#> 1 scalar        395µs     2549.
+#> 2 auto          282µs     3519.
 ```
 
 `"auto"` selects the best backend from the compiled and supported
