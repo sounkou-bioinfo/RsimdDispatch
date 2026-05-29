@@ -69,9 +69,14 @@ The demo operations are registered by each backend file. For example, the AVX2
 staged source registers both demo operations:
 
 ```c
+static const RsdKernelDef rsd_avx2_kernels[] = {
+    {RSD_OP_COUNT_NONZERO, RSD_SIG_RAW_COUNT, rsd_count_nonzero_avx2_invoke},
+    {RSD_OP_CONVOLVE1D, RSD_SIG_F64_CONVOLVE, rsd_convolve1d_avx2_invoke},
+    RSD_KERNEL_DEF_END
+};
+
 void rsd_register_avx2(RsdDispatchBuilder *builder) {
-    rsd_register_count_nonzero(builder, rsd_count_nonzero_avx2);
-    rsd_register_convolve1d(builder, rsd_convolve1d_avx2);
+    rsd_register_kernel_table(builder, rsd_avx2_kernels);
 }
 ```
 
@@ -82,7 +87,10 @@ calling the unsupported operation errors clearly; `"auto"` skips that backend
 for the unsupported operation.
 
 For a real package, replace the demo operation signatures with your own and keep
-the same structure:
+the same structure. Staged kernel files include `tools/kernels/kernel_api.h`,
+not private headers from `src/`; the dispatch core implements that kernel-facing
+registration ABI.
+
 
 ```text
 R API wrapper        ordinary src/Makevars compilation
@@ -103,20 +111,21 @@ function to each existing `tools/kernels/kernel_*.c` file, the same staged objec
 for that backend contains the new implementation. For a small number of
 operations, keep the dispatch code explicit and add:
 
-1. a function-pointer typedef and typed registration helper in
-   `src/simd_dispatch.h` and `src/simd_dispatch.c`;
-2. one implementation per backend file under `tools/kernels/`, following the
-   naming convention `rsd_<operation>_<backend>()`;
-3. a call to the typed registration helper in each backend file that implements
-   the operation;
-4. the resolved dispatch slot and wrapper in `src/simd_dispatch.c`;
-5. the `.Call` wrapper in `src/r_api.c`;
-6. the native registration entry in `src/registration.c`;
-7. the R wrapper, tests, and documentation.
+1. an operation ID, signature ID, call-frame type, and kernel definition entry
+   type support in `tools/kernels/kernel_api.h`;
+2. one implementation plus a small `void *` call-frame thunk per backend file
+   under `tools/kernels/`, following the naming convention
+   `rsd_<operation>_<backend>()`;
+3. one `RsdKernelDef` row in each backend file that implements the operation;
+4. the `.Call` wrapper in `src/r_api.c`, which marshals R objects into the
+   operation call frame and calls `rsd_dispatch_invoke()`;
+5. the native registration entry in `src/registration.c`;
+6. the R wrapper, tests, and documentation.
 
-Backend metadata is table-driven, while operation implementation ownership stays
-close to each backend source file. This explicit layout is easier to read for
-the template and still keeps backend-selection logic centralized.
+Backend metadata and kernel availability are table-driven, similar in spirit to
+R's native routine registration tables. Operation implementation ownership stays
+close to each backend source file, while `src/simd_dispatch.c` consumes only
+opaque operation IDs and generic kernel-definition rows.
 
 For packages with many public operations, keep a single operation catalog that
 can generate the repetitive dispatch metadata, `.Call` registration, and R

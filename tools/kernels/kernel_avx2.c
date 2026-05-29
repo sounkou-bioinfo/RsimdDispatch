@@ -6,7 +6,7 @@
 #include <simde/x86/avx2.h>
 
 #include "kernel_common.h"
-#include "simd_dispatch.h"
+#include "kernel_api.h"
 
 size_t rsd_count_nonzero_avx2(const uint8_t *x, size_t n) {
     size_t i = 0;
@@ -56,7 +56,22 @@ void rsd_convolve1d_avx2(const double *a, size_t na, const double *b, size_t nb,
     }
 }
 
+static void rsd_count_nonzero_avx2_invoke(void *call) {
+    RsdCountNonzeroCall *args = (RsdCountNonzeroCall *)call;
+    args->result = rsd_count_nonzero_avx2(args->x, args->n);
+}
+
+static void rsd_convolve1d_avx2_invoke(void *call) {
+    RsdConvolve1dCall *args = (RsdConvolve1dCall *)call;
+    rsd_convolve1d_avx2(args->a, args->na, args->b, args->nb, args->out);
+}
+
+static const RsdKernelDef rsd_avx2_kernels[] = {
+    {RSD_OP_COUNT_NONZERO, RSD_SIG_RAW_COUNT, rsd_count_nonzero_avx2_invoke},
+    {RSD_OP_CONVOLVE1D, RSD_SIG_F64_CONVOLVE, rsd_convolve1d_avx2_invoke},
+    RSD_KERNEL_DEF_END
+};
+
 void rsd_register_avx2(RsdDispatchBuilder *builder) {
-    rsd_register_count_nonzero(builder, rsd_count_nonzero_avx2);
-    rsd_register_convolve1d(builder, rsd_convolve1d_avx2);
+    rsd_register_kernel_table(builder, rsd_avx2_kernels);
 }

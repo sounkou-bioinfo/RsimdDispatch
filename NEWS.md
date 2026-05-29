@@ -20,6 +20,11 @@
   availability and the selected backend for each operation.
 * Add `Dockerfile.musl-check` for Alpine Linux / musl `R CMD check` smoke
   testing in repository-specific CI.
+* Split the staged-kernel registration ABI into `tools/kernels/kernel_api.h`
+  so backend kernels no longer include private dispatch headers from `src/`.
+  Backend files now expose R-style `RsdKernelDef` tables consumed by the generic
+  dispatch core, keeping operation names and operation-specific wrappers out of
+  `src/simd_dispatch.c`.
 
 # RsimdDispatch 0.1.2
 

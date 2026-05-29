@@ -22,15 +22,14 @@ typedef struct RsdBackendEntry {
     unsigned int priority;
 } RsdBackendEntry;
 
-typedef struct RsdResolvedOps {
-    rsd_count_nonzero_fn count_nonzero;
-    const char *count_nonzero_backend;
-    rsd_convolve1d_fn convolve1d;
-    const char *convolve1d_backend;
-} RsdResolvedOps;
+typedef struct RsdResolvedSlot {
+    rsd_kernel_invoke_fn invoke;
+    RsdKernelSignature signature;
+    const char *backend;
+} RsdResolvedSlot;
 
 struct RsdDispatchBuilder {
-    RsdResolvedOps *ops;
+    RsdResolvedSlot *slots;
     const RsdBackendEntry *backend;
     unsigned int best_priority[RSD_OP_COUNT];
 };
@@ -89,12 +88,7 @@ static const RsdBackendEntry rsd_backend_entries[] = {
 #endif
 };
 
-static const char *rsd_operation_names[] = {
-    "count_nonzero",
-    "convolve1d"
-};
-
-static RsdResolvedOps rsd_active_ops = {0};
+static RsdResolvedSlot rsd_active_slots[RSD_OP_COUNT] = {{0}};
 static int rsd_dispatch_initialized = 0;
 static char rsd_requested_backend_buf[32] = "auto";
 static char rsd_selected_backend_buf[32] = "uninitialized";
@@ -110,15 +104,8 @@ const char *rsd_backend_name(size_t i) {
     return rsd_backend_entries[i].name;
 }
 
-size_t rsd_operation_count(void) {
-    return sizeof(rsd_operation_names) / sizeof(rsd_operation_names[0]);
-}
-
-const char *rsd_operation_name(size_t i) {
-    if (i >= rsd_operation_count()) {
-        return NULL;
-    }
-    return rsd_operation_names[i];
+static int rsd_operation_valid(RsdOperation operation) {
+    return (int)operation >= 0 && operation < RSD_OP_COUNT;
 }
 
 static const RsdBackendEntry *rsd_find_backend(const char *backend) {
@@ -131,19 +118,6 @@ static const RsdBackendEntry *rsd_find_backend(const char *backend) {
         }
     }
     return NULL;
-}
-
-static int rsd_operation_from_name(const char *name, RsdOperation *operation) {
-    if (name == NULL) {
-        return 0;
-    }
-    for (size_t i = 0; i < rsd_operation_count(); ++i) {
-        if (strcmp(name, rsd_operation_names[i]) == 0) {
-            *operation = (RsdOperation)i;
-            return 1;
-        }
-    }
-    return 0;
 }
 
 static int rsd_backend_entry_cpu_supported(const RsdBackendEntry *entry) {
@@ -171,68 +145,53 @@ int rsd_backend_available(const char *backend) {
     return rsd_backend_entry_available(rsd_find_backend(backend));
 }
 
-static void rsd_builder_init(RsdDispatchBuilder *builder, RsdResolvedOps *ops, const RsdBackendEntry *backend) {
-    builder->ops = ops;
+static void rsd_builder_init(RsdDispatchBuilder *builder, RsdResolvedSlot *slots, const RsdBackendEntry *backend) {
+    builder->slots = slots;
     builder->backend = backend;
     for (size_t i = 0; i < RSD_OP_COUNT; ++i) {
         builder->best_priority[i] = UINT_MAX;
     }
 }
 
-static int rsd_builder_should_update(RsdDispatchBuilder *builder, RsdOperation operation, int has_function) {
-    if (builder == NULL || builder->ops == NULL || builder->backend == NULL || !has_function) {
+static int rsd_builder_should_update(RsdDispatchBuilder *builder, RsdOperation operation, const RsdKernelDef *kernel) {
+    if (builder == NULL || builder->slots == NULL || builder->backend == NULL || kernel == NULL) {
         return 0;
     }
-    if (operation >= RSD_OP_COUNT) {
+    if (!rsd_operation_valid(operation) || kernel->invoke == NULL || kernel->signature == RSD_SIG_NONE) {
         return 0;
     }
     return builder->backend->priority < builder->best_priority[operation];
 }
 
-void rsd_register_count_nonzero(RsdDispatchBuilder *builder, rsd_count_nonzero_fn fn) {
-    if (!rsd_builder_should_update(builder, RSD_OP_COUNT_NONZERO, fn != NULL)) {
+void rsd_register_kernel_table(RsdDispatchBuilder *builder, const RsdKernelDef *kernels) {
+    if (builder == NULL || kernels == NULL) {
         return;
     }
-    builder->ops->count_nonzero = fn;
-    builder->ops->count_nonzero_backend = builder->backend->name;
-    builder->best_priority[RSD_OP_COUNT_NONZERO] = builder->backend->priority;
-}
 
-void rsd_register_convolve1d(RsdDispatchBuilder *builder, rsd_convolve1d_fn fn) {
-    if (!rsd_builder_should_update(builder, RSD_OP_CONVOLVE1D, fn != NULL)) {
-        return;
+    for (size_t i = 0; kernels[i].invoke != NULL; ++i) {
+        RsdOperation operation = kernels[i].operation;
+        if (!rsd_builder_should_update(builder, operation, &kernels[i])) {
+            continue;
+        }
+        builder->slots[operation].invoke = kernels[i].invoke;
+        builder->slots[operation].signature = kernels[i].signature;
+        builder->slots[operation].backend = builder->backend->name;
+        builder->best_priority[operation] = builder->backend->priority;
     }
-    builder->ops->convolve1d = fn;
-    builder->ops->convolve1d_backend = builder->backend->name;
-    builder->best_priority[RSD_OP_CONVOLVE1D] = builder->backend->priority;
 }
 
-static int rsd_resolved_ops_has_operation(const RsdResolvedOps *ops, RsdOperation operation) {
-    if (ops == NULL) {
+static int rsd_resolved_slots_has_operation(const RsdResolvedSlot *slots, RsdOperation operation) {
+    if (slots == NULL || !rsd_operation_valid(operation)) {
         return 0;
     }
-    switch (operation) {
-    case RSD_OP_COUNT_NONZERO:
-        return ops->count_nonzero != NULL;
-    case RSD_OP_CONVOLVE1D:
-        return ops->convolve1d != NULL;
-    default:
-        return 0;
-    }
+    return slots[operation].invoke != NULL;
 }
 
-static const char *rsd_resolved_ops_backend_for_operation(const RsdResolvedOps *ops, RsdOperation operation) {
-    if (ops == NULL) {
+static const char *rsd_resolved_slots_backend_for_operation(const RsdResolvedSlot *slots, RsdOperation operation) {
+    if (slots == NULL || !rsd_operation_valid(operation)) {
         return NULL;
     }
-    switch (operation) {
-    case RSD_OP_COUNT_NONZERO:
-        return ops->count_nonzero_backend;
-    case RSD_OP_CONVOLVE1D:
-        return ops->convolve1d_backend;
-    default:
-        return NULL;
-    }
+    return slots[operation].backend;
 }
 
 static void rsd_register_available_backend(RsdDispatchBuilder *builder, const RsdBackendEntry *entry) {
@@ -243,44 +202,43 @@ static void rsd_register_available_backend(RsdDispatchBuilder *builder, const Rs
     entry->register_backend(builder);
 }
 
-static void rsd_build_auto_ops(RsdResolvedOps *ops) {
+static void rsd_build_auto_slots(RsdResolvedSlot *slots) {
     RsdDispatchBuilder builder;
-    memset(ops, 0, sizeof(*ops));
-    rsd_builder_init(&builder, ops, NULL);
+    memset(slots, 0, sizeof(RsdResolvedSlot) * RSD_OP_COUNT);
+    rsd_builder_init(&builder, slots, NULL);
     for (size_t i = 0; i < rsd_backend_count(); ++i) {
         rsd_register_available_backend(&builder, &rsd_backend_entries[i]);
     }
 }
 
-static void rsd_build_backend_ops(RsdResolvedOps *ops, const RsdBackendEntry *entry) {
+static void rsd_build_backend_slots(RsdResolvedSlot *slots, const RsdBackendEntry *entry) {
     RsdDispatchBuilder builder;
-    memset(ops, 0, sizeof(*ops));
-    rsd_builder_init(&builder, ops, entry);
+    memset(slots, 0, sizeof(RsdResolvedSlot) * RSD_OP_COUNT);
+    rsd_builder_init(&builder, slots, entry);
     if (entry != NULL && entry->register_backend != NULL) {
         entry->register_backend(&builder);
     }
 }
 
-int rsd_backend_operation_available(const char *backend, const char *operation_name) {
+int rsd_backend_operation_available(const char *backend, RsdOperation operation) {
     const RsdBackendEntry *entry = rsd_find_backend(backend);
-    RsdOperation operation;
-    RsdResolvedOps ops;
-    if (entry == NULL || !rsd_operation_from_name(operation_name, &operation)) {
+    RsdResolvedSlot slots[RSD_OP_COUNT];
+    if (entry == NULL || !rsd_operation_valid(operation)) {
         return 0;
     }
     if (!rsd_backend_entry_available(entry)) {
         return 0;
     }
-    rsd_build_backend_ops(&ops, entry);
-    return rsd_resolved_ops_has_operation(&ops, operation);
+    rsd_build_backend_slots(slots, entry);
+    return rsd_resolved_slots_has_operation(slots, operation);
 }
 
 static void rsd_update_selected_backend_summary(void) {
     const char *summary = NULL;
     int mixed = 0;
 
-    for (size_t i = 0; i < rsd_operation_count(); ++i) {
-        const char *backend = rsd_resolved_ops_backend_for_operation(&rsd_active_ops, (RsdOperation)i);
+    for (size_t i = 0; i < RSD_OP_COUNT; ++i) {
+        const char *backend = rsd_resolved_slots_backend_for_operation(rsd_active_slots, (RsdOperation)i);
         if (backend == NULL) {
             continue;
         }
@@ -301,22 +259,23 @@ static void rsd_update_selected_backend_summary(void) {
 }
 
 static void rsd_resolve_auto(void) {
-    rsd_build_auto_ops(&rsd_active_ops);
+    rsd_build_auto_slots(rsd_active_slots);
     rsd_update_selected_backend_summary();
     rsd_dispatch_initialized = 1;
 }
 
 static void rsd_resolve_backend(const RsdBackendEntry *entry) {
-    rsd_build_backend_ops(&rsd_active_ops, entry);
+    rsd_build_backend_slots(rsd_active_slots, entry);
     snprintf(rsd_selected_backend_buf, sizeof(rsd_selected_backend_buf), "%s", entry->name);
     rsd_dispatch_initialized = 1;
 }
 
 static void rsd_error_unavailable_operation(const char *operation_name) {
+    const char *name = operation_name != NULL ? operation_name : "<unknown>";
     if (strcmp(rsd_requested_backend_buf, "auto") == 0) {
-        Rf_error("operation '%s' is not available for any compiled and CPU-supported backend", operation_name);
+        Rf_error("operation '%s' is not available for any compiled and CPU-supported backend", name);
     }
-    Rf_error("operation '%s' is not available for selected backend '%s'", operation_name, rsd_selected_backend_buf);
+    Rf_error("operation '%s' is not available for selected backend '%s'", name, rsd_selected_backend_buf);
 }
 
 void rsd_init_dispatch(void) {
@@ -353,24 +312,20 @@ void rsd_set_backend(const char *backend) {
     rsd_resolve_backend(entry);
 }
 
-size_t rsd_count_nonzero(const uint8_t *x, size_t n) {
+void rsd_dispatch_invoke(RsdOperation operation, RsdKernelSignature signature, void *call, const char *operation_name) {
+    if (!rsd_operation_valid(operation)) {
+        Rf_error("unknown operation '%s'", operation_name != NULL ? operation_name : "<unknown>");
+    }
     if (!rsd_dispatch_initialized) {
         rsd_init_dispatch();
     }
-    if (rsd_active_ops.count_nonzero == NULL) {
-        rsd_error_unavailable_operation("count_nonzero");
+    if (!rsd_resolved_slots_has_operation(rsd_active_slots, operation)) {
+        rsd_error_unavailable_operation(operation_name);
     }
-    return rsd_active_ops.count_nonzero(x, n);
-}
-
-void rsd_convolve1d(const double *a, size_t na, const double *b, size_t nb, double *out) {
-    if (!rsd_dispatch_initialized) {
-        rsd_init_dispatch();
+    if (rsd_active_slots[operation].signature != signature) {
+        Rf_error("internal dispatch signature mismatch for operation '%s'", operation_name != NULL ? operation_name : "<unknown>");
     }
-    if (rsd_active_ops.convolve1d == NULL) {
-        rsd_error_unavailable_operation("convolve1d");
-    }
-    rsd_active_ops.convolve1d(a, na, b, nb, out);
+    rsd_active_slots[operation].invoke(call);
 }
 
 const char *rsd_requested_backend(void) {
@@ -384,15 +339,11 @@ const char *rsd_selected_backend(void) {
     return rsd_selected_backend_buf;
 }
 
-const char *rsd_operation_selected_backend(const char *operation_name) {
-    RsdOperation operation;
-    if (!rsd_operation_from_name(operation_name, &operation)) {
-        return NULL;
-    }
+const char *rsd_operation_selected_backend(RsdOperation operation) {
     if (!rsd_dispatch_initialized) {
         rsd_init_dispatch();
     }
-    return rsd_resolved_ops_backend_for_operation(&rsd_active_ops, operation);
+    return rsd_resolved_slots_backend_for_operation(rsd_active_slots, operation);
 }
 
 const char *rsd_dispatch_mode(void) {

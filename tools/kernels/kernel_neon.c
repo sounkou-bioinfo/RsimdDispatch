@@ -5,7 +5,7 @@
 
 #include <simde/arm/neon.h>
 
-#include "simd_dispatch.h"
+#include "kernel_api.h"
 
 size_t rsd_count_nonzero_neon(const uint8_t *x, size_t n) {
     size_t i = 0;
@@ -62,7 +62,22 @@ void rsd_convolve1d_neon(const double *a, size_t na, const double *b, size_t nb,
 #endif
 }
 
+static void rsd_count_nonzero_neon_invoke(void *call) {
+    RsdCountNonzeroCall *args = (RsdCountNonzeroCall *)call;
+    args->result = rsd_count_nonzero_neon(args->x, args->n);
+}
+
+static void rsd_convolve1d_neon_invoke(void *call) {
+    RsdConvolve1dCall *args = (RsdConvolve1dCall *)call;
+    rsd_convolve1d_neon(args->a, args->na, args->b, args->nb, args->out);
+}
+
+static const RsdKernelDef rsd_neon_kernels[] = {
+    {RSD_OP_COUNT_NONZERO, RSD_SIG_RAW_COUNT, rsd_count_nonzero_neon_invoke},
+    {RSD_OP_CONVOLVE1D, RSD_SIG_F64_CONVOLVE, rsd_convolve1d_neon_invoke},
+    RSD_KERNEL_DEF_END
+};
+
 void rsd_register_neon(RsdDispatchBuilder *builder) {
-    rsd_register_count_nonzero(builder, rsd_count_nonzero_neon);
-    rsd_register_convolve1d(builder, rsd_convolve1d_neon);
+    rsd_register_kernel_table(builder, rsd_neon_kernels);
 }

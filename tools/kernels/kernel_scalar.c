@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "simd_dispatch.h"
+#include "kernel_api.h"
 
 size_t rsd_count_nonzero_scalar(const uint8_t *x, size_t n) {
     size_t acc = 0;
@@ -29,7 +29,22 @@ void rsd_convolve1d_scalar(const double *a, size_t na, const double *b, size_t n
     }
 }
 
+static void rsd_count_nonzero_scalar_invoke(void *call) {
+    RsdCountNonzeroCall *args = (RsdCountNonzeroCall *)call;
+    args->result = rsd_count_nonzero_scalar(args->x, args->n);
+}
+
+static void rsd_convolve1d_scalar_invoke(void *call) {
+    RsdConvolve1dCall *args = (RsdConvolve1dCall *)call;
+    rsd_convolve1d_scalar(args->a, args->na, args->b, args->nb, args->out);
+}
+
+static const RsdKernelDef rsd_scalar_kernels[] = {
+    {RSD_OP_COUNT_NONZERO, RSD_SIG_RAW_COUNT, rsd_count_nonzero_scalar_invoke},
+    {RSD_OP_CONVOLVE1D, RSD_SIG_F64_CONVOLVE, rsd_convolve1d_scalar_invoke},
+    RSD_KERNEL_DEF_END
+};
+
 void rsd_register_scalar(RsdDispatchBuilder *builder) {
-    rsd_register_count_nonzero(builder, rsd_count_nonzero_scalar);
-    rsd_register_convolve1d(builder, rsd_convolve1d_scalar);
+    rsd_register_kernel_table(builder, rsd_scalar_kernels);
 }

@@ -2,7 +2,7 @@ BASE_OBJECTS = registration.o r_api.o cpu_features.o simd_dispatch.o
 KERNEL_OBJECTS = @RSD_OBJECTS@
 OBJECTS = $(BASE_OBJECTS)
 
-PKG_CPPFLAGS = @RSD_SIMDE_CPPFLAGS@
+PKG_CPPFLAGS = -I../tools/kernels @RSD_SIMDE_CPPFLAGS@
 PKG_LIBS = $(KERNEL_OBJECTS)
 
 all: $(SHLIB)

@@ -6,7 +6,7 @@
 #include <simde/x86/sse4.1.h>
 
 #include "kernel_common.h"
-#include "simd_dispatch.h"
+#include "kernel_api.h"
 
 size_t rsd_count_nonzero_sse41(const uint8_t *x, size_t n) {
     size_t i = 0;
@@ -29,6 +29,16 @@ size_t rsd_count_nonzero_sse41(const uint8_t *x, size_t n) {
     return acc;
 }
 
+static void rsd_count_nonzero_sse41_invoke(void *call) {
+    RsdCountNonzeroCall *args = (RsdCountNonzeroCall *)call;
+    args->result = rsd_count_nonzero_sse41(args->x, args->n);
+}
+
+static const RsdKernelDef rsd_sse41_kernels[] = {
+    {RSD_OP_COUNT_NONZERO, RSD_SIG_RAW_COUNT, rsd_count_nonzero_sse41_invoke},
+    RSD_KERNEL_DEF_END
+};
+
 void rsd_register_sse41(RsdDispatchBuilder *builder) {
-    rsd_register_count_nonzero(builder, rsd_count_nonzero_sse41);
+    rsd_register_kernel_table(builder, rsd_sse41_kernels);
 }

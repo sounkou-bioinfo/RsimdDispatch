@@ -41,6 +41,33 @@ static const char *rsd_string_scalar(SEXP x, const char *arg) {
     return CHAR(STRING_ELT(x, 0));
 }
 
+typedef struct RsdRApiOperation {
+    RsdOperation operation;
+    RsdKernelSignature signature;
+    const char *name;
+} RsdRApiOperation;
+
+static const RsdRApiOperation rsd_operations[] = {
+    {RSD_OP_COUNT_NONZERO, RSD_SIG_RAW_COUNT, "count_nonzero"},
+    {RSD_OP_CONVOLVE1D, RSD_SIG_F64_CONVOLVE, "convolve1d"}
+};
+
+static size_t rsd_operation_count(void) {
+    return sizeof(rsd_operations) / sizeof(rsd_operations[0]);
+}
+
+static const RsdRApiOperation *rsd_operation_info(size_t i) {
+    if (i >= rsd_operation_count()) {
+        return NULL;
+    }
+    return &rsd_operations[i];
+}
+
+static const char *rsd_operation_name(size_t i) {
+    const RsdRApiOperation *operation = rsd_operation_info(i);
+    return operation != NULL ? operation->name : NULL;
+}
+
 SEXP RC_count_nonzero(SEXP x) {
     if (TYPEOF(x) != RAWSXP) {
         Rf_error("x must be a raw vector");
@@ -49,8 +76,13 @@ SEXP RC_count_nonzero(SEXP x) {
     if ((uint64_t)len > (uint64_t)SIZE_MAX) {
         Rf_error("x is too large for this platform");
     }
-    size_t count = rsd_count_nonzero((const uint8_t *)RAW(x), (size_t)len);
-    return Rf_ScalarReal((double)count);
+    RsdCountNonzeroCall call = {
+        .x = (const uint8_t *)RAW(x),
+        .n = (size_t)len,
+        .result = 0
+    };
+    rsd_dispatch_invoke(RSD_OP_COUNT_NONZERO, RSD_SIG_RAW_COUNT, &call, "count_nonzero");
+    return Rf_ScalarReal((double)call.result);
 }
 
 SEXP RC_convolve1d(SEXP a, SEXP b) {
@@ -74,7 +106,14 @@ SEXP RC_convolve1d(SEXP a, SEXP b) {
     }
     SEXP out = PROTECT(Rf_allocVector(REALSXP, nab));
     if (nab > 0) {
-        rsd_convolve1d(REAL(a), (size_t)na, REAL(b), (size_t)nb, REAL(out));
+        RsdConvolve1dCall call = {
+            .a = REAL(a),
+            .na = (size_t)na,
+            .b = REAL(b),
+            .nb = (size_t)nb,
+            .out = REAL(out)
+        };
+        rsd_dispatch_invoke(RSD_OP_CONVOLVE1D, RSD_SIG_F64_CONVOLVE, &call, "convolve1d");
     }
     UNPROTECT(1);
     return out;
@@ -156,7 +195,7 @@ static SEXP rsd_operation_character_vector(void) {
     return out;
 }
 
-static SEXP rsd_operation_backend_vector(const char *operation) {
+static SEXP rsd_operation_backend_vector(RsdOperation operation) {
     size_t n_backends = rsd_backend_count();
     int n = 0;
 
@@ -183,9 +222,9 @@ static SEXP rsd_operation_backends_list(void) {
     SEXP out_names = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
 
     for (size_t i = 0; i < n_operations; ++i) {
-        const char *operation = rsd_operation_name(i);
-        SET_STRING_ELT(out_names, (R_xlen_t)i, Rf_mkChar(operation));
-        SET_VECTOR_ELT(out, (R_xlen_t)i, rsd_operation_backend_vector(operation));
+        const RsdRApiOperation *operation = rsd_operation_info(i);
+        SET_STRING_ELT(out_names, (R_xlen_t)i, Rf_mkChar(operation->name));
+        SET_VECTOR_ELT(out, (R_xlen_t)i, rsd_operation_backend_vector(operation->operation));
         UNPROTECT(1);
     }
     Rf_setAttrib(out, R_NamesSymbol, out_names);
@@ -199,9 +238,9 @@ static SEXP rsd_operation_selected_backends_vector(void) {
     SEXP out_names = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
 
     for (size_t i = 0; i < n_operations; ++i) {
-        const char *operation = rsd_operation_name(i);
-        const char *backend = rsd_operation_selected_backend(operation);
-        SET_STRING_ELT(out_names, (R_xlen_t)i, Rf_mkChar(operation));
+        const RsdRApiOperation *operation = rsd_operation_info(i);
+        const char *backend = rsd_operation_selected_backend(operation->operation);
+        SET_STRING_ELT(out_names, (R_xlen_t)i, Rf_mkChar(operation->name));
         SET_STRING_ELT(out, (R_xlen_t)i, backend != NULL ? Rf_mkChar(backend) : NA_STRING);
     }
     Rf_setAttrib(out, R_NamesSymbol, out_names);

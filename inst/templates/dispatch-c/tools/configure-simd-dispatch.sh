@@ -120,10 +120,10 @@ compile_kernel() {
     rm -f "$object_path"
     if [ -n "$SIMDE_INCLUDE_DIR" ]; then
         # shellcheck disable=SC2086
-        ${CC} ${RSD_CC_EXTRA:-} ${CPPFLAGS:-} ${CFLAGS:-} ${CPICFLAGS:-} -I"$KERNEL_DIR_PATH" -I"$SRC_DIR_PATH" -I"$SIMDE_INCLUDE_DIR" ${flags} -c "$source_path" -o "$object_path" >"$CONFDIR/$object_file.log" 2>&1
+        ${CC} ${RSD_CC_EXTRA:-} ${CPPFLAGS:-} ${CFLAGS:-} ${CPICFLAGS:-} -I"$KERNEL_DIR_PATH" -I"$SIMDE_INCLUDE_DIR" ${flags} -c "$source_path" -o "$object_path" >"$CONFDIR/$object_file.log" 2>&1
     else
         # shellcheck disable=SC2086
-        ${CC} ${RSD_CC_EXTRA:-} ${CPPFLAGS:-} ${CFLAGS:-} ${CPICFLAGS:-} -I"$KERNEL_DIR_PATH" -I"$SRC_DIR_PATH" ${flags} -c "$source_path" -o "$object_path" >"$CONFDIR/$object_file.log" 2>&1
+        ${CC} ${RSD_CC_EXTRA:-} ${CPPFLAGS:-} ${CFLAGS:-} ${CPICFLAGS:-} -I"$KERNEL_DIR_PATH" ${flags} -c "$source_path" -o "$object_path" >"$CONFDIR/$object_file.log" 2>&1
     fi
 }
 
