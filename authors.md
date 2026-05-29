@@ -16,14 +16,14 @@ Source:
 [`DESCRIPTION`](https://github.com/sounkou-bioinfo/RsimdDispatch/blob/main/DESCRIPTION)
 
 Toure S (2026). *RsimdDispatch: Runtime 'SIMD' Dispatch Templates for
-'C' Code in 'R' Packages*. R package version 0.1.2,
+'C' Code in 'R' Packages*. R package version 0.1.2.9000,
 <https://github.com/sounkou-bioinfo/RsimdDispatch>.
 
     @Manual{,
       title = {RsimdDispatch: Runtime 'SIMD' Dispatch Templates for 'C' Code in 'R' Packages},
       author = {Sounkou Mahamane Toure},
       year = {2026},
-      note = {R package version 0.1.2},
+      note = {R package version 0.1.2.9000},
       url = {https://github.com/sounkou-bioinfo/RsimdDispatch},
     }
 

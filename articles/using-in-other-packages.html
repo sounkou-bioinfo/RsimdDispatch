@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">RsimdDispatch</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -169,6 +169,25 @@ bitmask, punned signature families, and a
 <code>find_kernel(kind, dtype, capabilities, ...)</code> API. That would
 let many wrappers share one lookup path while keeping this package’s
 R-friendly configure-time staged object model.</p>
+<p>If this route is taken, the catalog should not stop at native
+dispatch metadata. The same source of truth should describe enough of
+each public operation to generate:</p>
+<ul>
+<li>C operation/dtype/capability declarations and finder tables;</li>
+<li>punned native signatures and typed adapter declarations;</li>
+<li>
+<code>.Call</code> entry points and their native registration
+entries;</li>
+<li>ordinary R wrappers, including argument names and basic coercion
+policy;</li>
+<li>roxygen documentation skeletons and scalar-equivalence test
+skeletons.</li>
+</ul>
+<p>The actual optimized kernels can remain hand-written per backend,
+because that is where algorithmic care belongs. The repetitive API
+plumbing should be generated; otherwise the error surface is only moved
+from backend selection into duplicated <code>.Call</code> and R-wrapper
+glue.</p>
 </div>
 <div class="section level2">
 <h2 id="build">Build<a class="anchor" aria-label="anchor" href="#build"></a>

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">RsimdDispatch</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,11 @@
       <small>Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.2.9000" id="rsimddispatch-0129000">RsimdDispatch 0.1.2.9000<a class="anchor" aria-label="anchor" href="#rsimddispatch-0129000"></a></h2>
+<ul><li>Open the post-0.1.2 development cycle.</li>
+<li>Record the large-operation-catalog direction: if RsimdDispatch adds a NumKong-style operation/dtype/capability finder, the same source catalog and generator should own the native dispatch metadata, C <code>.Call</code> API glue, registration entries, ordinary R wrappers, and documentation/test skeletons. The actual kernels can remain hand-written, but the public API plumbing should not become the new duplication point.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.2" id="rsimddispatch-012">RsimdDispatch 0.1.2<a class="anchor" aria-label="anchor" href="#rsimddispatch-012"></a></h2>
 <ul><li>Add WebAssembly SIMD128 (<code>wasm_simd128</code>) staged-kernel support for Emscripten/webR builds using SIMDe’s <code>&lt;simde/wasm/simd128.h&gt;</code> backend and <code>SIMDE_WASM_SIMD128_NATIVE</code> configure probing.</li>

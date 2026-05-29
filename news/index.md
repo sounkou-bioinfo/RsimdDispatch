@@ -1,5 +1,16 @@
 # Changelog
 
+## RsimdDispatch 0.1.2.9000
+
+- Open the post-0.1.2 development cycle.
+- Record the large-operation-catalog direction: if RsimdDispatch adds a
+  NumKong-style operation/dtype/capability finder, the same source
+  catalog and generator should own the native dispatch metadata, C
+  `.Call` API glue, registration entries, ordinary R wrappers, and
+  documentation/test skeletons. The actual kernels can remain
+  hand-written, but the public API plumbing should not become the new
+  duplication point.
+
 ## RsimdDispatch 0.1.2
 
 - Add WebAssembly SIMD128 (`wasm_simd128`) staged-kernel support for
