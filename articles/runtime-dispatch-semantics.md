@@ -40,10 +40,10 @@ performs two checks for explicit choices:
   AVX and AVX-512 register state on x86 and module-level SIMD128 support
   on WebAssembly.
 
-There is intentionally no unsafe force mode. If a backend is not
-available, the setter errors before any SIMD-only instruction can
-execute. Backend selection is a process-global operation-table pointer:
-initialize or change it from ordinary R code, and do not call
+If a backend is not available, the setter errors before any SIMD-only
+instruction can execute. Backend selection is a process-global
+operation-table pointer: initialize or change it from ordinary R code,
+and do not call
 [`simd_set_backend()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_set_backend.md)
 concurrently with active native worker threads that are executing
 dispatched kernels.
@@ -131,8 +131,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar      458.7µs     2168.
-#> 2 auto         36.8µs    15853.
+#> 1 scalar      358.6µs     2757.
+#> 2 auto         25.5µs    34289.
 ```
 
 The same switch applies to the full one-dimensional convolution demo:
@@ -162,8 +162,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar        622µs     1604.
-#> 2 auto          301µs     3317.
+#> 1 scalar        593µs     1686.
+#> 2 auto          193µs     5140.
 ```
 
 `"auto"` selects the best backend from the compiled and supported

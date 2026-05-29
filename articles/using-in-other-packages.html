@@ -110,6 +110,7 @@ performs the important substitutions, including <code>@useDynLib</code>,
 <span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_avx512.c</span></span>
 <span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_neon.c</span></span>
 <span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_wasm_simd128.c</span></span>
+<span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_common.h</span></span>
 <span><span class="va">src</span><span class="op">/</span><span class="va">Makevars.in</span></span>
 <span><span class="va">src</span><span class="op">/</span><span class="va">Makevars.win.in</span></span>
 <span><span class="va">src</span><span class="op">/</span><span class="va">cpu_features.c</span></span>
@@ -141,28 +142,25 @@ kernel objects, and the dispatcher remains safe on baseline CPUs.</p>
 <p>The staged build model already scales across operations: if you add
 another function to each existing <code>tools/kernels/kernel_*.c</code>
 file, the same staged object for that backend contains the new
-implementation. The dispatch surface is now macro-assisted, so adding a
-small number of operations mainly means:</p>
+implementation. For a small number of operations, keep the dispatch code
+explicit and add:</p>
 <ol style="list-style-type: decimal">
-<li>add one <code>RSD_DISPATCH_OPS()</code> entry in
-<code>src/simd_dispatch.h</code> with the operation name, return type,
-argument list, call argument list, and optional <code>return</code>
-token;</li>
-<li>add one implementation per backend file under
+<li>a function-pointer typedef and <code>RsdOps</code> field in
+<code>src/simd_dispatch.h</code>;</li>
+<li>one implementation per backend file under
 <code>tools/kernels/</code>, following the naming convention
 <code>rsd_&lt;operation&gt;_&lt;backend&gt;()</code>;</li>
-<li>add the <code>.Call</code> wrapper in <code>src/r_api.c</code>;</li>
-<li>add the routine once to <code>RSD_CALL_METHODS()</code> in
+<li>backend declarations, <code>RsdOps</code> initializers, and the
+dispatched wrapper in <code>src/simd_dispatch.c</code>;</li>
+<li>the <code>.Call</code> wrapper in <code>src/r_api.c</code>;</li>
+<li>the native registration entry in
 <code>src/registration.c</code>;</li>
-<li>add the R wrapper, tests, and documentation.</li>
+<li>the R wrapper, tests, and documentation.</li>
 </ol>
-<p>The <code>RSD_DISPATCH_OPS()</code> entry generates the typedef,
-<code>RsdOps</code> field, public C wrapper declaration, backend extern
-declarations, backend table initializers, and dispatched C wrapper.
-Backend metadata is also table-driven, so diagnostics and auto-selection
-do not need a second hand-maintained backend-name list. This is easy for
-a handful of operations and avoids duplicating backend-selection
-logic.</p>
+<p>Backend metadata is table-driven, so diagnostics and auto-selection
+do not need a second hand-maintained backend-name list. This explicit
+layout is easier to read for the template and still keeps
+backend-selection logic centralized.</p>
 <p>For packages with many public operations, keep a single operation
 catalog that can generate the repetitive dispatch metadata,
 <code>.Call</code> registration, and R wrappers. Optimized backend

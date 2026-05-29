@@ -60,7 +60,7 @@
 </h1></div>
 <!-- badges: start -->
 
-<p>Pure-C runtime SIMD dispatch templates for R packages. Stage scalar, SSE, AVX, AVX-512, NEON, and WebAssembly SIMD128 kernel objects during configuration; link one shared library and switch among compiled and CPU-supported implementations at runtime without unsafe overrides.</p>
+<p>Pure-C runtime SIMD dispatch templates for R packages. Stage scalar, SSE, AVX, AVX-512, NEON, and WebAssembly SIMD128 kernel objects during configuration; link one shared library and switch among compiled and CPU-supported implementations at runtime.</p>
 <div class="section level2">
 <h2 id="install">Install<a class="anchor" aria-label="anchor" href="#install"></a>
 </h2>
@@ -126,7 +126,7 @@
 <span><span class="co">#&gt; [1] "f3e8262173b7089db9a9d57a9ecef8dd07ad9c97"</span></span>
 <span><span class="fu"><a href="reference/simd_dispatch_template_path.html">simd_dispatch_template_path</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RsimdDispatch/templates/dispatch-c"</span></span></code></pre></div>
-<p><code><a href="reference/simd_set_backend.html">simd_set_backend()</a></code> rejects uncompiled or CPU-unsupported backends. There is no unsafe override.</p>
+<p><code><a href="reference/simd_set_backend.html">simd_set_backend()</a></code> rejects uncompiled or CPU-unsupported backends.</p>
 </div>
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
@@ -206,17 +206,17 @@
 <tbody>
 <tr>
 <td align="left">scalar</td>
-<td align="right">11.413</td>
-<td align="right">4573.997</td>
+<td align="right">11.431</td>
+<td align="right">4557.942</td>
 <td align="right">20</td>
 <td align="right">1.000</td>
 </tr>
 <tr>
 <td align="left">avx2</td>
-<td align="right">2.050</td>
-<td align="right">25258.295</td>
+<td align="right">1.874</td>
+<td align="right">27731.329</td>
 <td align="right">20</td>
-<td align="right">5.522</td>
+<td align="right">6.084</td>
 </tr>
 </tbody>
 </table>
@@ -271,17 +271,17 @@
 <tbody>
 <tr>
 <td align="left">scalar</td>
-<td align="right">4.143</td>
-<td align="right">2488.659</td>
+<td align="right">2.966</td>
+<td align="right">3328.908</td>
 <td align="right">20</td>
 <td align="right">1.000</td>
 </tr>
 <tr>
 <td align="left">avx2</td>
-<td align="right">1.254</td>
-<td align="right">7949.090</td>
+<td align="right">1.211</td>
+<td align="right">8259.988</td>
 <td align="right">20</td>
-<td align="right">3.194</td>
+<td align="right">2.481</td>
 </tr>
 </tbody>
 </table>

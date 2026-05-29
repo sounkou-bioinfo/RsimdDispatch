@@ -44,6 +44,9 @@
 <ul><li>Open the post-0.1.2 development cycle.</li>
 <li>Clarify many-operation maintenance guidance: repetitive dispatch metadata, C registration, and R wrapper metadata should come from one source of truth; hand-written code should focus on backend kernels.</li>
 <li>Move the downstream-use vignette after runtime dispatch semantics in the pkgdown article order and shorten its many-operation guidance.</li>
+<li>Trim redundant backend-selection wording from README and dispatch semantics documentation.</li>
+<li>Move the staged-kernel-only <code>kernel_common.h</code> helper from <code>src/</code> into <code>tools/kernels/</code> and the copied template kernel directory, and update downstream-template docs for that layout.</li>
+<li>Replace short-lived C preprocessor expansion blocks in <code>src/</code> with explicit operation-table declarations, dispatch wrappers, and native registration entries.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.2" id="rsimddispatch-012">RsimdDispatch 0.1.2<a class="anchor" aria-label="anchor" href="#rsimddispatch-012"></a></h2>
@@ -52,7 +55,7 @@
 <li>Add webR check tooling based on the local <code>rwasm::build()</code> + Node <code>webr</code> workflow used by related packages.</li>
 <li>Generate explicit SIMDe include flags in <code>src/Makevars</code> and quote configure include paths so copied templates are more robust in downstream libraries.</li>
 <li>Eagerly initialize dispatch at package load, exercise copied-template runtime behavior in CI, and remove legacy comma-separated backend-list C helpers.</li>
-<li>Switch dispatch from one function pointer per operation to a backend <code>RsdOps</code> operation table, use <code>RSD_DISPATCH_OPS()</code> to generate operation typedefs, fields, backend declarations, table initializers, and wrappers, and use an X-macro list for <code>.Call</code> routine registration. Backend diagnostics now reuse the C backend metadata table, and the R setter no longer hardcodes backend names. This makes adding several dispatched operations substantially less brittle.</li>
+<li>Switch dispatch from one function pointer per operation to a backend <code>RsdOps</code> operation table. Backend diagnostics now reuse the C backend metadata table, and the R setter no longer hardcodes backend names.</li>
 <li>Add a dispatched <code><a href="../reference/convolve1d.html">convolve1d()</a></code> full one-dimensional convolution demo, using SIMDe inner-loop multiply-add kernels for numeric vectors, and include it in tests, documentation, webR checks, and evaluated benchmarks.</li>
 <li>Document the current extension path for adding operations while retaining RsimdDispatch’s staged-object R package build model.</li>
 </ul></div>
