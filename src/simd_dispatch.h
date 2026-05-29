@@ -8,6 +8,11 @@
 extern "C" {
 #endif
 
+typedef enum RsdOperation {
+    RSD_OP_COUNT_NONZERO = 0,
+    RSD_OP_CONVOLVE1D = 1
+} RsdOperation;
+
 typedef size_t (*rsd_count_nonzero_fn)(const uint8_t *x, size_t n);
 typedef void (*rsd_convolve1d_fn)(const double *a, size_t na, const double *b, size_t nb, double *out);
 
@@ -26,8 +31,11 @@ int rsd_backend_known(const char *backend);
 int rsd_backend_compiled(const char *backend);
 int rsd_backend_cpu_supported(const char *backend);
 int rsd_backend_available(const char *backend);
+int rsd_backend_operation_available(const char *backend, const char *operation);
 size_t rsd_backend_count(void);
 const char *rsd_backend_name(size_t i);
+size_t rsd_operation_count(void);
+const char *rsd_operation_name(size_t i);
 const char *rsd_dispatch_mode(void);
 
 #ifdef __cplusplus

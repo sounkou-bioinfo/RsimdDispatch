@@ -24,33 +24,3 @@ size_t rsd_count_nonzero_sse2(const uint8_t *x, size_t n) {
     }
     return acc;
 }
-
-void rsd_convolve1d_sse2(const double *a, size_t na, const double *b, size_t nb, double *out) {
-    if (na == 0 || nb == 0) {
-        return;
-    }
-
-    const size_t nab = na + nb - 1;
-    size_t k = 0;
-    const simde__m128d zero = simde_mm_setzero_pd();
-    for (; k + 2 <= nab; k += 2) {
-        simde_mm_storeu_pd(out + k, zero);
-    }
-    for (; k < nab; ++k) {
-        out[k] = 0.0;
-    }
-
-    for (size_t i = 0; i < na; ++i) {
-        const simde__m128d ai = simde_mm_set1_pd(a[i]);
-        size_t j = 0;
-        for (; j + 2 <= nb; j += 2) {
-            simde__m128d bv = simde_mm_loadu_pd(b + j);
-            simde__m128d ov = simde_mm_loadu_pd(out + i + j);
-            ov = simde_mm_add_pd(ov, simde_mm_mul_pd(ai, bv));
-            simde_mm_storeu_pd(out + i + j, ov);
-        }
-        for (; j < nb; ++j) {
-            out[i + j] += a[i] * b[j];
-        }
-    }
-}

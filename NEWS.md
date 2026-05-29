@@ -14,6 +14,10 @@
 * Replace short-lived C preprocessor expansion blocks in `src/` with explicit
   operation-table declarations, dispatch wrappers, and native registration
   entries.
+* Support explicit `NULL` operation slots for backend/operation combinations
+  that are deliberately unsupported, report operation-level backend availability
+  in `simd_info()`, and make `"auto"` skip unsupported slots for the operation
+  being called.
 
 # RsimdDispatch 0.1.2
 

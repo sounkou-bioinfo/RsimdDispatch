@@ -40,7 +40,7 @@ simd_set_backend("scalar")
 count_nonzero(x)
 convolve1d(a, b)
 
-candidate <- setdiff(simd_info()$available_backends, "scalar")[1]
+candidate <- setdiff(simd_info()$operation_backends$convolve1d, "scalar")[1]
 if (!is.na(candidate)) {
   simd_set_backend(candidate)
   count_nonzero(x)

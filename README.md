@@ -71,22 +71,19 @@ simd_set_backend("avx2")
 simd_backend()
 #> [1] "avx2"
 simd_set_backend("auto")
-simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends", "simde_native_backends")]
+simd_info()[c("compiled_backends", "available_backends", "simde_native_backends")]
 #> $compiled_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
-#> 
-#> $cpu_supported_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"  
-#> 
+#>
 #> $available_backends
-#> [1] "scalar" "sse2"   "sse41"  "avx2"  
-#> 
+#> [1] "scalar" "sse2"   "sse41"  "avx2"
+#>
 #> $simde_native_backends
 #> [1] "sse2"   "sse41"  "avx2"   "avx512"
 simde_info()[c("version", "commit")]
 #> $version
 #> [1] "0.8.4"
-#> 
+#>
 #> $commit
 #> [1] "f3e8262173b7089db9a9d57a9ecef8dd07ad9c97"
 simd_dispatch_template_path()
@@ -94,6 +91,8 @@ simd_dispatch_template_path()
 ```
 
 `simd_set_backend()` rejects uncompiled or CPU-unsupported backends.
+Operation-level backend availability is reported in
+`simd_info()$operation_backends`.
 
 ## Example
 
@@ -105,7 +104,7 @@ convolve1d(a, b)
 simd_info()[c("selected_backend", "available_backends")]
 #> $selected_backend
 #> [1] "avx2"
-#> 
+#>
 #> $available_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"
 ```
@@ -169,8 +168,8 @@ knitr::kable(bench, digits = 3)
 
 | backend | median_ms | mb_per_second | iterations | speedup_vs_scalar |
 |:--------|----------:|--------------:|-----------:|------------------:|
-| scalar  |    11.431 |      4557.942 |         20 |             1.000 |
-| avx2    |     1.874 |     27731.329 |         20 |             6.084 |
+| scalar  |    11.522 |      4559.696 |         20 |             1.000 |
+| avx2    |     1.853 |     27697.757 |         20 |             6.074 |
 
 The same runtime switch can benchmark a full one-dimensional
 convolution: the classic nested-loop `out[i + j - 1] += a[i] * b[j]`
@@ -212,8 +211,8 @@ knitr::kable(conv_bench, digits = 3)
 
 | backend | median_ms | million_multiply_adds_per_second | iterations | speedup_vs_scalar |
 |:--------|----------:|---------------------------------:|-----------:|------------------:|
-| scalar  |     2.966 |                         3328.908 |         20 |             1.000 |
-| avx2    |     1.211 |                         8259.988 |         20 |             2.481 |
+| scalar  |     3.069 |                         3271.550 |         20 |             1.000 |
+| avx2    |     1.232 |                         8092.049 |         20 |             2.473 |
 
 ## Development
 

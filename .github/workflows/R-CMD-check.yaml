@@ -91,10 +91,16 @@ jobs:
           ref <- slow_convolve(a, b)
           info <- simd_info()
           stopifnot("scalar" %in% info$available_backends)
+          stopifnot("scalar" %in% info$operation_backends$count_nonzero)
+          stopifnot("scalar" %in% info$operation_backends$convolve1d)
           for (backend in info$available_backends) {
             simd_set_backend(backend)
             stopifnot(identical(count_nonzero(x), 3))
-            stopifnot(isTRUE(all.equal(convolve1d(a, b), ref, tolerance = 1e-12)))
+            if (backend %in% info$operation_backends$convolve1d) {
+              stopifnot(isTRUE(all.equal(convolve1d(a, b), ref, tolerance = 1e-12)))
+            } else {
+              stopifnot(inherits(try(convolve1d(a, b), silent = TRUE), "try-error"))
+            }
           }
           simd_set_backend("auto")
           stopifnot(simd_backend() %in% info$available_backends)

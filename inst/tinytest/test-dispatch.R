@@ -24,27 +24,39 @@ expect_true(is.list(info))
 expect_true(all(c(
   "dispatch_mode", "requested_backend", "selected_backend",
   "compiled_backends", "cpu_supported_backends", "available_backends",
-  "simde_native_backends", "cpu_avx2", "cpu_wasm_simd128", "target_arch", "simde_version", "simde_commit"
+  "simde_native_backends", "operations", "operation_backends",
+  "cpu_avx2", "cpu_wasm_simd128", "target_arch", "simde_version", "simde_commit"
 ) %in% names(info)))
 expect_true(is.character(info$compiled_backends))
 expect_true(is.character(info$cpu_supported_backends))
 expect_true(is.character(info$available_backends))
 expect_true(is.character(info$simde_native_backends))
+expect_true(is.character(info$operations))
+expect_true(is.list(info$operation_backends))
+expect_true(all(c("count_nonzero", "convolve1d") %in% info$operations))
+expect_true(all(c("count_nonzero", "convolve1d") %in% names(info$operation_backends)))
 expect_true(all(info$simde_native_backends %in% info$compiled_backends))
 expect_true("scalar" %in% info$compiled_backends)
 expect_true("scalar" %in% info$available_backends)
+expect_true("scalar" %in% info$operation_backends$count_nonzero)
+expect_true("scalar" %in% info$operation_backends$convolve1d)
 
 expect_silent(simd_set_backend("scalar"))
 expect_equal(simd_backend(), "scalar")
 expect_equal(count_nonzero(x), 4)
 expect_equal(convolve1d(conv_a, conv_b), conv_ref, tolerance = 1e-12)
 
-available <- simd_info()$available_backends
+info <- simd_info()
+available <- info$available_backends
 for (backend in setdiff(available, "scalar")) {
   expect_silent(simd_set_backend(backend))
   expect_equal(simd_backend(), backend)
   expect_equal(count_nonzero(x), 4)
-  expect_equal(convolve1d(conv_a, conv_b), conv_ref, tolerance = 1e-12)
+  if (backend %in% info$operation_backends$convolve1d) {
+    expect_equal(convolve1d(conv_a, conv_b), conv_ref, tolerance = 1e-12)
+  } else {
+    expect_error(convolve1d(conv_a, conv_b), "operation 'convolve1d' is not available")
+  }
 }
 
 expect_silent(simd_set_backend("auto"))

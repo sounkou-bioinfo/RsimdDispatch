@@ -147,6 +147,52 @@ static SEXP rsd_backend_character_vector(int mode) {
     return out;
 }
 
+static SEXP rsd_operation_character_vector(void) {
+    size_t n_operations = rsd_operation_count();
+    SEXP out = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
+    for (size_t i = 0; i < n_operations; ++i) {
+        SET_STRING_ELT(out, (R_xlen_t)i, Rf_mkChar(rsd_operation_name(i)));
+    }
+    return out;
+}
+
+static SEXP rsd_operation_backend_vector(const char *operation) {
+    size_t n_backends = rsd_backend_count();
+    int n = 0;
+
+    for (size_t i = 0; i < n_backends; ++i) {
+        const char *backend = rsd_backend_name(i);
+        n += rsd_backend_operation_available(backend, operation) != 0;
+    }
+
+    SEXP out = PROTECT(Rf_allocVector(STRSXP, n));
+    int j = 0;
+    for (size_t i = 0; i < n_backends; ++i) {
+        const char *backend = rsd_backend_name(i);
+        if (rsd_backend_operation_available(backend, operation)) {
+            SET_STRING_ELT(out, j, Rf_mkChar(backend));
+            ++j;
+        }
+    }
+    return out;
+}
+
+static SEXP rsd_operation_backends_list(void) {
+    size_t n_operations = rsd_operation_count();
+    SEXP out = PROTECT(Rf_allocVector(VECSXP, (R_xlen_t)n_operations));
+    SEXP out_names = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
+
+    for (size_t i = 0; i < n_operations; ++i) {
+        const char *operation = rsd_operation_name(i);
+        SET_STRING_ELT(out_names, (R_xlen_t)i, Rf_mkChar(operation));
+        SET_VECTOR_ELT(out, (R_xlen_t)i, rsd_operation_backend_vector(operation));
+        UNPROTECT(1);
+    }
+    Rf_setAttrib(out, R_NamesSymbol, out_names);
+    UNPROTECT(1);
+    return out;
+}
+
 SEXP RC_simd_info(void) {
     const char *names[] = {
         "dispatch_mode",
@@ -156,6 +202,8 @@ SEXP RC_simd_info(void) {
         "cpu_supported_backends",
         "available_backends",
         "simde_native_backends",
+        "operations",
+        "operation_backends",
         "cpu_sse2",
         "cpu_sse41",
         "cpu_avx2",
@@ -181,16 +229,18 @@ SEXP RC_simd_info(void) {
     SET_VECTOR_ELT(out, 4, rsd_backend_character_vector(1)); UNPROTECT(1);
     SET_VECTOR_ELT(out, 5, rsd_backend_character_vector(2)); UNPROTECT(1);
     SET_VECTOR_ELT(out, 6, rsd_backend_character_vector(3)); UNPROTECT(1);
-    SET_VECTOR_ELT(out, 7, Rf_ScalarLogical(rsd_cpu_has_sse2() != 0));
-    SET_VECTOR_ELT(out, 8, Rf_ScalarLogical(rsd_cpu_has_sse41() != 0));
-    SET_VECTOR_ELT(out, 9, Rf_ScalarLogical(rsd_cpu_has_avx2() != 0));
-    SET_VECTOR_ELT(out, 10, Rf_ScalarLogical(rsd_cpu_has_avx512() != 0));
-    SET_VECTOR_ELT(out, 11, Rf_ScalarLogical(rsd_cpu_has_neon() != 0));
-    SET_VECTOR_ELT(out, 12, Rf_ScalarLogical(rsd_cpu_has_wasm_simd128() != 0));
-    SET_VECTOR_ELT(out, 13, Rf_mkString(rsd_target_arch()));
-    SET_VECTOR_ELT(out, 14, Rf_mkString(rsd_target_os()));
-    SET_VECTOR_ELT(out, 15, Rf_mkString(RSD_SIMDE_VERSION));
-    SET_VECTOR_ELT(out, 16, Rf_mkString(RSD_SIMDE_COMMIT));
+    SET_VECTOR_ELT(out, 7, rsd_operation_character_vector()); UNPROTECT(1);
+    SET_VECTOR_ELT(out, 8, rsd_operation_backends_list()); UNPROTECT(1);
+    SET_VECTOR_ELT(out, 9, Rf_ScalarLogical(rsd_cpu_has_sse2() != 0));
+    SET_VECTOR_ELT(out, 10, Rf_ScalarLogical(rsd_cpu_has_sse41() != 0));
+    SET_VECTOR_ELT(out, 11, Rf_ScalarLogical(rsd_cpu_has_avx2() != 0));
+    SET_VECTOR_ELT(out, 12, Rf_ScalarLogical(rsd_cpu_has_avx512() != 0));
+    SET_VECTOR_ELT(out, 13, Rf_ScalarLogical(rsd_cpu_has_neon() != 0));
+    SET_VECTOR_ELT(out, 14, Rf_ScalarLogical(rsd_cpu_has_wasm_simd128() != 0));
+    SET_VECTOR_ELT(out, 15, Rf_mkString(rsd_target_arch()));
+    SET_VECTOR_ELT(out, 16, Rf_mkString(rsd_target_os()));
+    SET_VECTOR_ELT(out, 17, Rf_mkString(RSD_SIMDE_VERSION));
+    SET_VECTOR_ELT(out, 18, Rf_mkString(RSD_SIMDE_COMMIT));
 
     for (int i = 0; i < n; ++i) {
         SET_STRING_ELT(out_names, i, Rf_mkChar(names[i]));

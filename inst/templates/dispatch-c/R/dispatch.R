@@ -76,9 +76,10 @@ simd_backend <- function() {
 #' Report runtime SIMD dispatch diagnostics
 #'
 #' Returns the requested backend, selected backend, compiled backends,
-#' CPU-supported backends, SIMDe-native backends, target information, and SIMDe
-#' provenance compiled into the shared library. Calling this initializes the lazy auto-dispatch
-#' selection if it has not already been initialized.
+#' CPU-supported backends, operation-level backend availability, SIMDe-native
+#' backends, target information, and SIMDe provenance compiled into the shared
+#' library. Calling this initializes the lazy auto-dispatch selection if it has
+#' not already been initialized.
 #'
 #' @return A named list of dispatch and CPU feature diagnostics. Backend-set
 #'   entries are character vectors, not comma-separated strings.

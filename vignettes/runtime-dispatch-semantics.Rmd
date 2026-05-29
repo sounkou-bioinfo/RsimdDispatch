@@ -27,7 +27,7 @@ simd_set_backend("scalar")
 count_nonzero(x)
 convolve1d(a, b)
 
-candidate <- setdiff(simd_info()$available_backends, "scalar")[1]
+candidate <- setdiff(simd_info()$operation_backends$convolve1d, "scalar")[1]
 if (!is.na(candidate)) {
   simd_set_backend(candidate)
   count_nonzero(x)
@@ -45,13 +45,16 @@ simd_backend()
   AVX-512 register state on x86 and module-level SIMD128 support on WebAssembly.
 
 If a backend is not available, the setter errors before any SIMD-only
-instruction can execute. Backend selection is a process-global operation-table
-pointer: initialize or change it from ordinary R code, and do not call
-`simd_set_backend()` concurrently with active native worker threads that are
-executing dispatched kernels.
+instruction can execute. Individual operation slots may also be `NULL` for a
+backend. Explicitly selecting such a backend is allowed, but calling an
+unsupported operation errors clearly. With `"auto"`, each operation resolves to
+the best available backend that has a non-`NULL` slot for that operation.
+Backend selection is a process-global operation-table pointer: initialize or
+change it from ordinary R code, and do not call `simd_set_backend()` concurrently
+with active native worker threads that are executing dispatched kernels.
 
 ```{r}
-simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends")]
+simd_info()[c("compiled_backends", "cpu_supported_backends", "available_backends", "operation_backends")]
 ```
 
 ## SIMDe and native ISA compilation
@@ -134,8 +137,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 }
 ```
 
-`"auto"` selects the best backend from the compiled and supported intersection.
-The current ranking is:
+`"auto"` selects the best backend from the compiled and supported intersection
+that also supports the operation being called. The current ranking is:
 
 ```text
 avx512 > avx2 > sse41 > sse2 > neon > wasm_simd128 > scalar
