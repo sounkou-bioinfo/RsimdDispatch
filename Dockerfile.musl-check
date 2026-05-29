@@ -1,0 +1,72 @@
+# syntax=docker/dockerfile:1
+FROM alpine:3.22
+
+LABEL org.opencontainers.image.title="RsimdDispatch musl check image"
+LABEL org.opencontainers.image.description="Alpine Linux / musl environment for R CMD check of RsimdDispatch"
+LABEL org.opencontainers.image.source="https://github.com/sounkou-bioinfo/RsimdDispatch"
+
+ENV TZ=UTC \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    R_LIBS_USER=/opt/R/site-library \
+    R_KEEP_PKG_SOURCE=yes \
+    R_DEFAULT_INTERNET_TIMEOUT=600 \
+    MAKEFLAGS=-j2
+
+RUN apk add --no-cache \
+        R \
+        R-dev \
+        R-doc \
+        build-base \
+        ca-certificates \
+        checkbashisms \
+        curl \
+        diffutils \
+        gfortran \
+        git \
+        grep \
+        libuv-dev \
+        make \
+        musl-dev \
+        pandoc \
+        pkgconf \
+        qpdf \
+        tar \
+        tzdata \
+        xz \
+    && update-ca-certificates
+
+RUN mkdir -p "${R_LIBS_USER}" /root/.R \
+    && printf '%s\n' 'options(repos = c(CRAN = "https://cloud.r-project.org"), Ncpus = 2)' > /root/.Rprofile \
+    && Rscript -e 'pkgs <- c("bench", "knitr", "rmarkdown", "tinytest"); need <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]; if (length(need)) install.packages(need, lib = Sys.getenv("R_LIBS_USER")); missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]; if (length(missing)) stop("missing R packages: ", paste(missing, collapse = ", "))'
+
+RUN cat > /usr/local/bin/rsd-musl-check <<'EOF'
+#!/bin/sh
+set -eu
+
+echo "== Alpine =="
+cat /etc/alpine-release
+
+echo "== libc =="
+ldd --version || true
+
+echo "== R =="
+Rscript -e 'cat(R.version$platform, "\n"); cat(R.version.string, "\n")'
+
+make check-template-sync
+R CMD INSTALL --preclean .
+Rscript -e 'tinytest::test_package("RsimdDispatch", testdir = "inst/tinytest")'
+R CMD build .
+PKG="$(ls -t RsimdDispatch_*.tar.gz | head -n 1)"
+CHECK_DIR="$(sed -n 's/^Package: *//p' DESCRIPTION).Rcheck"
+R CMD check --as-cran --no-manual "$PKG"
+if grep -Eq '^Status: .*ERROR|^Status: .*WARNING' "$CHECK_DIR/00check.log"; then
+    echo "musl check failed: ERROR or WARNING in $CHECK_DIR/00check.log" >&2
+    exit 1
+fi
+EOF
+RUN chmod +x /usr/local/bin/rsd-musl-check
+
+WORKDIR /pkg
+
+CMD ["rsd-musl-check"]

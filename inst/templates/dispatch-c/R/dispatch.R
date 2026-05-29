@@ -44,13 +44,14 @@ convolve1d <- function(a, b) {
 #'
 #' Select the backend used by subsequent calls to dispatched demo kernels such
 #' as `count_nonzero()` and `convolve1d()`. `RsimdDispatch` keeps all compiled
-#' variants in one shared object and switches guarded operation tables. This
-#' makes same-process benchmarking possible.
+#' variants in one shared object and switches a guarded resolved operation
+#' table. This makes same-process benchmarking possible.
 #'
 #' @param backend Character scalar. Use `"auto"` to select the best available
 #'   backend, or one of `simd_info()$available_backends` for an explicit choice.
-#' @return The selected backend, invisibly. For `"auto"`, this is the backend
-#'   chosen from the compiled and CPU-supported set.
+#' @return The selected backend summary, invisibly. For `"auto"`, operations
+#'   resolve independently and the summary may be `"mixed"` when different
+#'   operations choose different backends.
 #' @examples
 #' old <- simd_backend()
 #' simd_set_backend("scalar")
@@ -65,7 +66,7 @@ simd_set_backend <- function(backend = "auto") {
 
 #' Report the currently selected SIMD backend
 #'
-#' @return A character scalar naming the selected backend.
+#' @return A character scalar naming the selected backend summary.
 #' @examples
 #' simd_backend()
 #' @export
@@ -76,10 +77,10 @@ simd_backend <- function() {
 #' Report runtime SIMD dispatch diagnostics
 #'
 #' Returns the requested backend, selected backend, compiled backends,
-#' CPU-supported backends, operation-level backend availability, SIMDe-native
-#' backends, target information, and SIMDe provenance compiled into the shared
-#' library. Calling this initializes the lazy auto-dispatch selection if it has
-#' not already been initialized.
+#' CPU-supported backends, operation-level backend availability, operation-level
+#' selected backends, SIMDe-native backends, target information, and SIMDe
+#' provenance compiled into the shared library. Calling this initializes the lazy
+#' auto-dispatch selection if it has not already been initialized.
 #'
 #' @return A named list of dispatch and CPU feature diagnostics. Backend-set
 #'   entries are character vectors, not comma-separated strings.

@@ -14,10 +14,12 @@
 * Replace short-lived C preprocessor expansion blocks in `src/` with explicit
   operation-table declarations, dispatch wrappers, and native registration
   entries.
-* Support explicit `NULL` operation slots for backend/operation combinations
-  that are deliberately unsupported, report operation-level backend availability
-  in `simd_info()`, and make `"auto"` skip unsupported slots for the operation
-  being called.
+* Move dispatch to a NumKong-inspired resolved operation table: backend files
+  register the operation slots they implement, `"auto"` resolves the best
+  backend per operation, and `simd_info()` reports both operation-level backend
+  availability and the selected backend for each operation.
+* Add `Dockerfile.musl-check` for Alpine Linux / musl `R CMD check` smoke
+  testing in repository-specific CI.
 
 # RsimdDispatch 0.1.2
 

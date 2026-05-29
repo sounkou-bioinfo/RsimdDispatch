@@ -6,6 +6,7 @@
 #include <simde/x86/sse4.1.h>
 
 #include "kernel_common.h"
+#include "simd_dispatch.h"
 
 size_t rsd_count_nonzero_sse41(const uint8_t *x, size_t n) {
     size_t i = 0;
@@ -26,4 +27,8 @@ size_t rsd_count_nonzero_sse41(const uint8_t *x, size_t n) {
         acc += x[i] != 0;
     }
     return acc;
+}
+
+void rsd_register_sse41(RsdDispatchBuilder *builder) {
+    rsd_register_count_nonzero(builder, rsd_count_nonzero_sse41);
 }

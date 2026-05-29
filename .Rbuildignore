@@ -13,6 +13,7 @@
 ^config\.log$
 ^Makefile$
 ^Dockerfile\.webr-test$
+^Dockerfile\.musl-check$
 ^README\.Rmd$
 ^README\.html$
 ^REVIEW\.md$

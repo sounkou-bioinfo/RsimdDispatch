@@ -6,6 +6,7 @@
 #include <simde/wasm/simd128.h>
 
 #include "kernel_common.h"
+#include "simd_dispatch.h"
 
 size_t rsd_count_nonzero_wasm_simd128(const uint8_t *x, size_t n) {
     size_t i = 0;
@@ -53,4 +54,9 @@ void rsd_convolve1d_wasm_simd128(const double *a, size_t na, const double *b, si
             out[i + j] += a[i] * b[j];
         }
     }
+}
+
+void rsd_register_wasm_simd128(RsdDispatchBuilder *builder) {
+    rsd_register_count_nonzero(builder, rsd_count_nonzero_wasm_simd128);
+    rsd_register_convolve1d(builder, rsd_convolve1d_wasm_simd128);
 }

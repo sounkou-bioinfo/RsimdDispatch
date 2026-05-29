@@ -8,7 +8,7 @@ The important pattern is:
 - compile R API, CPU detection, and dispatch files through ordinary `src/Makevars`;
 - stage scalar and optional SIMD kernel objects during `configure`;
 - select only a backend that is both compiled and supported by the current CPU/runtime;
-- switch a guarded operation table when `simd_set_backend()` is called.
+- rebuild a guarded resolved operation table when `simd_set_backend()` is called.
 
 Copy with:
 
@@ -18,6 +18,6 @@ RsimdDispatch::use_simd_dispatch("/path/to/pkg", pkg = "YourPackage", prefix = "
 
 The helper substitutes the package name and C symbol prefixes. Then replace the
 example `count_nonzero()` and `convolve1d()` kernels with your package-specific
-kernel signatures. If a backend intentionally does not implement an operation,
-leave the corresponding operation-table slot as `NULL`. See `CHECKLIST.md` if
-you copy files manually.
+kernel signatures. Backend files register only the operation slots they
+implement; omit the registration call when a backend intentionally does not
+implement an operation. See `CHECKLIST.md` if you copy files manually.

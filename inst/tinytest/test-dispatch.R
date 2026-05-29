@@ -25,7 +25,8 @@ expect_true(all(c(
   "dispatch_mode", "requested_backend", "selected_backend",
   "compiled_backends", "cpu_supported_backends", "available_backends",
   "simde_native_backends", "operations", "operation_backends",
-  "cpu_avx2", "cpu_wasm_simd128", "target_arch", "simde_version", "simde_commit"
+  "operation_selected_backends", "cpu_avx2", "cpu_wasm_simd128",
+  "target_arch", "simde_version", "simde_commit"
 ) %in% names(info)))
 expect_true(is.character(info$compiled_backends))
 expect_true(is.character(info$cpu_supported_backends))
@@ -33,16 +34,22 @@ expect_true(is.character(info$available_backends))
 expect_true(is.character(info$simde_native_backends))
 expect_true(is.character(info$operations))
 expect_true(is.list(info$operation_backends))
+expect_true(is.character(info$operation_selected_backends))
 expect_true(all(c("count_nonzero", "convolve1d") %in% info$operations))
 expect_true(all(c("count_nonzero", "convolve1d") %in% names(info$operation_backends)))
+expect_true(all(c("count_nonzero", "convolve1d") %in% names(info$operation_selected_backends)))
 expect_true(all(info$simde_native_backends %in% info$compiled_backends))
 expect_true("scalar" %in% info$compiled_backends)
 expect_true("scalar" %in% info$available_backends)
 expect_true("scalar" %in% info$operation_backends$count_nonzero)
 expect_true("scalar" %in% info$operation_backends$convolve1d)
+expect_true(info$operation_selected_backends[["count_nonzero"]] %in% info$operation_backends$count_nonzero)
+expect_true(info$operation_selected_backends[["convolve1d"]] %in% info$operation_backends$convolve1d)
 
 expect_silent(simd_set_backend("scalar"))
 expect_equal(simd_backend(), "scalar")
+info_scalar <- simd_info()
+expect_equal(unname(info_scalar$operation_selected_backends), c("scalar", "scalar"))
 expect_equal(count_nonzero(x), 4)
 expect_equal(convolve1d(conv_a, conv_b), conv_ref, tolerance = 1e-12)
 
@@ -51,16 +58,23 @@ available <- info$available_backends
 for (backend in setdiff(available, "scalar")) {
   expect_silent(simd_set_backend(backend))
   expect_equal(simd_backend(), backend)
+  info_backend <- simd_info()
+  expect_equal(info_backend$operation_selected_backends[["count_nonzero"]], backend)
   expect_equal(count_nonzero(x), 4)
   if (backend %in% info$operation_backends$convolve1d) {
+    expect_equal(info_backend$operation_selected_backends[["convolve1d"]], backend)
     expect_equal(convolve1d(conv_a, conv_b), conv_ref, tolerance = 1e-12)
   } else {
+    expect_true(is.na(info_backend$operation_selected_backends[["convolve1d"]]))
     expect_error(convolve1d(conv_a, conv_b), "operation 'convolve1d' is not available")
   }
 }
 
 expect_silent(simd_set_backend("auto"))
-expect_true(simd_backend() %in% available)
+info_auto <- simd_info()
+expect_true(simd_backend() %in% c(available, "mixed", "unavailable"))
+expect_true(info_auto$operation_selected_backends[["count_nonzero"]] %in% info_auto$operation_backends$count_nonzero)
+expect_true(info_auto$operation_selected_backends[["convolve1d"]] %in% info_auto$operation_backends$convolve1d)
 
 if (!("avx512" %in% available)) {
   expect_error(simd_set_backend("avx512"))

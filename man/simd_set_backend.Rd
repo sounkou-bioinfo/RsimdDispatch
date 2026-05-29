@@ -11,14 +11,15 @@ simd_set_backend(backend = "auto")
 backend, or one of \code{simd_info()$available_backends} for an explicit choice.}
 }
 \value{
-The selected backend, invisibly. For \code{"auto"}, this is the backend
-chosen from the compiled and CPU-supported set.
+The selected backend summary, invisibly. For \code{"auto"}, operations
+resolve independently and the summary may be \code{"mixed"} when different
+operations choose different backends.
 }
 \description{
 Select the backend used by subsequent calls to dispatched demo kernels such
 as \code{count_nonzero()} and \code{convolve1d()}. \code{RsimdDispatch} keeps all compiled
-variants in one shared object and switches guarded operation tables. This
-makes same-process benchmarking possible.
+variants in one shared object and switches a guarded resolved operation
+table. This makes same-process benchmarking possible.
 }
 \examples{
 old <- simd_backend()

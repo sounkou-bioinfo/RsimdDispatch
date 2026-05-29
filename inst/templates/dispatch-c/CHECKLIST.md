@@ -8,7 +8,7 @@ If you copy files manually, update at least these package-specific values:
 - Review exported R names (`count_nonzero()`, `convolve1d()`, `simd_set_backend()`, `simd_backend()`, `simd_info()`).
 - Replace the demo `count_nonzero()` and `convolve1d()` kernel signatures in `tools/kernels/` with your package kernel signatures.
 - Keep shared staged-kernel helpers, such as `kernel_common.h`, in `tools/kernels/`.
-- Use explicit `NULL` operation-table slots for backend/operation combinations that are deliberately unsupported.
+- Register each operation in the backend file that implements it; omit the registration call for backend/operation combinations that are deliberately unsupported.
 
 Prefer using:
 

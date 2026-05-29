@@ -74,23 +74,23 @@ simd_backend()
 simd_set_backend("avx2")
 simd_backend()
 simd_set_backend("auto")
-simd_info()[c("compiled_backends", "available_backends", "simde_native_backends")]
+simd_info()[c("compiled_backends", "available_backends", "operation_selected_backends", "simde_native_backends")]
 simde_info()[c("version", "commit")]
 simd_dispatch_template_path()
 ```
 
-`simd_set_backend()` rejects uncompiled or CPU-unsupported backends. Operation-level backend availability is reported in `simd_info()$operation_backends`.
+`simd_set_backend()` rejects uncompiled or CPU-unsupported backends. Operation-level backend availability is reported in `simd_info()$operation_backends`, and the active resolved backend for each operation is reported in `simd_info()$operation_selected_backends`.
 
 ## Example
 
 ```{r}
 count_nonzero(x)
 convolve1d(a, b)
-simd_info()[c("selected_backend", "available_backends")]
+simd_info()[c("selected_backend", "operation_selected_backends", "available_backends")]
 ```
 
 Switching backends is same-process because all variants are linked into one R
-shared library and selected through a guarded operation table.
+shared library and selected through a guarded resolved operation table.
 
 ```{r}
 simd_set_backend("scalar")

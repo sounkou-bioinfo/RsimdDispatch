@@ -193,6 +193,22 @@ static SEXP rsd_operation_backends_list(void) {
     return out;
 }
 
+static SEXP rsd_operation_selected_backends_vector(void) {
+    size_t n_operations = rsd_operation_count();
+    SEXP out = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
+    SEXP out_names = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
+
+    for (size_t i = 0; i < n_operations; ++i) {
+        const char *operation = rsd_operation_name(i);
+        const char *backend = rsd_operation_selected_backend(operation);
+        SET_STRING_ELT(out_names, (R_xlen_t)i, Rf_mkChar(operation));
+        SET_STRING_ELT(out, (R_xlen_t)i, backend != NULL ? Rf_mkChar(backend) : NA_STRING);
+    }
+    Rf_setAttrib(out, R_NamesSymbol, out_names);
+    UNPROTECT(1);
+    return out;
+}
+
 SEXP RC_simd_info(void) {
     const char *names[] = {
         "dispatch_mode",
@@ -204,6 +220,7 @@ SEXP RC_simd_info(void) {
         "simde_native_backends",
         "operations",
         "operation_backends",
+        "operation_selected_backends",
         "cpu_sse2",
         "cpu_sse41",
         "cpu_avx2",
@@ -231,16 +248,17 @@ SEXP RC_simd_info(void) {
     SET_VECTOR_ELT(out, 6, rsd_backend_character_vector(3)); UNPROTECT(1);
     SET_VECTOR_ELT(out, 7, rsd_operation_character_vector()); UNPROTECT(1);
     SET_VECTOR_ELT(out, 8, rsd_operation_backends_list()); UNPROTECT(1);
-    SET_VECTOR_ELT(out, 9, Rf_ScalarLogical(rsd_cpu_has_sse2() != 0));
-    SET_VECTOR_ELT(out, 10, Rf_ScalarLogical(rsd_cpu_has_sse41() != 0));
-    SET_VECTOR_ELT(out, 11, Rf_ScalarLogical(rsd_cpu_has_avx2() != 0));
-    SET_VECTOR_ELT(out, 12, Rf_ScalarLogical(rsd_cpu_has_avx512() != 0));
-    SET_VECTOR_ELT(out, 13, Rf_ScalarLogical(rsd_cpu_has_neon() != 0));
-    SET_VECTOR_ELT(out, 14, Rf_ScalarLogical(rsd_cpu_has_wasm_simd128() != 0));
-    SET_VECTOR_ELT(out, 15, Rf_mkString(rsd_target_arch()));
-    SET_VECTOR_ELT(out, 16, Rf_mkString(rsd_target_os()));
-    SET_VECTOR_ELT(out, 17, Rf_mkString(RSD_SIMDE_VERSION));
-    SET_VECTOR_ELT(out, 18, Rf_mkString(RSD_SIMDE_COMMIT));
+    SET_VECTOR_ELT(out, 9, rsd_operation_selected_backends_vector()); UNPROTECT(1);
+    SET_VECTOR_ELT(out, 10, Rf_ScalarLogical(rsd_cpu_has_sse2() != 0));
+    SET_VECTOR_ELT(out, 11, Rf_ScalarLogical(rsd_cpu_has_sse41() != 0));
+    SET_VECTOR_ELT(out, 12, Rf_ScalarLogical(rsd_cpu_has_avx2() != 0));
+    SET_VECTOR_ELT(out, 13, Rf_ScalarLogical(rsd_cpu_has_avx512() != 0));
+    SET_VECTOR_ELT(out, 14, Rf_ScalarLogical(rsd_cpu_has_neon() != 0));
+    SET_VECTOR_ELT(out, 15, Rf_ScalarLogical(rsd_cpu_has_wasm_simd128() != 0));
+    SET_VECTOR_ELT(out, 16, Rf_mkString(rsd_target_arch()));
+    SET_VECTOR_ELT(out, 17, Rf_mkString(rsd_target_os()));
+    SET_VECTOR_ELT(out, 18, Rf_mkString(RSD_SIMDE_VERSION));
+    SET_VECTOR_ELT(out, 19, Rf_mkString(RSD_SIMDE_COMMIT));
 
     for (int i = 0; i < n; ++i) {
         SET_STRING_ELT(out_names, i, Rf_mkChar(names[i]));

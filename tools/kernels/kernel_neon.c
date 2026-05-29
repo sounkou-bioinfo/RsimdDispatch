@@ -5,6 +5,8 @@
 
 #include <simde/arm/neon.h>
 
+#include "simd_dispatch.h"
+
 size_t rsd_count_nonzero_neon(const uint8_t *x, size_t n) {
     size_t i = 0;
     size_t acc = 0;
@@ -58,4 +60,9 @@ void rsd_convolve1d_neon(const double *a, size_t na, const double *b, size_t nb,
         }
     }
 #endif
+}
+
+void rsd_register_neon(RsdDispatchBuilder *builder) {
+    rsd_register_count_nonzero(builder, rsd_count_nonzero_neon);
+    rsd_register_convolve1d(builder, rsd_convolve1d_neon);
 }

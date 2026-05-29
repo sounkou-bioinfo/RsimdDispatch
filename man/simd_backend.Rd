@@ -7,7 +7,7 @@
 simd_backend()
 }
 \value{
-A character scalar naming the selected backend.
+A character scalar naming the selected backend summary.
 }
 \description{
 Report the currently selected SIMD backend

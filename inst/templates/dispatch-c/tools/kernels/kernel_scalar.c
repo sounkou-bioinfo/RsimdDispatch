@@ -1,6 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "simd_dispatch.h"
+
 size_t rsd_count_nonzero_scalar(const uint8_t *x, size_t n) {
     size_t acc = 0;
     for (size_t i = 0; i < n; ++i) {
@@ -25,4 +27,9 @@ void rsd_convolve1d_scalar(const double *a, size_t na, const double *b, size_t n
             out[i + j] += ai * b[j];
         }
     }
+}
+
+void rsd_register_scalar(RsdDispatchBuilder *builder) {
+    rsd_register_count_nonzero(builder, rsd_count_nonzero_scalar);
+    rsd_register_convolve1d(builder, rsd_convolve1d_scalar);
 }

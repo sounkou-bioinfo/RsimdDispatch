@@ -6,6 +6,7 @@
 #include <simde/x86/avx2.h>
 
 #include "kernel_common.h"
+#include "simd_dispatch.h"
 
 size_t rsd_count_nonzero_avx2(const uint8_t *x, size_t n) {
     size_t i = 0;
@@ -53,4 +54,9 @@ void rsd_convolve1d_avx2(const double *a, size_t na, const double *b, size_t nb,
             out[i + j] += a[i] * b[j];
         }
     }
+}
+
+void rsd_register_avx2(RsdDispatchBuilder *builder) {
+    rsd_register_count_nonzero(builder, rsd_count_nonzero_avx2);
+    rsd_register_convolve1d(builder, rsd_convolve1d_avx2);
 }

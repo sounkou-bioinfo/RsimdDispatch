@@ -103,7 +103,10 @@ jobs:
             }
           }
           simd_set_backend("auto")
-          stopifnot(simd_backend() %in% info$available_backends)
+          info_auto <- simd_info()
+          stopifnot(simd_backend() %in% c(info$available_backends, "mixed", "unavailable"))
+          stopifnot(info_auto$operation_selected_backends[["count_nonzero"]] %in% info_auto$operation_backends$count_nonzero)
+          stopifnot(info_auto$operation_selected_backends[["convolve1d"]] %in% info_auto$operation_backends$convolve1d)
           EOF
 
       - uses: r-lib/actions/check-r-package@v2
