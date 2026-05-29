@@ -88,6 +88,29 @@ Do not put `-mavx2`, `-mavx512*`, `-msimd128`, or `-march=native` in global pack
 The configure helper keeps ISA flags local to optional staged kernel objects, and
 the dispatcher remains safe on baseline CPUs.
 
+## Extending the number of operations
+
+The staged build model already scales across operations: if you add another
+function to each existing `tools/kernels/kernel_*.c` file, the same staged object
+for that backend contains the new implementation. Adding a small number of
+operations now mainly means updating the dispatch surface:
+
+1. add a function-pointer typedef and field to `RsdOps` in `src/simd_dispatch.h`;
+2. add one implementation per backend file under `tools/kernels/`;
+3. add the corresponding extern declarations and backend table entries in
+   `src/simd_dispatch.c`;
+4. add the small public dispatched C wrapper in `src/simd_dispatch.c`;
+5. add the `.Call` wrapper in `src/r_api.c`;
+6. add the routine once to `RSD_CALL_METHODS()` in `src/registration.c`;
+7. add the R wrapper, tests, and documentation.
+
+That is easy for a handful of operations and avoids duplicating backend-selection
+logic. For a large operation catalog, the next step should be a NumKong-style
+layer: operation enum, dtype enum, backend/capability bitmask, punned signature
+families, and a `find_kernel(kind, dtype, capabilities, ...)` API. That would let
+many wrappers share one lookup path while keeping this package's R-friendly
+configure-time staged object model.
+
 ## Build
 
 The generated `configure` checks compiler support, writes `src/config.h` plus
