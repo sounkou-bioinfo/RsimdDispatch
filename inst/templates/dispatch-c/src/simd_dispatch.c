@@ -7,168 +7,134 @@
 #include <stdio.h>
 #include <string.h>
 
-extern size_t rsd_count_nonzero_scalar(const uint8_t *x, size_t n);
-extern void rsd_convolve1d_scalar(const double *a, size_t na, const double *b, size_t nb, double *out);
+#define RSD_DECLARE_BACKEND_OP(suffix, name, ret, args, call_args, return_stmt) extern ret rsd_##name##_##suffix args;
+#define RSD_DECLARE_BACKEND(suffix) RSD_DISPATCH_OPS(RSD_DECLARE_BACKEND_OP, suffix)
+#define RSD_INIT_BACKEND_OP(suffix, name, ret, args, call_args, return_stmt) rsd_##name##_##suffix,
+#define RSD_DEFINE_BACKEND_OPS(suffix) static const RsdOps rsd_ops_##suffix = { RSD_DISPATCH_OPS(RSD_INIT_BACKEND_OP, suffix) };
+
+RSD_DECLARE_BACKEND(scalar)
+RSD_DEFINE_BACKEND_OPS(scalar)
 
 #if RSD_HAVE_SSE2
-extern size_t rsd_count_nonzero_sse2(const uint8_t *x, size_t n);
-extern void rsd_convolve1d_sse2(const double *a, size_t na, const double *b, size_t nb, double *out);
+RSD_DECLARE_BACKEND(sse2)
+RSD_DEFINE_BACKEND_OPS(sse2)
+#define RSD_OPS_SSE2 (&rsd_ops_sse2)
+#else
+#define RSD_OPS_SSE2 NULL
 #endif
 
 #if RSD_HAVE_SSE41
-extern size_t rsd_count_nonzero_sse41(const uint8_t *x, size_t n);
-extern void rsd_convolve1d_sse41(const double *a, size_t na, const double *b, size_t nb, double *out);
+RSD_DECLARE_BACKEND(sse41)
+RSD_DEFINE_BACKEND_OPS(sse41)
+#define RSD_OPS_SSE41 (&rsd_ops_sse41)
+#else
+#define RSD_OPS_SSE41 NULL
 #endif
 
 #if RSD_HAVE_AVX2
-extern size_t rsd_count_nonzero_avx2(const uint8_t *x, size_t n);
-extern void rsd_convolve1d_avx2(const double *a, size_t na, const double *b, size_t nb, double *out);
+RSD_DECLARE_BACKEND(avx2)
+RSD_DEFINE_BACKEND_OPS(avx2)
+#define RSD_OPS_AVX2 (&rsd_ops_avx2)
+#else
+#define RSD_OPS_AVX2 NULL
 #endif
 
 #if RSD_HAVE_AVX512
-extern size_t rsd_count_nonzero_avx512(const uint8_t *x, size_t n);
-extern void rsd_convolve1d_avx512(const double *a, size_t na, const double *b, size_t nb, double *out);
+RSD_DECLARE_BACKEND(avx512)
+RSD_DEFINE_BACKEND_OPS(avx512)
+#define RSD_OPS_AVX512 (&rsd_ops_avx512)
+#else
+#define RSD_OPS_AVX512 NULL
 #endif
 
 #if RSD_HAVE_NEON
-extern size_t rsd_count_nonzero_neon(const uint8_t *x, size_t n);
-extern void rsd_convolve1d_neon(const double *a, size_t na, const double *b, size_t nb, double *out);
+RSD_DECLARE_BACKEND(neon)
+RSD_DEFINE_BACKEND_OPS(neon)
+#define RSD_OPS_NEON (&rsd_ops_neon)
+#else
+#define RSD_OPS_NEON NULL
 #endif
 
 #if RSD_HAVE_WASM_SIMD128
-extern size_t rsd_count_nonzero_wasm_simd128(const uint8_t *x, size_t n);
-extern void rsd_convolve1d_wasm_simd128(const double *a, size_t na, const double *b, size_t nb, double *out);
+RSD_DECLARE_BACKEND(wasm_simd128)
+RSD_DEFINE_BACKEND_OPS(wasm_simd128)
+#define RSD_OPS_WASM_SIMD128 (&rsd_ops_wasm_simd128)
+#else
+#define RSD_OPS_WASM_SIMD128 NULL
 #endif
 
-static const RsdOps rsd_ops_scalar = {
-    rsd_count_nonzero_scalar,
-    rsd_convolve1d_scalar
-};
+#undef RSD_DEFINE_BACKEND_OPS
+#undef RSD_INIT_BACKEND_OP
+#undef RSD_DECLARE_BACKEND
+#undef RSD_DECLARE_BACKEND_OP
 
-#if RSD_HAVE_SSE2
-static const RsdOps rsd_ops_sse2 = {
-    rsd_count_nonzero_sse2,
-    rsd_convolve1d_sse2
-};
-#endif
+static int rsd_cpu_has_scalar_backend(void) {
+    return 1;
+}
 
-#if RSD_HAVE_SSE41
-static const RsdOps rsd_ops_sse41 = {
-    rsd_count_nonzero_sse41,
-    rsd_convolve1d_sse41
-};
-#endif
+typedef struct RsdBackendEntry {
+    const char *name;
+    int compiled;
+    int (*supported)(void);
+    const RsdOps *ops;
+    int priority;
+} RsdBackendEntry;
 
-#if RSD_HAVE_AVX2
-static const RsdOps rsd_ops_avx2 = {
-    rsd_count_nonzero_avx2,
-    rsd_convolve1d_avx2
-};
-#endif
+#define RSD_BACKENDS(X) \
+    X(scalar, "scalar", 1, rsd_cpu_has_scalar_backend, &rsd_ops_scalar, 70) \
+    X(sse2, "sse2", RSD_HAVE_SSE2, rsd_cpu_has_sse2, RSD_OPS_SSE2, 40) \
+    X(sse41, "sse41", RSD_HAVE_SSE41, rsd_cpu_has_sse41, RSD_OPS_SSE41, 30) \
+    X(avx2, "avx2", RSD_HAVE_AVX2, rsd_cpu_has_avx2, RSD_OPS_AVX2, 20) \
+    X(avx512, "avx512", RSD_HAVE_AVX512, rsd_cpu_has_avx512, RSD_OPS_AVX512, 10) \
+    X(neon, "neon", RSD_HAVE_NEON, rsd_cpu_has_neon, RSD_OPS_NEON, 50) \
+    X(wasm_simd128, "wasm_simd128", RSD_HAVE_WASM_SIMD128, rsd_cpu_has_wasm_simd128, RSD_OPS_WASM_SIMD128, 60)
 
-#if RSD_HAVE_AVX512
-static const RsdOps rsd_ops_avx512 = {
-    rsd_count_nonzero_avx512,
-    rsd_convolve1d_avx512
+#define RSD_BACKEND_ENTRY(suffix, name, compiled, supported, ops, priority) {name, (compiled) != 0, supported, ops, priority},
+static const RsdBackendEntry rsd_backend_entries[] = {
+    RSD_BACKENDS(RSD_BACKEND_ENTRY)
 };
-#endif
-
-#if RSD_HAVE_NEON
-static const RsdOps rsd_ops_neon = {
-    rsd_count_nonzero_neon,
-    rsd_convolve1d_neon
-};
-#endif
-
-#if RSD_HAVE_WASM_SIMD128
-static const RsdOps rsd_ops_wasm_simd128 = {
-    rsd_count_nonzero_wasm_simd128,
-    rsd_convolve1d_wasm_simd128
-};
-#endif
+#undef RSD_BACKEND_ENTRY
 
 static const RsdOps *rsd_ops = &rsd_ops_scalar;
 static int rsd_dispatch_initialized = 0;
 static char rsd_requested_backend_buf[32] = "auto";
 static char rsd_selected_backend_buf[32] = "uninitialized";
 
-static const char *const rsd_backend_order[] = {
-    "avx512",
-    "avx2",
-    "sse41",
-    "sse2",
-    "neon",
-    "wasm_simd128",
-    "scalar"
-};
+size_t rsd_backend_count(void) {
+    return sizeof(rsd_backend_entries) / sizeof(rsd_backend_entries[0]);
+}
+
+const char *rsd_backend_name(size_t i) {
+    if (i >= rsd_backend_count()) {
+        return NULL;
+    }
+    return rsd_backend_entries[i].name;
+}
+
+static const RsdBackendEntry *rsd_find_backend(const char *backend) {
+    if (backend == NULL) {
+        return NULL;
+    }
+    for (size_t i = 0; i < rsd_backend_count(); ++i) {
+        if (strcmp(backend, rsd_backend_entries[i].name) == 0) {
+            return &rsd_backend_entries[i];
+        }
+    }
+    return NULL;
+}
 
 int rsd_backend_known(const char *backend) {
-    if (backend == NULL) {
-        return 0;
-    }
-    return strcmp(backend, "scalar") == 0 ||
-           strcmp(backend, "sse2") == 0 ||
-           strcmp(backend, "sse41") == 0 ||
-           strcmp(backend, "avx2") == 0 ||
-           strcmp(backend, "avx512") == 0 ||
-           strcmp(backend, "neon") == 0 ||
-           strcmp(backend, "wasm_simd128") == 0;
+    return rsd_find_backend(backend) != NULL;
 }
 
 int rsd_backend_compiled(const char *backend) {
-    if (backend == NULL) {
-        return 0;
-    }
-    if (strcmp(backend, "scalar") == 0) {
-        return 1;
-    }
-    if (strcmp(backend, "sse2") == 0) {
-        return RSD_HAVE_SSE2 != 0;
-    }
-    if (strcmp(backend, "sse41") == 0) {
-        return RSD_HAVE_SSE41 != 0;
-    }
-    if (strcmp(backend, "avx2") == 0) {
-        return RSD_HAVE_AVX2 != 0;
-    }
-    if (strcmp(backend, "avx512") == 0) {
-        return RSD_HAVE_AVX512 != 0;
-    }
-    if (strcmp(backend, "neon") == 0) {
-        return RSD_HAVE_NEON != 0;
-    }
-    if (strcmp(backend, "wasm_simd128") == 0) {
-        return RSD_HAVE_WASM_SIMD128 != 0;
-    }
-    return 0;
+    const RsdBackendEntry *entry = rsd_find_backend(backend);
+    return entry != NULL && entry->compiled != 0;
 }
 
 int rsd_backend_cpu_supported(const char *backend) {
-    if (backend == NULL) {
-        return 0;
-    }
-    if (strcmp(backend, "scalar") == 0) {
-        return 1;
-    }
-    if (strcmp(backend, "sse2") == 0) {
-        return rsd_cpu_has_sse2();
-    }
-    if (strcmp(backend, "sse41") == 0) {
-        return rsd_cpu_has_sse41();
-    }
-    if (strcmp(backend, "avx2") == 0) {
-        return rsd_cpu_has_avx2();
-    }
-    if (strcmp(backend, "avx512") == 0) {
-        return rsd_cpu_has_avx512();
-    }
-    if (strcmp(backend, "neon") == 0) {
-        return rsd_cpu_has_neon();
-    }
-    if (strcmp(backend, "wasm_simd128") == 0) {
-        return rsd_cpu_has_wasm_simd128();
-    }
-    return 0;
+    const RsdBackendEntry *entry = rsd_find_backend(backend);
+    return entry != NULL && entry->supported != NULL && entry->supported() != 0;
 }
 
 int rsd_backend_available(const char *backend) {
@@ -176,40 +142,11 @@ int rsd_backend_available(const char *backend) {
 }
 
 static const RsdOps *rsd_backend_ops(const char *backend) {
-    if (strcmp(backend, "scalar") == 0) {
-        return &rsd_ops_scalar;
+    const RsdBackendEntry *entry = rsd_find_backend(backend);
+    if (entry == NULL || !entry->compiled) {
+        return NULL;
     }
-#if RSD_HAVE_SSE2
-    if (strcmp(backend, "sse2") == 0) {
-        return &rsd_ops_sse2;
-    }
-#endif
-#if RSD_HAVE_SSE41
-    if (strcmp(backend, "sse41") == 0) {
-        return &rsd_ops_sse41;
-    }
-#endif
-#if RSD_HAVE_AVX2
-    if (strcmp(backend, "avx2") == 0) {
-        return &rsd_ops_avx2;
-    }
-#endif
-#if RSD_HAVE_AVX512
-    if (strcmp(backend, "avx512") == 0) {
-        return &rsd_ops_avx512;
-    }
-#endif
-#if RSD_HAVE_NEON
-    if (strcmp(backend, "neon") == 0) {
-        return &rsd_ops_neon;
-    }
-#endif
-#if RSD_HAVE_WASM_SIMD128
-    if (strcmp(backend, "wasm_simd128") == 0) {
-        return &rsd_ops_wasm_simd128;
-    }
-#endif
-    return NULL;
+    return entry->ops;
 }
 
 static void rsd_select_backend_unchecked(const char *backend) {
@@ -223,14 +160,15 @@ static void rsd_select_backend_unchecked(const char *backend) {
 }
 
 static const char *rsd_select_best_backend_name(void) {
-    size_t n = sizeof(rsd_backend_order) / sizeof(rsd_backend_order[0]);
-    for (size_t i = 0; i < n; ++i) {
-        const char *candidate = rsd_backend_order[i];
-        if (rsd_backend_available(candidate)) {
-            return candidate;
+    const RsdBackendEntry *best = NULL;
+    for (size_t i = 0; i < rsd_backend_count(); ++i) {
+        const RsdBackendEntry *candidate = &rsd_backend_entries[i];
+        if (rsd_backend_available(candidate->name) &&
+            (best == NULL || candidate->priority < best->priority)) {
+            best = candidate;
         }
     }
-    return "scalar";
+    return best != NULL ? best->name : "scalar";
 }
 
 void rsd_init_dispatch(void) {
@@ -262,19 +200,15 @@ void rsd_set_backend(const char *backend) {
     rsd_select_backend_unchecked(backend);
 }
 
-size_t rsd_count_nonzero(const uint8_t *x, size_t n) {
-    if (!rsd_dispatch_initialized) {
-        rsd_init_dispatch();
+#define RSD_DEFINE_DISPATCH_WRAPPER(data, name, ret, args, call_args, return_stmt) \
+    ret rsd_##name args { \
+        if (!rsd_dispatch_initialized) { \
+            rsd_init_dispatch(); \
+        } \
+        return_stmt rsd_ops->name call_args; \
     }
-    return rsd_ops->count_nonzero(x, n);
-}
-
-void rsd_convolve1d(const double *a, size_t na, const double *b, size_t nb, double *out) {
-    if (!rsd_dispatch_initialized) {
-        rsd_init_dispatch();
-    }
-    rsd_ops->convolve1d(a, na, b, nb, out);
-}
+RSD_DISPATCH_OPS(RSD_DEFINE_DISPATCH_WRAPPER, _)
+#undef RSD_DEFINE_DISPATCH_WRAPPER
 
 const char *rsd_requested_backend(void) {
     return rsd_requested_backend_buf;

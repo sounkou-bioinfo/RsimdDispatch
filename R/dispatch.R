@@ -47,8 +47,8 @@ convolve1d <- function(a, b) {
 #' variants in one shared object and switches guarded operation tables. This
 #' makes same-process benchmarking possible.
 #'
-#' @param backend One of `"auto"`, `"scalar"`, `"sse2"`, `"sse41"`,
-#'   `"avx2"`, `"avx512"`, `"neon"`, or `"wasm_simd128"`.
+#' @param backend Character scalar. Use `"auto"` to select the best available
+#'   backend, or one of `simd_info()$available_backends` for an explicit choice.
 #' @return The selected backend, invisibly. For `"auto"`, this is the backend
 #'   chosen from the compiled and CPU-supported set.
 #' @examples
@@ -56,8 +56,10 @@ convolve1d <- function(a, b) {
 #' simd_set_backend("scalar")
 #' simd_set_backend("auto")
 #' @export
-simd_set_backend <- function(backend = c("auto", "scalar", "sse2", "sse41", "avx2", "avx512", "neon", "wasm_simd128")) {
-  backend <- match.arg(backend)
+simd_set_backend <- function(backend = "auto") {
+  if (!is.character(backend) || length(backend) != 1L || is.na(backend) || !nzchar(backend)) {
+    stop("backend must be a non-empty character scalar", call. = FALSE)
+  }
   invisible(.Call(RC_simd_set_backend, backend))
 }
 

@@ -113,30 +113,34 @@ static int rsd_backend_simde_native(const char *backend) {
     return 0;
 }
 
+static int rsd_backend_included(const char *backend, int mode) {
+    if (mode == 0) {
+        return rsd_backend_compiled(backend);
+    }
+    if (mode == 1) {
+        return rsd_backend_cpu_supported(backend);
+    }
+    if (mode == 2) {
+        return rsd_backend_available(backend);
+    }
+    return rsd_backend_simde_native(backend);
+}
+
 static SEXP rsd_backend_character_vector(int mode) {
-    const char *backends[] = {"scalar", "sse2", "sse41", "avx2", "avx512", "neon", "wasm_simd128"};
-    const int n_backends = (int)(sizeof(backends) / sizeof(backends[0]));
-    int include[7] = {0, 0, 0, 0, 0, 0, 0};
+    size_t n_backends = rsd_backend_count();
     int n = 0;
 
-    for (int i = 0; i < n_backends; ++i) {
-        if (mode == 0) {
-            include[i] = rsd_backend_compiled(backends[i]);
-        } else if (mode == 1) {
-            include[i] = rsd_backend_cpu_supported(backends[i]);
-        } else if (mode == 2) {
-            include[i] = rsd_backend_available(backends[i]);
-        } else {
-            include[i] = rsd_backend_simde_native(backends[i]);
-        }
-        n += include[i] != 0;
+    for (size_t i = 0; i < n_backends; ++i) {
+        const char *backend = rsd_backend_name(i);
+        n += rsd_backend_included(backend, mode) != 0;
     }
 
     SEXP out = PROTECT(Rf_allocVector(STRSXP, n));
     int j = 0;
-    for (int i = 0; i < n_backends; ++i) {
-        if (include[i]) {
-            SET_STRING_ELT(out, j, Rf_mkChar(backends[i]));
+    for (size_t i = 0; i < n_backends; ++i) {
+        const char *backend = rsd_backend_name(i);
+        if (rsd_backend_included(backend, mode)) {
+            SET_STRING_ELT(out, j, Rf_mkChar(backend));
             ++j;
         }
     }
