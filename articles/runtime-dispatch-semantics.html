@@ -164,18 +164,15 @@ are compiled by R’s ordinary <code>src/Makevars</code> path.</p>
 <p>The installed diagnostics report the backends that passed the
 SIMDe-native compile probe:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"simde_native_backends"</span>, <span class="st">"simde_version"</span>, <span class="st">"simde_commit"</span><span class="op">)</span><span class="op">]</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/simd_info.html">simd_info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compiled_backends"</span>, <span class="st">"simde_native_backends"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $compiled_backends</span></span>
 <span><span class="co">#&gt; [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $simde_native_backends</span></span>
-<span><span class="co">#&gt; [1] "sse2"   "sse41"  "avx2"   "avx512"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $simde_version</span></span>
-<span><span class="co">#&gt; [1] "0.8.4"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $simde_commit</span></span>
-<span><span class="co">#&gt; [1] "f3e8262173b7089db9a9d57a9ecef8dd07ad9c97"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "sse2"   "sse41"  "avx2"   "avx512"</span></span></code></pre></div>
+<p>SIMDe provenance (version, commit, date) is available separately via
+<code><a href="../reference/simde_info.html">simde_info()</a></code>, which reads from
+<code>inst/vendor/simde/VERSION</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="benchmarking-backend-switching">Benchmarking backend switching<a class="anchor" aria-label="anchor" href="#benchmarking-backend-switching"></a>
@@ -206,8 +203,8 @@ same-process backend switching through the public API.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      329.6µs     <span style="text-decoration: underline;">2</span>931.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         45.1µs    <span style="text-decoration: underline;">19</span>050.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        330µs     <span style="text-decoration: underline;">2</span>957.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto           45µs    <span style="text-decoration: underline;">19</span>448.</span></span></code></pre></div>
 <p>The same switch applies to the full one-dimensional convolution
 demo:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -234,8 +231,8 @@ demo:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        415µs     <span style="text-decoration: underline;">2</span>362.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto          216µs     <span style="text-decoration: underline;">4</span>644.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        423µs     <span style="text-decoration: underline;">2</span>347.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto          186µs     <span style="text-decoration: underline;">5</span>396.</span></span></code></pre></div>
 <p><code>"auto"</code> selects the best backend from the compiled and
 supported intersection that also supports the operation being called.
 The current ranking is:</p>

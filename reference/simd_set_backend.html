@@ -69,10 +69,19 @@ backend, or one of <code>simd_info()$available_backends</code> for an explicit c
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The selected backend summary, invisibly. For <code>"auto"</code>, operations
-resolve independently and the summary may be <code>"mixed"</code> when different
-operations choose different backends.</p>
-    </div>
+    <p>The selected backend summary string, invisibly. Possible values:</p><dl><dt><code>"&lt;name&gt;"</code></dt>
+<dd><p>All operations resolved to the same named backend.</p></dd>
+
+<dt><code>"mixed"</code></dt>
+<dd><p>Different operations resolved to different backends
+(only possible under <code>"auto"</code>).</p></dd>
+
+<dt><code>"unavailable"</code></dt>
+<dd><p>No operation could be resolved for the requested
+backend.</p></dd>
+
+
+</dl></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

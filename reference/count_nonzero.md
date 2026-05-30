@@ -19,7 +19,9 @@ count_nonzero(x)
 
 ## Value
 
-A numeric scalar count.
+A `double` scalar giving the count of non-zero bytes. The return type is
+`double` rather than `integer` to accommodate vectors longer than
+`.Machine$integer.max` without overflow.
 
 ## Examples
 

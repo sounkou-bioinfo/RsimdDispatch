@@ -107,19 +107,17 @@ SIMDe-native compile probe:
 
 ``` r
 
-simd_info()[c("compiled_backends", "simde_native_backends", "simde_version", "simde_commit")]
+simd_info()[c("compiled_backends", "simde_native_backends")]
 #> $compiled_backends
 #> [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
 #> 
 #> $simde_native_backends
 #> [1] "sse2"   "sse41"  "avx2"   "avx512"
-#> 
-#> $simde_version
-#> [1] "0.8.4"
-#> 
-#> $simde_commit
-#> [1] "f3e8262173b7089db9a9d57a9ecef8dd07ad9c97"
 ```
+
+SIMDe provenance (version, commit, date) is available separately via
+[`simde_info()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simde_info.md),
+which reads from `inst/vendor/simde/VERSION`.
 
 ## Benchmarking backend switching
 
@@ -151,8 +149,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar      329.6µs     2931.
-#> 2 auto         45.1µs    19050.
+#> 1 scalar        330µs     2957.
+#> 2 auto           45µs    19448.
 ```
 
 The same switch applies to the full one-dimensional convolution demo:
@@ -182,8 +180,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar        415µs     2362.
-#> 2 auto          216µs     4644.
+#> 1 scalar        423µs     2347.
+#> 2 auto          186µs     5396.
 ```
 
 `"auto"` selects the best backend from the compiled and supported

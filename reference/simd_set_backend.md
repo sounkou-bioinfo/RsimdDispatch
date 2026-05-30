@@ -24,9 +24,20 @@ simd_set_backend(backend = "auto")
 
 ## Value
 
-The selected backend summary, invisibly. For `"auto"`, operations
-resolve independently and the summary may be `"mixed"` when different
-operations choose different backends.
+The selected backend summary string, invisibly. Possible values:
+
+- `"<name>"`:
+
+  All operations resolved to the same named backend.
+
+- `"mixed"`:
+
+  Different operations resolved to different backends (only possible
+  under `"auto"`).
+
+- `"unavailable"`:
+
+  No operation could be resolved for the requested backend.
 
 ## Examples
 

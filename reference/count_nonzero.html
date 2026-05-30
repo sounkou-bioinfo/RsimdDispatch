@@ -68,7 +68,9 @@ backend supported by the current CPU/runtime.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A numeric scalar count.</p>
+    <p>A <code>double</code> scalar giving the count of non-zero bytes. The return
+type is <code>double</code> rather than <code>integer</code> to accommodate vectors longer than
+<code>.Machine$integer.max</code> without overflow.</p>
     </div>
 
     <div class="section level2">
