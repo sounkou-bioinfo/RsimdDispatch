@@ -43,6 +43,20 @@ check-template-sync:
 			(echo "ERROR: template file drift detected: $$f" && exit 1); \
 	done
 
+sync-template:
+	@rsync -a --delete \
+		--exclude='*.o' --exclude='*.so' --exclude='*.dll' --exclude='*.dylib' \
+		--exclude='Makevars' --exclude='Makevars.win' --exclude='config.h' \
+		--exclude='rsd-kernels' --exclude='rsd-lib' \
+		src/ inst/templates/dispatch-c/src/
+	@rsync -a --delete \
+		--exclude='build' --exclude='README.Rmd' --exclude='README.md' \
+		tools/simdDispatch/ inst/templates/dispatch-c/tools/simdDispatch/
+	@for f in cleanup configure configure.win src/Makevars.in src/Makevars.win.in tools/configure-simd-dispatch.sh; do \
+		cp "$$f" "inst/templates/dispatch-c/$$f"; \
+	done
+	@echo 'Template synced.'
+
 build:
 	R CMD build .
 
