@@ -185,6 +185,19 @@ static const SdBackendEntry sd_backend_entries[] = {
 #endif
 };
 
+/* --------------------------------------------------------------------------
+ * Dispatch state globals
+ *
+ * Thread-safety contract: these globals are written only during
+ * initialisation (sd_init_dispatch / sd_set_backend) and read during
+ * dispatch (sd_dispatch_invoke).  The design relies on the caller
+ * completing initialisation before any concurrent dispatch calls are
+ * issued.  In the R embedding this is guaranteed because sd_init_dispatch
+ * is called from the main R thread before any parallel work, and R's own
+ * global interpreter lock prevents concurrent R-level calls.  Standalone
+ * embeddings must provide the same serialisation guarantee externally if
+ * sd_set_backend may be called concurrently with sd_dispatch_invoke.
+ * -------------------------------------------------------------------------- */
 static SdResolvedSlot sd_active_slots[SD_OP_COUNT] = {{0}};
 static int sd_dispatch_initialized = 0;
 static char sd_requested_backend_buf[32] = "auto";

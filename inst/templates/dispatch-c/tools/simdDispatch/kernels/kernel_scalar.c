@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <limits.h>
 
 #include "kernel_api.h"
 
@@ -13,6 +14,12 @@ size_t sd_count_nonzero_scalar(const uint8_t *x, size_t n) {
 
 void sd_convolve1d_scalar(const double *a, size_t na, const double *b, size_t nb, double *out) {
     if (na == 0 || nb == 0) {
+        return;
+    }
+    /* Precondition: na + nb - 1 must not overflow size_t.  The R API
+     * enforces this before dispatch; guard defensively here for standalone
+     * callers.  nb >= 1 at this point so SIZE_MAX - nb + 1 is well-defined. */
+    if (na > SIZE_MAX - nb + 1) {
         return;
     }
 

@@ -26,4 +26,8 @@
 ^vignettes/.*\.html$
 ^doc$
 ^Meta$
+^tools/simdDispatch/build$
+^tools/simdDispatch/build/.*$
+^inst/templates/dispatch-c/tools/simdDispatch/build$
+^inst/templates/dispatch-c/tools/simdDispatch/build/.*$
 ^AGENT\.md$

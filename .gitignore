@@ -20,6 +20,7 @@ src/*.dylib
 config.log
 docs
 tools/simdDispatch/build/
+inst/templates/dispatch-c/tools/simdDispatch/build/
 tools/simdDispatch/README.html
 AGENT.md
 

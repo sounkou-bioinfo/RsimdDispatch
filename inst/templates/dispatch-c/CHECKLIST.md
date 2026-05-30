@@ -6,9 +6,9 @@ If you copy files manually, update at least these package-specific values:
 - `src/registration.c`: `R_init_RsimdDispatch()` must become `R_init_<Package>()`.
 - `tools/configure-simd-dispatch.sh`: set `RSD_LOG_PREFIX` or replace the log prefix.
 - Review exported R names (`count_nonzero()`, `convolve1d()`, `simd_set_backend()`, `simd_backend()`, `simd_info()`).
-- Replace the demo `count_nonzero()` and `convolve1d()` kernel signatures in `tools/kernels/` with your package kernel signatures.
-- Keep shared staged-kernel helpers, such as `kernel_common.h`, and the kernel-facing registration ABI, `kernel_api.h`, in `tools/kernels/`.
-- Add each implemented backend/operation combination to that backend file's `RsdKernelDef` table; omit rows that are deliberately unsupported.
+- Replace the demo `count_nonzero()` and `convolve1d()` kernel signatures in `tools/simdDispatch/kernels/` with your package kernel signatures.
+- Keep shared staged-kernel helpers, such as `kernel_common.h`, and the kernel-facing registration ABI, `kernel_api.h`, in `tools/simdDispatch/kernels/`.
+- Add each implemented backend/operation combination to that backend file's `SdKernelDef` table; omit rows that are deliberately unsupported.
 
 Prefer using:
 
