@@ -21,3 +21,5 @@ config.log
 docs
 
 vignettes/*.html
+/doc/
+/Meta/

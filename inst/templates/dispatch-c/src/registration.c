@@ -2,7 +2,7 @@
 #include <R_ext/Rdynload.h>
 #include <Rinternals.h>
 
-#include "simd_dispatch.h"
+#include "../tools/simdDispatch/simd_dispatch.h"
 
 SEXP RC_count_nonzero(SEXP x);
 SEXP RC_convolve1d(SEXP a, SEXP b);
@@ -20,15 +20,15 @@ static const R_CallMethodDef call_methods[] = {
 };
 
 /* Error handler that redirects dispatch engine errors into R's error
- * mechanism. Installed before rsd_init_dispatch() so any error raised
+ * mechanism. Installed before sd_init_dispatch() so any error raised
  * during eager initialisation is handled correctly. */
-static void rsd_r_error_handler(const char *msg) {
+static void sd_r_error_handler(const char *msg) {
     Rf_error("%s", msg);
 }
 
 void R_init_RsimdDispatch(DllInfo *dll) {
-    rsd_set_error_handler(rsd_r_error_handler);
-    rsd_init_dispatch();
+    sd_set_error_handler(sd_r_error_handler);
+    sd_init_dispatch();
     R_registerRoutines(dll, NULL, call_methods, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

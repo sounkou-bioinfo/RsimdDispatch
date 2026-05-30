@@ -7,15 +7,49 @@
 simd_info()
 }
 \value{
-A named list of dispatch and CPU feature diagnostics. Backend-set
-entries are character vectors, not comma-separated strings.
+A named list with the following elements:
+\describe{
+\item{\code{dispatch_mode}}{Character scalar. Internal dispatch implementation
+strategy string (stable across patch releases).}
+\item{\code{requested_backend}}{Character scalar. The last value passed to
+\code{simd_set_backend()}, or \code{"auto"} if not explicitly set.}
+\item{\code{selected_backend}}{Character scalar. Summary of the currently
+active backend: a backend name, \code{"mixed"}, or \code{"unavailable"}.}
+\item{\code{compiled_backends}}{Character vector. Backends compiled into
+the shared library (not necessarily supported by the current CPU).}
+\item{\code{cpu_supported_backends}}{Character vector. Backends whose
+required CPU features are present at runtime.}
+\item{\code{available_backends}}{Character vector. Backends that are both
+compiled and CPU-supported (i.e. usable).}
+\item{\code{simde_native_backends}}{Character vector. Backends for which
+the compiler emitted native intrinsics rather than SIMDe emulation.}
+\item{\code{operations}}{Character vector. Names of registered operations
+(e.g. \code{"count_nonzero"}, \code{"convolve1d"}).}
+\item{\code{operation_backends}}{Named list of character vectors. For each
+operation, the backends that provide a kernel for it.}
+\item{\code{operation_selected_backends}}{Named character vector. For each
+operation, the backend currently selected for dispatch (or \code{NA} if
+none is resolved).}
+\item{\code{cpu_sse2}}{Logical scalar. \code{TRUE} if SSE2 is detected at runtime.}
+\item{\code{cpu_sse41}}{Logical scalar. \code{TRUE} if SSE4.1 is detected.}
+\item{\code{cpu_avx2}}{Logical scalar. \code{TRUE} if AVX2 is detected.}
+\item{\code{cpu_avx512}}{Logical scalar. \code{TRUE} if AVX-512 (F/BW/VL) is detected.}
+\item{\code{cpu_neon}}{Logical scalar. \code{TRUE} if NEON/AdvSIMD is detected.}
+\item{\code{cpu_wasm_simd128}}{Logical scalar. \code{TRUE} if WASM SIMD128 is
+available.}
+\item{\code{target_arch}}{Character scalar. Compiler target CPU architecture
+(e.g. \code{"x86_64"}, \code{"aarch64"}).}
+\item{\code{target_os}}{Character scalar. Compiler target OS family
+(e.g. \code{"linux"}, \code{"macos"}, \code{"windows"}, \code{"emscripten"}).}
+}
 }
 \description{
 Returns the requested backend, selected backend, compiled backends,
 CPU-supported backends, operation-level backend availability, operation-level
-selected backends, SIMDe-native backends, target information, and SIMDe
-provenance compiled into the shared library. Calling this initializes the lazy
-auto-dispatch selection if it has not already been initialized.
+selected backends, SIMDe-native backends, and target architecture information.
+Calling this initializes the lazy auto-dispatch selection if it has not
+already been initialized. For SIMDe provenance (version, commit, date) use
+\code{\link[=simde_info]{simde_info()}}.
 }
 \examples{
 names(simd_info())

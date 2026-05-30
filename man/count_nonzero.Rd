@@ -10,7 +10,9 @@ count_nonzero(x)
 \item{x}{A raw vector.}
 }
 \value{
-A numeric scalar count.
+A \code{double} scalar giving the count of non-zero bytes. The return
+type is \code{double} rather than \code{integer} to accommodate vectors longer than
+\code{.Machine$integer.max} without overflow.
 }
 \description{
 Demonstration kernel for the runtime dispatch template. \code{count_nonzero()}

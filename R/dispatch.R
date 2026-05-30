@@ -85,9 +85,10 @@ simd_backend <- function() {
 #'
 #' Returns the requested backend, selected backend, compiled backends,
 #' CPU-supported backends, operation-level backend availability, operation-level
-#' selected backends, SIMDe-native backends, target information, and SIMDe
-#' provenance compiled into the shared library. Calling this initializes the lazy
-#' auto-dispatch selection if it has not already been initialized.
+#' selected backends, SIMDe-native backends, and target architecture information.
+#' Calling this initializes the lazy auto-dispatch selection if it has not
+#' already been initialized. For SIMDe provenance (version, commit, date) use
+#' [simde_info()].
 #'
 #' @return A named list with the following elements:
 #'   \describe{
@@ -123,10 +124,6 @@ simd_backend <- function() {
 #'       (e.g. `"x86_64"`, `"aarch64"`).}
 #'     \item{`target_os`}{Character scalar. Compiler target OS family
 #'       (e.g. `"linux"`, `"macos"`, `"windows"`, `"emscripten"`).}
-#'     \item{`simde_version`}{Character scalar. Vendored SIMDe version string
-#'       (e.g. `"0.8.2"`).}
-#'     \item{`simde_commit`}{Character scalar. Full 40-character SIMDe git
-#'       commit SHA.}
 #'   }
 #' @examples
 #' names(simd_info())

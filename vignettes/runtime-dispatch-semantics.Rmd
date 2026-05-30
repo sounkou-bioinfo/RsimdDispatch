@@ -85,8 +85,11 @@ The installed diagnostics report the backends that passed the SIMDe-native
 compile probe:
 
 ```{r}
-simd_info()[c("compiled_backends", "simde_native_backends", "simde_version", "simde_commit")]
+simd_info()[c("compiled_backends", "simde_native_backends")]
 ```
+
+SIMDe provenance (version, commit, date) is available separately via
+`simde_info()`, which reads from `inst/vendor/simde/VERSION`.
 
 ## Benchmarking backend switching
 

@@ -26,7 +26,7 @@ expect_equal(RsimdDispatch:::rsd_camel_prefix("_foo"), "Foo")
 # rsd_template_substitute
 # ---------------------------------------------------------------------------
 
-lines <- c("rsd_count", "RSD_HAVE_SSE2", "Rsd something", "RsimdDispatch", "RC_count")
+lines <- c("sd_count", "SD_HAVE_SSE2", "Sd something", "RsimdDispatch", "RC_count")
 out <- RsimdDispatch:::rsd_template_substitute(lines, pkg = "MyPkg", prefix = "mp")
 expect_equal(out[1], "mp_count")
 expect_equal(out[2], "MP_HAVE_SSE2")
@@ -132,18 +132,23 @@ local({
   expect_true(file.exists(file.path(tmpdir, "configure")))
   expect_true(file.exists(file.path(tmpdir, "cleanup")))
 
-  # Key source files were written (core lib now lives in tools/lib/, not src/)
-  expect_true(file.exists(file.path(tmpdir, "tools", "lib", "simd_dispatch.c")))
-  expect_true(file.exists(file.path(tmpdir, "tools", "lib", "simd_dispatch.h")))
-  expect_true(file.exists(file.path(tmpdir, "tools", "lib", "cpu_features.c")))
-  expect_true(file.exists(file.path(tmpdir, "tools", "lib", "cpu_features.h")))
+  # Key source files: core lib lives in tools/simdDispatch/ (not src/, not tools/lib/)
+  expect_true(file.exists(file.path(tmpdir, "tools", "simdDispatch", "simd_dispatch.c")))
+  expect_true(file.exists(file.path(tmpdir, "tools", "simdDispatch", "simd_dispatch.h")))
+  expect_true(file.exists(file.path(tmpdir, "tools", "simdDispatch", "cpu_features.c")))
+  expect_true(file.exists(file.path(tmpdir, "tools", "simdDispatch", "cpu_features.h")))
   expect_false(file.exists(file.path(tmpdir, "src", "simd_dispatch.c")))
   expect_false(file.exists(file.path(tmpdir, "src", "cpu_features.c")))
   expect_true(file.exists(file.path(tmpdir, "src", "r_api.c")))
 
-  # Prefix substitution was applied to the core lib
-  dispatch_c <- readLines(file.path(tmpdir, "tools", "lib", "simd_dispatch.c"), warn = FALSE)
-  expect_false(any(grepl("\\brsd_", dispatch_c)))
+  # Standalone-only files must NOT be copied into the R package scaffold
+  expect_false(file.exists(file.path(tmpdir, "tools", "simdDispatch", "Makefile")))
+  expect_false(file.exists(file.path(tmpdir, "tools", "simdDispatch", "examples", "example_count.c")))
+  expect_false(file.exists(file.path(tmpdir, "tools", "simdDispatch", "test", "test_dispatch.c")))
+
+  # Prefix substitution was applied (sd_ → testsimd_ prefix)
+  dispatch_c <- readLines(file.path(tmpdir, "tools", "simdDispatch", "simd_dispatch.c"), warn = FALSE)
+  expect_false(any(grepl("\\bsd_", dispatch_c)))
 
   r_api_c <- readLines(file.path(tmpdir, "src", "r_api.c"), warn = FALSE)
   expect_false(any(grepl("\\bRsimdDispatch\\b", r_api_c)))

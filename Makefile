@@ -35,10 +35,9 @@ check-template-sync:
 		--exclude='*.o' --exclude='*.so' --exclude='*.dll' --exclude='*.dylib' \
 		--exclude='Makevars' --exclude='Makevars.win' --exclude='config.h' --exclude='rsd-kernels' --exclude='rsd-lib' \
 		|| (echo 'ERROR: template/src drift detected' && exit 1)
-	@diff -rq tools/kernels inst/templates/dispatch-c/tools/kernels \
-		|| (echo 'ERROR: template kernel drift detected' && exit 1)
-	@diff -rq tools/lib inst/templates/dispatch-c/tools/lib \
-		|| (echo 'ERROR: template lib drift detected' && exit 1)
+	@diff -rq tools/simdDispatch inst/templates/dispatch-c/tools/simdDispatch \
+		--exclude='build' \
+		|| (echo 'ERROR: template simdDispatch drift detected' && exit 1)
 	@for f in cleanup configure configure.win src/Makevars.in src/Makevars.win.in tools/configure-simd-dispatch.sh; do \
 		diff -q "$$f" "inst/templates/dispatch-c/$$f" >/dev/null || \
 			(echo "ERROR: template file drift detected: $$f" && exit 1); \

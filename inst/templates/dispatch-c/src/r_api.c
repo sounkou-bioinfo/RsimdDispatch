@@ -6,65 +6,60 @@
 #include <string.h>
 
 #include "config.h"
-#include "cpu_features.h"
-#include "simd_dispatch.h"
+#include "../tools/simdDispatch/cpu_features.h"
+#include "../tools/simdDispatch/simd_dispatch.h"
+#include "../tools/simdDispatch/kernels/kernel_api.h"
 
-#ifndef RSD_SIMDE_VERSION
-#define RSD_SIMDE_VERSION "unknown"
+#ifndef SD_SIMDE_NATIVE_SSE2
+#define SD_SIMDE_NATIVE_SSE2 0
 #endif
-#ifndef RSD_SIMDE_COMMIT
-#define RSD_SIMDE_COMMIT "unknown"
+#ifndef SD_SIMDE_NATIVE_SSE41
+#define SD_SIMDE_NATIVE_SSE41 0
 #endif
-#ifndef RSD_SIMDE_NATIVE_SSE2
-#define RSD_SIMDE_NATIVE_SSE2 0
+#ifndef SD_SIMDE_NATIVE_AVX2
+#define SD_SIMDE_NATIVE_AVX2 0
 #endif
-#ifndef RSD_SIMDE_NATIVE_SSE41
-#define RSD_SIMDE_NATIVE_SSE41 0
+#ifndef SD_SIMDE_NATIVE_AVX512
+#define SD_SIMDE_NATIVE_AVX512 0
 #endif
-#ifndef RSD_SIMDE_NATIVE_AVX2
-#define RSD_SIMDE_NATIVE_AVX2 0
+#ifndef SD_SIMDE_NATIVE_NEON
+#define SD_SIMDE_NATIVE_NEON 0
 #endif
-#ifndef RSD_SIMDE_NATIVE_AVX512
-#define RSD_SIMDE_NATIVE_AVX512 0
-#endif
-#ifndef RSD_SIMDE_NATIVE_NEON
-#define RSD_SIMDE_NATIVE_NEON 0
-#endif
-#ifndef RSD_SIMDE_NATIVE_WASM_SIMD128
-#define RSD_SIMDE_NATIVE_WASM_SIMD128 0
+#ifndef SD_SIMDE_NATIVE_WASM_SIMD128
+#define SD_SIMDE_NATIVE_WASM_SIMD128 0
 #endif
 
-static const char *rsd_string_scalar(SEXP x, const char *arg) {
+static const char *sd_string_scalar(SEXP x, const char *arg) {
     if (TYPEOF(x) != STRSXP || XLENGTH(x) != 1 || STRING_ELT(x, 0) == NA_STRING) {
         Rf_error("%s must be a non-missing character scalar", arg);
     }
     return CHAR(STRING_ELT(x, 0));
 }
 
-typedef struct RsdRApiOperation {
-    RsdOperation operation;
-    RsdKernelSignature signature;
+typedef struct SdRApiOperation {
+    SdOperation operation;
+    SdKernelSignature signature;
     const char *name;
-} RsdRApiOperation;
+} SdRApiOperation;
 
-static const RsdRApiOperation rsd_operations[] = {
-    {RSD_OP_COUNT_NONZERO, RSD_SIG_RAW_COUNT, "count_nonzero"},
-    {RSD_OP_CONVOLVE1D, RSD_SIG_F64_CONVOLVE, "convolve1d"}
+static const SdRApiOperation sd_operations[] = {
+    {SD_OP_COUNT_NONZERO, SD_SIG_RAW_COUNT, "count_nonzero"},
+    {SD_OP_CONVOLVE1D, SD_SIG_F64_CONVOLVE, "convolve1d"}
 };
 
-static size_t rsd_operation_count(void) {
-    return sizeof(rsd_operations) / sizeof(rsd_operations[0]);
+static size_t sd_operation_count(void) {
+    return sizeof(sd_operations) / sizeof(sd_operations[0]);
 }
 
-static const RsdRApiOperation *rsd_operation_info(size_t i) {
-    if (i >= rsd_operation_count()) {
+static const SdRApiOperation *sd_operation_info(size_t i) {
+    if (i >= sd_operation_count()) {
         return NULL;
     }
-    return &rsd_operations[i];
+    return &sd_operations[i];
 }
 
-static const char *rsd_operation_name(size_t i) {
-    const RsdRApiOperation *operation = rsd_operation_info(i);
+static const char *sd_operation_name(size_t i) {
+    const SdRApiOperation *operation = sd_operation_info(i);
     return operation != NULL ? operation->name : NULL;
 }
 
@@ -76,12 +71,12 @@ SEXP RC_count_nonzero(SEXP x) {
     if ((uint64_t)len > (uint64_t)SIZE_MAX) {
         Rf_error("x is too large for this platform");
     }
-    RsdCountNonzeroCall call = {
+    SdCountNonzeroCall call = {
         .x = (const uint8_t *)RAW(x),
         .n = (size_t)len,
         .result = 0
     };
-    rsd_dispatch_invoke(RSD_OP_COUNT_NONZERO, RSD_SIG_RAW_COUNT, &call, "count_nonzero");
+    sd_dispatch_invoke(SD_OP_COUNT_NONZERO, SD_SIG_RAW_COUNT, &call, "count_nonzero");
     return Rf_ScalarReal((double)call.result);
 }
 
@@ -106,87 +101,87 @@ SEXP RC_convolve1d(SEXP a, SEXP b) {
     }
     SEXP out = PROTECT(Rf_allocVector(REALSXP, nab));
     if (nab > 0) {
-        RsdConvolve1dCall call = {
+        SdConvolve1dCall call = {
             .a = REAL(a),
             .na = (size_t)na,
             .b = REAL(b),
             .nb = (size_t)nb,
             .out = REAL(out)
         };
-        rsd_dispatch_invoke(RSD_OP_CONVOLVE1D, RSD_SIG_F64_CONVOLVE, &call, "convolve1d");
+        sd_dispatch_invoke(SD_OP_CONVOLVE1D, SD_SIG_F64_CONVOLVE, &call, "convolve1d");
     }
     UNPROTECT(1);
     return out;
 }
 
 SEXP RC_simd_set_backend(SEXP backend_s) {
-    const char *backend = rsd_string_scalar(backend_s, "backend");
-    rsd_set_backend(backend);
-    return Rf_mkString(rsd_selected_backend());
+    const char *backend = sd_string_scalar(backend_s, "backend");
+    sd_set_backend(backend);
+    return Rf_mkString(sd_selected_backend());
 }
 
 SEXP RC_simd_backend(void) {
-    return Rf_mkString(rsd_selected_backend());
+    return Rf_mkString(sd_selected_backend());
 }
 
 /* Returns 1 if the named backend was compiled with native (non-SIMDe)
  * intrinsics, i.e. the compiler targeted that ISA directly. */
-static int rsd_backend_simde_native(const char *backend) {
+static int sd_backend_simde_native(const char *backend) {
     if (strcmp(backend, "sse2") == 0) {
-        return RSD_SIMDE_NATIVE_SSE2 != 0;
+        return SD_SIMDE_NATIVE_SSE2 != 0;
     }
     if (strcmp(backend, "sse41") == 0) {
-        return RSD_SIMDE_NATIVE_SSE41 != 0;
+        return SD_SIMDE_NATIVE_SSE41 != 0;
     }
     if (strcmp(backend, "avx2") == 0) {
-        return RSD_SIMDE_NATIVE_AVX2 != 0;
+        return SD_SIMDE_NATIVE_AVX2 != 0;
     }
     if (strcmp(backend, "avx512") == 0) {
-        return RSD_SIMDE_NATIVE_AVX512 != 0;
+        return SD_SIMDE_NATIVE_AVX512 != 0;
     }
     if (strcmp(backend, "neon") == 0) {
-        return RSD_SIMDE_NATIVE_NEON != 0;
+        return SD_SIMDE_NATIVE_NEON != 0;
     }
     if (strcmp(backend, "wasm_simd128") == 0) {
-        return RSD_SIMDE_NATIVE_WASM_SIMD128 != 0;
+        return SD_SIMDE_NATIVE_WASM_SIMD128 != 0;
     }
     return 0;
 }
 
 /* Which membership predicate to apply when building a backend character
  * vector.  This replaces the former magic integer argument to
- * rsd_backend_included(). */
+ * sd_backend_included(). */
 typedef enum {
-    RSD_BACKEND_FILTER_COMPILED      = 0,
-    RSD_BACKEND_FILTER_CPU_SUPPORTED = 1,
-    RSD_BACKEND_FILTER_AVAILABLE     = 2,
-    RSD_BACKEND_FILTER_SIMDE_NATIVE  = 3
-} RsdBackendFilter;
+    SD_BACKEND_FILTER_COMPILED      = 0,
+    SD_BACKEND_FILTER_CPU_SUPPORTED = 1,
+    SD_BACKEND_FILTER_AVAILABLE     = 2,
+    SD_BACKEND_FILTER_SIMDE_NATIVE  = 3
+} SdBackendFilter;
 
-static int rsd_backend_included(const char *backend, RsdBackendFilter filter) {
+static int sd_backend_included(const char *backend, SdBackendFilter filter) {
     switch (filter) {
-        case RSD_BACKEND_FILTER_COMPILED:      return rsd_backend_compiled(backend);
-        case RSD_BACKEND_FILTER_CPU_SUPPORTED: return rsd_backend_cpu_supported(backend);
-        case RSD_BACKEND_FILTER_AVAILABLE:     return rsd_backend_available(backend);
-        case RSD_BACKEND_FILTER_SIMDE_NATIVE:  return rsd_backend_simde_native(backend);
+        case SD_BACKEND_FILTER_COMPILED:      return sd_backend_compiled(backend);
+        case SD_BACKEND_FILTER_CPU_SUPPORTED: return sd_backend_cpu_supported(backend);
+        case SD_BACKEND_FILTER_AVAILABLE:     return sd_backend_available(backend);
+        case SD_BACKEND_FILTER_SIMDE_NATIVE:  return sd_backend_simde_native(backend);
         default:                               return 0;
     }
 }
 
-static SEXP rsd_backend_character_vector(RsdBackendFilter filter) {
-    size_t n_backends = rsd_backend_count();
+static SEXP sd_backend_character_vector(SdBackendFilter filter) {
+    size_t n_backends = sd_backend_count();
     int n = 0;
 
     for (size_t i = 0; i < n_backends; ++i) {
-        const char *backend = rsd_backend_name(i);
-        n += rsd_backend_included(backend, filter) != 0;
+        const char *backend = sd_backend_name(i);
+        n += sd_backend_included(backend, filter) != 0;
     }
 
     SEXP out = PROTECT(Rf_allocVector(STRSXP, n));
     int j = 0;
     for (size_t i = 0; i < n_backends; ++i) {
-        const char *backend = rsd_backend_name(i);
-        if (rsd_backend_included(backend, filter)) {
+        const char *backend = sd_backend_name(i);
+        if (sd_backend_included(backend, filter)) {
             SET_STRING_ELT(out, j, Rf_mkChar(backend));
             ++j;
         }
@@ -194,29 +189,29 @@ static SEXP rsd_backend_character_vector(RsdBackendFilter filter) {
     return out;
 }
 
-static SEXP rsd_operation_character_vector(void) {
-    size_t n_operations = rsd_operation_count();
+static SEXP sd_operation_character_vector(void) {
+    size_t n_operations = sd_operation_count();
     SEXP out = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
     for (size_t i = 0; i < n_operations; ++i) {
-        SET_STRING_ELT(out, (R_xlen_t)i, Rf_mkChar(rsd_operation_name(i)));
+        SET_STRING_ELT(out, (R_xlen_t)i, Rf_mkChar(sd_operation_name(i)));
     }
     return out;
 }
 
-static SEXP rsd_operation_backend_vector(RsdOperation operation) {
-    size_t n_backends = rsd_backend_count();
+static SEXP sd_operation_backend_vector(SdOperation operation) {
+    size_t n_backends = sd_backend_count();
     int n = 0;
 
     for (size_t i = 0; i < n_backends; ++i) {
-        const char *backend = rsd_backend_name(i);
-        n += rsd_backend_operation_available(backend, operation) != 0;
+        const char *backend = sd_backend_name(i);
+        n += sd_backend_operation_available(backend, operation) != 0;
     }
 
     SEXP out = PROTECT(Rf_allocVector(STRSXP, n));
     int j = 0;
     for (size_t i = 0; i < n_backends; ++i) {
-        const char *backend = rsd_backend_name(i);
-        if (rsd_backend_operation_available(backend, operation)) {
+        const char *backend = sd_backend_name(i);
+        if (sd_backend_operation_available(backend, operation)) {
             SET_STRING_ELT(out, j, Rf_mkChar(backend));
             ++j;
         }
@@ -224,15 +219,15 @@ static SEXP rsd_operation_backend_vector(RsdOperation operation) {
     return out;
 }
 
-static SEXP rsd_operation_backends_list(void) {
-    size_t n_operations = rsd_operation_count();
+static SEXP sd_operation_backends_list(void) {
+    size_t n_operations = sd_operation_count();
     SEXP out = PROTECT(Rf_allocVector(VECSXP, (R_xlen_t)n_operations));
     SEXP out_names = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
 
     for (size_t i = 0; i < n_operations; ++i) {
-        const RsdRApiOperation *operation = rsd_operation_info(i);
+        const SdRApiOperation *operation = sd_operation_info(i);
         SET_STRING_ELT(out_names, (R_xlen_t)i, Rf_mkChar(operation->name));
-        SET_VECTOR_ELT(out, (R_xlen_t)i, rsd_operation_backend_vector(operation->operation));
+        SET_VECTOR_ELT(out, (R_xlen_t)i, sd_operation_backend_vector(operation->operation));
         UNPROTECT(1);
     }
     Rf_setAttrib(out, R_NamesSymbol, out_names);
@@ -240,14 +235,14 @@ static SEXP rsd_operation_backends_list(void) {
     return out;
 }
 
-static SEXP rsd_operation_selected_backends_vector(void) {
-    size_t n_operations = rsd_operation_count();
+static SEXP sd_operation_selected_backends_vector(void) {
+    size_t n_operations = sd_operation_count();
     SEXP out = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
     SEXP out_names = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
 
     for (size_t i = 0; i < n_operations; ++i) {
-        const RsdRApiOperation *operation = rsd_operation_info(i);
-        const char *backend = rsd_operation_selected_backend(operation->operation);
+        const SdRApiOperation *operation = sd_operation_info(i);
+        const char *backend = sd_operation_selected_backend(operation->operation);
         SET_STRING_ELT(out_names, (R_xlen_t)i, Rf_mkChar(operation->name));
         SET_STRING_ELT(out, (R_xlen_t)i, backend != NULL ? Rf_mkChar(backend) : NA_STRING);
     }
@@ -275,37 +270,33 @@ SEXP RC_simd_info(void) {
         "cpu_neon",
         "cpu_wasm_simd128",
         "target_arch",
-        "target_os",
-        "simde_version",
-        "simde_commit"
+        "target_os"
     };
     const int n = (int)(sizeof(names) / sizeof(names[0]));
     SEXP out = PROTECT(Rf_allocVector(VECSXP, n));
     SEXP out_names = PROTECT(Rf_allocVector(STRSXP, n));
 
     /* Force lazy auto-selection so selected_backend is always meaningful. */
-    rsd_init_dispatch();
+    sd_init_dispatch();
 
-    SET_VECTOR_ELT(out, 0, Rf_mkString(rsd_dispatch_mode()));
-    SET_VECTOR_ELT(out, 1, Rf_mkString(rsd_requested_backend()));
-    SET_VECTOR_ELT(out, 2, Rf_mkString(rsd_selected_backend()));
-    SET_VECTOR_ELT(out, 3, rsd_backend_character_vector(RSD_BACKEND_FILTER_COMPILED));      UNPROTECT(1);
-    SET_VECTOR_ELT(out, 4, rsd_backend_character_vector(RSD_BACKEND_FILTER_CPU_SUPPORTED)); UNPROTECT(1);
-    SET_VECTOR_ELT(out, 5, rsd_backend_character_vector(RSD_BACKEND_FILTER_AVAILABLE));     UNPROTECT(1);
-    SET_VECTOR_ELT(out, 6, rsd_backend_character_vector(RSD_BACKEND_FILTER_SIMDE_NATIVE));  UNPROTECT(1);
-    SET_VECTOR_ELT(out, 7, rsd_operation_character_vector()); UNPROTECT(1);
-    SET_VECTOR_ELT(out, 8, rsd_operation_backends_list()); UNPROTECT(1);
-    SET_VECTOR_ELT(out, 9, rsd_operation_selected_backends_vector()); UNPROTECT(1);
-    SET_VECTOR_ELT(out, 10, Rf_ScalarLogical(rsd_cpu_has_sse2() != 0));
-    SET_VECTOR_ELT(out, 11, Rf_ScalarLogical(rsd_cpu_has_sse41() != 0));
-    SET_VECTOR_ELT(out, 12, Rf_ScalarLogical(rsd_cpu_has_avx2() != 0));
-    SET_VECTOR_ELT(out, 13, Rf_ScalarLogical(rsd_cpu_has_avx512() != 0));
-    SET_VECTOR_ELT(out, 14, Rf_ScalarLogical(rsd_cpu_has_neon() != 0));
-    SET_VECTOR_ELT(out, 15, Rf_ScalarLogical(rsd_cpu_has_wasm_simd128() != 0));
-    SET_VECTOR_ELT(out, 16, Rf_mkString(rsd_target_arch()));
-    SET_VECTOR_ELT(out, 17, Rf_mkString(rsd_target_os()));
-    SET_VECTOR_ELT(out, 18, Rf_mkString(RSD_SIMDE_VERSION));
-    SET_VECTOR_ELT(out, 19, Rf_mkString(RSD_SIMDE_COMMIT));
+    SET_VECTOR_ELT(out, 0, Rf_mkString(sd_dispatch_mode()));
+    SET_VECTOR_ELT(out, 1, Rf_mkString(sd_requested_backend()));
+    SET_VECTOR_ELT(out, 2, Rf_mkString(sd_selected_backend()));
+    SET_VECTOR_ELT(out, 3, sd_backend_character_vector(SD_BACKEND_FILTER_COMPILED));      UNPROTECT(1);
+    SET_VECTOR_ELT(out, 4, sd_backend_character_vector(SD_BACKEND_FILTER_CPU_SUPPORTED)); UNPROTECT(1);
+    SET_VECTOR_ELT(out, 5, sd_backend_character_vector(SD_BACKEND_FILTER_AVAILABLE));     UNPROTECT(1);
+    SET_VECTOR_ELT(out, 6, sd_backend_character_vector(SD_BACKEND_FILTER_SIMDE_NATIVE));  UNPROTECT(1);
+    SET_VECTOR_ELT(out, 7, sd_operation_character_vector()); UNPROTECT(1);
+    SET_VECTOR_ELT(out, 8, sd_operation_backends_list()); UNPROTECT(1);
+    SET_VECTOR_ELT(out, 9, sd_operation_selected_backends_vector()); UNPROTECT(1);
+    SET_VECTOR_ELT(out, 10, Rf_ScalarLogical(sd_cpu_has_sse2() != 0));
+    SET_VECTOR_ELT(out, 11, Rf_ScalarLogical(sd_cpu_has_sse41() != 0));
+    SET_VECTOR_ELT(out, 12, Rf_ScalarLogical(sd_cpu_has_avx2() != 0));
+    SET_VECTOR_ELT(out, 13, Rf_ScalarLogical(sd_cpu_has_avx512() != 0));
+    SET_VECTOR_ELT(out, 14, Rf_ScalarLogical(sd_cpu_has_neon() != 0));
+    SET_VECTOR_ELT(out, 15, Rf_ScalarLogical(sd_cpu_has_wasm_simd128() != 0));
+    SET_VECTOR_ELT(out, 16, Rf_mkString(sd_target_arch()));
+    SET_VECTOR_ELT(out, 17, Rf_mkString(sd_target_os()));
 
     for (int i = 0; i < n; ++i) {
         SET_STRING_ELT(out_names, i, Rf_mkChar(names[i]));

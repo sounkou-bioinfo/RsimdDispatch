@@ -26,7 +26,7 @@ expect_true(all(c(
   "compiled_backends", "cpu_supported_backends", "available_backends",
   "simde_native_backends", "operations", "operation_backends",
   "operation_selected_backends", "cpu_avx2", "cpu_wasm_simd128",
-  "target_arch", "simde_version", "simde_commit"
+  "target_arch", "target_os"
 ) %in% names(info)))
 expect_true(is.character(info$compiled_backends))
 expect_true(is.character(info$cpu_supported_backends))
@@ -89,5 +89,3 @@ expect_true(all(c("component", "version", "repository", "commit", "date") %in% n
 expect_equal(vendor$component, "SIMDe")
 expect_match(vendor$version, "^[0-9]+\\.[0-9]+\\.[0-9]+$")
 expect_match(vendor$commit, "^[0-9a-f]{40}$")
-expect_equal(vendor$version, simd_info()$simde_version)
-expect_equal(vendor$commit, simd_info()$simde_commit)

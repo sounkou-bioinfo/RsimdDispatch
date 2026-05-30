@@ -11,9 +11,14 @@ simd_set_backend(backend = "auto")
 backend, or one of \code{simd_info()$available_backends} for an explicit choice.}
 }
 \value{
-The selected backend summary, invisibly. For \code{"auto"}, operations
-resolve independently and the summary may be \code{"mixed"} when different
-operations choose different backends.
+The selected backend summary string, invisibly. Possible values:
+\describe{
+\item{\code{"<name>"}}{All operations resolved to the same named backend.}
+\item{\code{"mixed"}}{Different operations resolved to different backends
+(only possible under \code{"auto"}).}
+\item{\code{"unavailable"}}{No operation could be resolved for the requested
+backend.}
+}
 }
 \description{
 Select the backend used by subsequent calls to dispatched demo kernels such

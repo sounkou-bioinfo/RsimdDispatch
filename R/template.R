@@ -55,6 +55,10 @@ use_simd_dispatch <- function(path = ".",
   files <- list.files(template, recursive = TRUE, all.files = TRUE, no.. = TRUE, full.names = FALSE)
   files <- files[!files %in% c("README.md", "CHECKLIST.md")]
   files <- files[!grepl("^\\.github/", files)]
+  # Exclude standalone-only files (examples, C tests, and the simdDispatch Makefile):
+  # these belong to the self-contained tools/simdDispatch C library, not the R package scaffold.
+  files <- files[!grepl("^tools/simdDispatch/(examples|test)/", files)]
+  files <- files[files != "tools/simdDispatch/Makefile"]
   copied <- character()
   for (file in files) {
     from <- file.path(template, file)
@@ -100,9 +104,9 @@ rsd_sanitize_c_prefix <- function(pkg) {
 rsd_template_substitute <- function(x, pkg, prefix, file = "") {
   upper_prefix <- toupper(prefix)
   x <- gsub("RsimdDispatch", pkg, x, fixed = TRUE)
-  x <- gsub("rsd_", paste0(prefix, "_"), x, fixed = TRUE)
-  x <- gsub("Rsd", rsd_camel_prefix(prefix), x, fixed = TRUE)
-  x <- gsub("RSD_", paste0(upper_prefix, "_"), x, fixed = TRUE)
+  x <- gsub("sd_", paste0(prefix, "_"), x, fixed = TRUE)
+  x <- gsub("Sd", rsd_camel_prefix(prefix), x, fixed = TRUE)
+  x <- gsub("SD_", paste0(upper_prefix, "_"), x, fixed = TRUE)
   x <- gsub("RC_", paste0(upper_prefix, "_C_"), x, fixed = TRUE)
   if (identical(file, file.path("tools", "configure-simd-dispatch.sh"))) {
     x <- gsub(paste0('package = "', pkg, '"'), 'package = "RsimdDispatch"', x, fixed = TRUE)
