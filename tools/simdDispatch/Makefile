@@ -37,8 +37,8 @@ ifeq ($(HAVE_SIMDE),1)
     HAVE_SSE41  := $(shell echo 'int x;' | $(CC) $(CFLAGS) $(SIMDE_CFLAGS) -msse4.1 -include simde/x86/sse4.1.h -c -x c - -o /dev/null 2>/dev/null && echo 1 || echo 0)
     HAVE_AVX2   := $(shell echo 'int x;' | $(CC) $(CFLAGS) $(SIMDE_CFLAGS) -mavx2   -include simde/x86/avx2.h   -c -x c - -o /dev/null 2>/dev/null && echo 1 || echo 0)
     HAVE_AVX512 := $(shell echo 'int x;' | $(CC) $(CFLAGS) $(SIMDE_CFLAGS) -mavx512f -mavx512bw -mavx512vl -include simde/x86/avx512.h -c -x c - -o /dev/null 2>/dev/null && echo 1 || echo 0)
-    HAVE_NEON   := $(shell printf '#include <simde/arm/neon.h>\n#ifndef SIMDE_ARM_NEON_A32V7_NATIVE\n#error "no native NEON"\n#endif\nint x;\n' | $(CC) $(CFLAGS) $(SIMDE_CFLAGS) -c -x c - -o /dev/null 2>/dev/null && echo 1 || echo 0)
-    HAVE_WASM   := $(shell printf '#include <simde/wasm/simd128.h>\n#ifndef SIMDE_WASM_SIMD128_NATIVE\n#error "no native WASM SIMD"\n#endif\nint x;\n' | $(CC) $(CFLAGS) $(SIMDE_CFLAGS) -msimd128 -c -x c - -o /dev/null 2>/dev/null && echo 1 || echo 0)
+    HAVE_NEON   := $(shell echo 'int x;' | $(CC) $(CFLAGS) $(SIMDE_CFLAGS) -include simde/arm/neon.h -c -x c - -o /dev/null 2>/dev/null && $(CC) $(CFLAGS) -dM -E -x c /dev/null 2>/dev/null | grep -q '__ARM_NEON' && echo 1 || echo 0)
+    HAVE_WASM   := $(shell echo 'int x;' | $(CC) $(CFLAGS) $(SIMDE_CFLAGS) -msimd128 -include simde/wasm/simd128.h -c -x c - -o /dev/null 2>/dev/null && $(CC) $(CFLAGS) -msimd128 -dM -E -x c /dev/null 2>/dev/null | grep -q '__wasm_simd128__' && echo 1 || echo 0)
 else
     HAVE_SSE2   := 0
     HAVE_SSE41  := 0
