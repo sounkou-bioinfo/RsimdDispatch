@@ -56,6 +56,23 @@ void sd_dispatch_invoke(SdOperation operation, SdKernelSignature signature,
                          void *call, const char *operation_name);
 
 /* --------------------------------------------------------------------------
+ * Operation introspection
+ *
+ * These functions expose the canonical operation catalog so consumers (e.g.
+ * the R API layer) do not maintain a separate parallel table.
+ * -------------------------------------------------------------------------- */
+
+/* Number of registered operations (equals SD_OP_COUNT). */
+size_t sd_operation_count(void);
+
+/* Name string for the i-th operation, or NULL if out of range. */
+const char *sd_operation_name(SdOperation operation);
+
+/* Canonical call-frame signature for the i-th operation.
+ * Returns SD_SIG_NONE if operation is out of range. */
+SdKernelSignature sd_operation_expected_signature(SdOperation operation);
+
+/* --------------------------------------------------------------------------
  * Backend introspection
  * -------------------------------------------------------------------------- */
 

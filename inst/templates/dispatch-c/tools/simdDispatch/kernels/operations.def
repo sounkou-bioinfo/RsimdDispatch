@@ -1,0 +1,22 @@
+/* operations.def — canonical operation catalog.
+ *
+ * Each row defines one dispatchable operation. This file is included with
+ * SD_OPERATION defined to different macros depending on context. Guards are
+ * intentionally omitted so the file can be included multiple times.
+ *
+ * SD_OPERATION(UPPER_ID, lower_name, SIG_UPPER_ID, CallType)
+ *
+ *   UPPER_ID    — appended to SD_OP_ to form the SdOperation enum value
+ *   lower_name  — C string name; also the R function name
+ *   SIG_UPPER_ID — appended to SD_SIG_ to form the SdKernelSignature value
+ *   CallType    — the call-frame struct type used to pass arguments
+ *
+ * To add an operation:
+ *   1. Add a row here.
+ *   2. Add the CallType struct to kernel_api.h.
+ *   3. Add the SD_SIG_* enumerator to SdKernelSignature in kernel_api.h.
+ *   4. Add SD_DEFINE_*_THUNK and RC_* wrapper to the appropriate files.
+ */
+
+SD_OPERATION(COUNT_NONZERO, count_nonzero, RAW_COUNT,    SdCountNonzeroCall)
+SD_OPERATION(CONVOLVE1D,    convolve1d,    F64_CONVOLVE,  SdConvolve1dCall)

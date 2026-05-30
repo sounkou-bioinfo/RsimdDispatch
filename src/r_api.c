@@ -36,32 +36,6 @@ static const char *sd_string_scalar(SEXP x, const char *arg) {
     return CHAR(STRING_ELT(x, 0));
 }
 
-typedef struct SdRApiOperation {
-    SdOperation operation;
-    SdKernelSignature signature;
-    const char *name;
-} SdRApiOperation;
-
-static const SdRApiOperation sd_operations[] = {
-    {SD_OP_COUNT_NONZERO, SD_SIG_RAW_COUNT, "count_nonzero"},
-    {SD_OP_CONVOLVE1D, SD_SIG_F64_CONVOLVE, "convolve1d"}
-};
-
-static size_t sd_operation_count(void) {
-    return sizeof(sd_operations) / sizeof(sd_operations[0]);
-}
-
-static const SdRApiOperation *sd_operation_info(size_t i) {
-    if (i >= sd_operation_count()) {
-        return NULL;
-    }
-    return &sd_operations[i];
-}
-
-static const char *sd_operation_name(size_t i) {
-    const SdRApiOperation *operation = sd_operation_info(i);
-    return operation != NULL ? operation->name : NULL;
-}
 
 SEXP RC_count_nonzero(SEXP x) {
     if (TYPEOF(x) != RAWSXP) {
@@ -193,7 +167,7 @@ static SEXP sd_operation_character_vector(void) {
     size_t n_operations = sd_operation_count();
     SEXP out = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
     for (size_t i = 0; i < n_operations; ++i) {
-        SET_STRING_ELT(out, (R_xlen_t)i, Rf_mkChar(sd_operation_name(i)));
+        SET_STRING_ELT(out, (R_xlen_t)i, Rf_mkChar(sd_operation_name((SdOperation)i)));
     }
     return out;
 }
@@ -225,9 +199,9 @@ static SEXP sd_operation_backends_list(void) {
     SEXP out_names = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
 
     for (size_t i = 0; i < n_operations; ++i) {
-        const SdRApiOperation *operation = sd_operation_info(i);
-        SET_STRING_ELT(out_names, (R_xlen_t)i, Rf_mkChar(operation->name));
-        SET_VECTOR_ELT(out, (R_xlen_t)i, sd_operation_backend_vector(operation->operation));
+        SdOperation op = (SdOperation)i;
+        SET_STRING_ELT(out_names, (R_xlen_t)i, Rf_mkChar(sd_operation_name(op)));
+        SET_VECTOR_ELT(out, (R_xlen_t)i, sd_operation_backend_vector(op));
         UNPROTECT(1);
     }
     Rf_setAttrib(out, R_NamesSymbol, out_names);
@@ -241,9 +215,9 @@ static SEXP sd_operation_selected_backends_vector(void) {
     SEXP out_names = PROTECT(Rf_allocVector(STRSXP, (R_xlen_t)n_operations));
 
     for (size_t i = 0; i < n_operations; ++i) {
-        const SdRApiOperation *operation = sd_operation_info(i);
-        const char *backend = sd_operation_selected_backend(operation->operation);
-        SET_STRING_ELT(out_names, (R_xlen_t)i, Rf_mkChar(operation->name));
+        SdOperation op = (SdOperation)i;
+        const char *backend = sd_operation_selected_backend(op);
+        SET_STRING_ELT(out_names, (R_xlen_t)i, Rf_mkChar(sd_operation_name(op)));
         SET_STRING_ELT(out, (R_xlen_t)i, backend != NULL ? Rf_mkChar(backend) : NA_STRING);
     }
     Rf_setAttrib(out, R_NamesSymbol, out_names);

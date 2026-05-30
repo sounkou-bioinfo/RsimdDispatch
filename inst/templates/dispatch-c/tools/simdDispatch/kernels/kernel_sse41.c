@@ -29,15 +29,11 @@ size_t sd_count_nonzero_sse41(const uint8_t *x, size_t n) {
     return acc;
 }
 
-static void sd_count_nonzero_sse41_invoke(void *call) {
-    SdCountNonzeroCall *args = (SdCountNonzeroCall *)call;
-    args->result = sd_count_nonzero_sse41(args->x, args->n);
-}
+SD_DEFINE_RAW_COUNT_THUNK(sd_count_nonzero_sse41_invoke, sd_count_nonzero_sse41)
 
-static const SdKernelDef sd_sse41_kernels[] = {
-    {SD_OP_COUNT_NONZERO, SD_SIG_RAW_COUNT, sd_count_nonzero_sse41_invoke},
-    SD_KERNEL_DEF_END
-};
+SD_KERNEL_TABLE_BEGIN(sse41)
+    SD_KERNEL(COUNT_NONZERO, RAW_COUNT, sd_count_nonzero_sse41_invoke),
+SD_KERNEL_TABLE_END;
 
 void sd_register_sse41(SdDispatchBuilder *builder) {
     sd_register_kernel_table(builder, sd_sse41_kernels);

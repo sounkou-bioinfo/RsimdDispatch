@@ -36,21 +36,13 @@ void sd_convolve1d_scalar(const double *a, size_t na, const double *b, size_t nb
     }
 }
 
-static void sd_count_nonzero_scalar_invoke(void *call) {
-    SdCountNonzeroCall *args = (SdCountNonzeroCall *)call;
-    args->result = sd_count_nonzero_scalar(args->x, args->n);
-}
+SD_DEFINE_RAW_COUNT_THUNK(sd_count_nonzero_scalar_invoke, sd_count_nonzero_scalar)
+SD_DEFINE_F64_CONVOLVE_THUNK(sd_convolve1d_scalar_invoke, sd_convolve1d_scalar)
 
-static void sd_convolve1d_scalar_invoke(void *call) {
-    SdConvolve1dCall *args = (SdConvolve1dCall *)call;
-    sd_convolve1d_scalar(args->a, args->na, args->b, args->nb, args->out);
-}
-
-static const SdKernelDef sd_scalar_kernels[] = {
-    {SD_OP_COUNT_NONZERO, SD_SIG_RAW_COUNT, sd_count_nonzero_scalar_invoke},
-    {SD_OP_CONVOLVE1D, SD_SIG_F64_CONVOLVE, sd_convolve1d_scalar_invoke},
-    SD_KERNEL_DEF_END
-};
+SD_KERNEL_TABLE_BEGIN(scalar)
+    SD_KERNEL(COUNT_NONZERO, RAW_COUNT,    sd_count_nonzero_scalar_invoke),
+    SD_KERNEL(CONVOLVE1D,    F64_CONVOLVE, sd_convolve1d_scalar_invoke),
+SD_KERNEL_TABLE_END;
 
 void sd_register_scalar(SdDispatchBuilder *builder) {
     sd_register_kernel_table(builder, sd_scalar_kernels);

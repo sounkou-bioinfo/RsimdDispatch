@@ -1,0 +1,32 @@
+/* backends.def — canonical backend catalog.
+ *
+ * Each row defines one SIMD backend. This file is included with SD_BACKEND
+ * defined to different macros depending on context. Guards are intentionally
+ * omitted so the file can be included multiple times.
+ *
+ * SD_BACKEND(UPPER_ID, lower_name, compiled_flag, supported_fn, priority)
+ *
+ *   UPPER_ID     — identifier (reserved for future enum use)
+ *   lower_name   — C string name; also the sd_register_##lower_name symbol
+ *   compiled_flag — compile-time 0/1 (typically SD_HAVE_* macro)
+ *   supported_fn  — int(*)(void) CPU/runtime support predicate
+ *   priority      — unsigned int; lower value wins a slot in auto dispatch
+ *
+ * The order here determines priority tie-breaking: earlier rows in the
+ * same priority bucket are preferred. Keep higher-priority backends first.
+ *
+ * To add a backend:
+ *   1. Add a row here.
+ *   2. Add SD_HAVE_* detection to the standalone Makefile and configure script.
+ *   3. Add sd_cpu_has_*() to cpu_features.h/c.
+ *   4. Add SD_PRIORITY_* to simd_dispatch.c.
+ *   5. Implement the kernel file tools/simdDispatch/kernels/kernel_<name>.c.
+ */
+
+SD_BACKEND(SCALAR,       scalar,        1,                    sd_cpu_has_scalar_backend, SD_PRIORITY_SCALAR)
+SD_BACKEND(SSE2,         sse2,          SD_HAVE_SSE2,          sd_cpu_has_sse2,           SD_PRIORITY_SSE2)
+SD_BACKEND(SSE41,        sse41,         SD_HAVE_SSE41,         sd_cpu_has_sse41,          SD_PRIORITY_SSE41)
+SD_BACKEND(AVX2,         avx2,          SD_HAVE_AVX2,          sd_cpu_has_avx2,           SD_PRIORITY_AVX2)
+SD_BACKEND(AVX512,       avx512,        SD_HAVE_AVX512,        sd_cpu_has_avx512,         SD_PRIORITY_AVX512)
+SD_BACKEND(NEON,         neon,          SD_HAVE_NEON,          sd_cpu_has_neon,           SD_PRIORITY_NEON)
+SD_BACKEND(WASM_SIMD128, wasm_simd128,  SD_HAVE_WASM_SIMD128,  sd_cpu_has_wasm_simd128,   SD_PRIORITY_WASM_SIMD128)
