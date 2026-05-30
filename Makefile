@@ -36,7 +36,7 @@ check-template-sync:
 		--exclude='Makevars' --exclude='Makevars.win' --exclude='config.h' --exclude='rsd-kernels' --exclude='rsd-lib' \
 		|| (echo 'ERROR: template/src drift detected' && exit 1)
 	@diff -rq tools/simdDispatch inst/templates/dispatch-c/tools/simdDispatch \
-		--exclude='build' \
+		--exclude='build' --exclude='README.Rmd' --exclude='README.md' \
 		|| (echo 'ERROR: template simdDispatch drift detected' && exit 1)
 	@for f in cleanup configure configure.win src/Makevars.in src/Makevars.win.in tools/configure-simd-dispatch.sh; do \
 		diff -q "$$f" "inst/templates/dispatch-c/$$f" >/dev/null || \

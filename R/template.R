@@ -58,7 +58,9 @@ use_simd_dispatch <- function(path = ".",
   # Exclude standalone-only files (examples, C tests, and the simdDispatch Makefile):
   # these belong to the self-contained tools/simdDispatch C library, not the R package scaffold.
   files <- files[!grepl("^tools/simdDispatch/(examples|test)/", files)]
-  files <- files[files != "tools/simdDispatch/Makefile"]
+  files <- files[!files %in% c("tools/simdDispatch/Makefile",
+                                "tools/simdDispatch/README.Rmd",
+                                "tools/simdDispatch/README.md")]
   copied <- character()
   for (file in files) {
     from <- file.path(template, file)
