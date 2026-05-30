@@ -6,9 +6,9 @@
 #include <string.h>
 
 #include "config.h"
-#include "../tools/simdDispatch/cpu_features.h"
-#include "../tools/simdDispatch/simd_dispatch.h"
-#include "../tools/simdDispatch/kernels/kernel_api.h"
+#include <simdDispatch/cpu_features.h>
+#include <simdDispatch/simd_dispatch.h>
+#include <simdDispatch/kernels/kernel_api.h>
 
 #ifndef SD_SIMDE_NATIVE_SSE2
 #define SD_SIMDE_NATIVE_SSE2 0

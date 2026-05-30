@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "kernel_api.h"
+#include "kernels/kernel_api.h"
 
 #ifdef __cplusplus
 extern "C" {

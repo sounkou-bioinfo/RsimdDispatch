@@ -2,7 +2,7 @@
 #include <R_ext/Rdynload.h>
 #include <Rinternals.h>
 
-#include "../tools/simdDispatch/simd_dispatch.h"
+#include <simdDispatch/simd_dispatch.h>
 
 /* Forward-declare all RC_* entry points (old-style, no prototype). */
 #define RC_CALL(name, nargs) SEXP RC_##name();
