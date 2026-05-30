@@ -19,6 +19,7 @@ src/*.dll
 src/*.dylib
 config.log
 docs
+tools/simdDispatch/build/
 
 vignettes/*.html
 /doc/
