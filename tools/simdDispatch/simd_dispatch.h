@@ -104,6 +104,10 @@ int sd_backend_cpu_supported(const char *backend);
 /* Returns 1 if backend is both compiled and CPU-supported. */
 int sd_backend_available(const char *backend);
 
+/* Returns 1 if backend was compiled with native (non-SIMDe) intrinsics,
+ * i.e. the compiler targeted that ISA directly. */
+int sd_backend_simde_native(const char *backend);
+
 /* Returns 1 if backend is available AND provides a kernel for operation. */
 int sd_backend_operation_available(const char *backend, SdOperation operation);
 

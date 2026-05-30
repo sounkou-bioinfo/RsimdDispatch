@@ -4,13 +4,13 @@
 
 #include <simdDispatch/simd_dispatch.h>
 
-/* Forward-declare all RC_* entry points (old-style, no prototype). */
-#define RC_CALL(name, nargs) SEXP RC_##name();
+/* Forward-declare all RC_* entry points with full prototypes. */
+#define RC_CALL(name, nargs, proto) SEXP RC_##name proto;
 #include "r_calls.def"
 #undef RC_CALL
 
 static const R_CallMethodDef call_methods[] = {
-#define RC_CALL(name, nargs) {"RC_" #name, (DL_FUNC)&RC_##name, nargs},
+#define RC_CALL(name, nargs, proto) {"RC_" #name, (DL_FUNC)&RC_##name, nargs},
 #include "r_calls.def"
 #undef RC_CALL
     {NULL, NULL, 0}

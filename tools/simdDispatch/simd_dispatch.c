@@ -51,6 +51,28 @@
 #  endif
 #endif
 
+/* SD_SIMDE_NATIVE_* — 1 when the backend was compiled with native (non-SIMDe)
+ * intrinsics, i.e. the compiler targeted that ISA directly.
+ * Set by configure via config.h; default to 0 for standalone builds. */
+#ifndef SD_SIMDE_NATIVE_SSE2
+#  define SD_SIMDE_NATIVE_SSE2 0
+#endif
+#ifndef SD_SIMDE_NATIVE_SSE41
+#  define SD_SIMDE_NATIVE_SSE41 0
+#endif
+#ifndef SD_SIMDE_NATIVE_AVX2
+#  define SD_SIMDE_NATIVE_AVX2 0
+#endif
+#ifndef SD_SIMDE_NATIVE_AVX512
+#  define SD_SIMDE_NATIVE_AVX512 0
+#endif
+#ifndef SD_SIMDE_NATIVE_NEON
+#  define SD_SIMDE_NATIVE_NEON 0
+#endif
+#ifndef SD_SIMDE_NATIVE_WASM_SIMD128
+#  define SD_SIMDE_NATIVE_WASM_SIMD128 0
+#endif
+
 #include "simd_dispatch.h"
 #include "cpu_features.h"
 
@@ -153,6 +175,7 @@ typedef void (*SdBackendRegisterFn)(SdDispatchBuilder *builder);
 typedef struct SdBackendEntry {
     const char *name;
     int compiled;
+    int simde_native;
     int (*supported)(void);
     SdBackendRegisterFn register_backend;
     unsigned int priority;
@@ -227,8 +250,8 @@ static void sd_register_wasm_simd128(SdDispatchBuilder *b) { (void)b; }
  * -------------------------------------------------------------------------- */
 
 static const SdBackendEntry sd_backend_entries[] = {
-#define SD_BACKEND(ID, name, compiled, supported_fn, priority) \
-    {#name, (int)((compiled) != 0), supported_fn, sd_register_##name, priority},
+#define SD_BACKEND(ID, name, compiled, supported_fn, priority, simde_native_flag) \
+    {#name, (int)((compiled) != 0), (int)((simde_native_flag) != 0), supported_fn, sd_register_##name, priority},
 #include "backends.def"
 #undef SD_BACKEND
 };
@@ -301,6 +324,11 @@ int sd_backend_cpu_supported(const char *backend) {
 
 int sd_backend_available(const char *backend) {
     return sd_backend_entry_available(sd_find_backend(backend));
+}
+
+int sd_backend_simde_native(const char *backend) {
+    const SdBackendEntry *e = sd_find_backend(backend);
+    return e != NULL ? e->simde_native : 0;
 }
 
 static void sd_builder_init(SdDispatchBuilder *builder, SdResolvedSlot *slots, const SdBackendEntry *backend) {

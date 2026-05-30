@@ -2,9 +2,8 @@ BASE_OBJECTS = registration.o r_api.o
 STAGED_OBJECTS = @RSD_OBJECTS@
 OBJECTS = $(BASE_OBJECTS)
 
-# -I../tools/simdDispatch         makes simd_dispatch.h and cpu_features.h available to src/
-# -I../tools/simdDispatch/kernels makes kernel_api.h available to src/ and the dispatch lib
-PKG_CPPFLAGS = -I../tools/simdDispatch -I../tools/simdDispatch/kernels @RSD_SIMDE_CPPFLAGS@
+# -I../tools makes all simdDispatch headers available as <simdDispatch/...>
+PKG_CPPFLAGS = -I../tools @RSD_SIMDE_CPPFLAGS@
 PKG_LIBS = $(STAGED_OBJECTS)
 
 all: $(SHLIB)

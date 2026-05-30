@@ -1,17 +1,18 @@
 /* r_calls.def — R .Call entry point catalog.
  *
- * RC_CALL(lower_name, nargs)
+ * RC_CALL(lower_name, nargs, proto)
  *
  *   lower_name — appended to RC_ to form the entry point name
  *   nargs      — number of SEXP arguments expected by .Call
+ *   proto      — full C parameter list (used for typed forward declarations)
  *
  * Used in registration.c to generate:
- *   (a) extern forward declarations for all RC_* functions
+ *   (a) typed extern forward declarations for all RC_* functions
  *   (b) the R_CallMethodDef table
  */
 
-RC_CALL(count_nonzero,    1)
-RC_CALL(convolve1d,       2)
-RC_CALL(simd_set_backend, 1)
-RC_CALL(simd_backend,     0)
-RC_CALL(simd_info,        0)
+RC_CALL(count_nonzero,    1, (SEXP x))
+RC_CALL(convolve1d,       2, (SEXP a, SEXP b))
+RC_CALL(simd_set_backend, 1, (SEXP backend_s))
+RC_CALL(simd_backend,     0, (void))
+RC_CALL(simd_info,        0, (void))

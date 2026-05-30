@@ -9,7 +9,7 @@
 * Trim redundant backend-selection wording from README and dispatch semantics
   documentation.
 * Move the staged-kernel-only `kernel_common.h` helper from `src/` into
-  `tools/kernels/` and the copied template kernel directory, and update
+  `tools/simdDispatch/kernels/` and the copied template kernel directory, and update
   downstream-template docs for that layout.
 * Replace short-lived C preprocessor expansion blocks in `src/` with explicit
   operation-table declarations, dispatch wrappers, and native registration
@@ -20,11 +20,11 @@
   availability and the selected backend for each operation.
 * Add `Dockerfile.musl-check` for Alpine Linux / musl `R CMD check` smoke
   testing in repository-specific CI.
-* Split the staged-kernel registration ABI into `tools/kernels/kernel_api.h`
+* Split the staged-kernel registration ABI into `tools/simdDispatch/kernels/kernel_api.h`
   so backend kernels no longer include private dispatch headers from `src/`.
-  Backend files now expose R-style `RsdKernelDef` tables consumed by the generic
+  Backend files now expose `SdKernelDef` tables consumed by the generic
   dispatch core, keeping operation names and operation-specific wrappers out of
-  `src/simd_dispatch.c`.
+  `tools/simdDispatch/simd_dispatch.c`.
 
 # RsimdDispatch 0.1.2
 
@@ -40,7 +40,7 @@
   include paths so copied templates are more robust in downstream libraries.
 * Eagerly initialize dispatch at package load, exercise copied-template runtime
   behavior in CI, and remove legacy comma-separated backend-list C helpers.
-* Switch dispatch from one function pointer per operation to a backend `RsdOps`
+* Switch dispatch from one function pointer per operation to a backend `SdKernelDef`
   operation table. Backend diagnostics now reuse the C backend metadata table,
   and the R setter no longer hardcodes backend names.
 * Add a dispatched `convolve1d()` full one-dimensional convolution demo, using
@@ -54,7 +54,7 @@
 * Stage scalar and optional SIMD kernel objects during `configure`, then link
   them through generated `src/Makevars` with the baseline R API, CPU feature
   detection, and dispatcher code.
-* Move demo kernels from `src/` to `tools/kernels/` so copied templates keep
+* Move demo kernels from `src/` to `tools/simdDispatch/kernels/` so copied templates keep
   build-time kernel sources separate from ordinary R package `src/` files.
 * Reword `DESCRIPTION` to avoid incoming spell-check notes for backend acronym
   names while keeping detailed backend names in user-facing documentation.

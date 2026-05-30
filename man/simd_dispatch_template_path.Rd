@@ -20,7 +20,7 @@ use_simd_dispatch(
 
 \item{pkg}{R package name. If \code{NULL}, the name is read from \code{DESCRIPTION}.}
 
-\item{prefix}{C symbol prefix used to replace \code{rsd_} in the copied sources.
+\item{prefix}{C symbol prefix used to replace \code{sd_} in the copied sources.
 The default is a sanitized lowercase package name.}
 
 \item{overwrite}{Whether to overwrite existing files.}

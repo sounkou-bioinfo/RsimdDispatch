@@ -40,7 +40,7 @@ The helper updates `DESCRIPTION` with `LinkingTo: RsimdDispatch`, writes
 the scaffold files, and substitutes package-specific registration and C
 symbol prefixes. It does not add a runtime dependency on
 `RsimdDispatch`. Replace the demo `count_nonzero()` and `convolve1d()`
-kernels under `tools/kernels/` with your own
+kernels under `tools/simdDispatch/kernels/` with your own
 scalar/SSE/AVX/NEON/WebAssembly kernels. The generated `configure`
 script probes compiler support, stages selected kernel objects in
 `src/rsd-kernels/`, and leaves `src/Makevars` to link those objects with

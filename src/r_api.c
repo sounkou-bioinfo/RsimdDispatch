@@ -3,31 +3,11 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <string.h>
 
 #include "config.h"
 #include <simdDispatch/cpu_features.h>
 #include <simdDispatch/simd_dispatch.h>
 #include <simdDispatch/kernels/kernel_api.h>
-
-#ifndef SD_SIMDE_NATIVE_SSE2
-#define SD_SIMDE_NATIVE_SSE2 0
-#endif
-#ifndef SD_SIMDE_NATIVE_SSE41
-#define SD_SIMDE_NATIVE_SSE41 0
-#endif
-#ifndef SD_SIMDE_NATIVE_AVX2
-#define SD_SIMDE_NATIVE_AVX2 0
-#endif
-#ifndef SD_SIMDE_NATIVE_AVX512
-#define SD_SIMDE_NATIVE_AVX512 0
-#endif
-#ifndef SD_SIMDE_NATIVE_NEON
-#define SD_SIMDE_NATIVE_NEON 0
-#endif
-#ifndef SD_SIMDE_NATIVE_WASM_SIMD128
-#define SD_SIMDE_NATIVE_WASM_SIMD128 0
-#endif
 
 static const char *sd_string_scalar(SEXP x, const char *arg) {
     if (TYPEOF(x) != STRSXP || XLENGTH(x) != 1 || STRING_ELT(x, 0) == NA_STRING) {
@@ -72,6 +52,9 @@ SEXP RC_convolve1d(SEXP a, SEXP b) {
             Rf_error("convolution output is too large");
         }
         nab = na + nb - 1;
+        if ((uint64_t)nab > (uint64_t)SIZE_MAX) {
+            Rf_error("convolution output is too large for this platform");
+        }
     }
     SEXP out = PROTECT(Rf_allocVector(REALSXP, nab));
     if (nab > 0) {
@@ -96,30 +79,6 @@ SEXP RC_simd_set_backend(SEXP backend_s) {
 
 SEXP RC_simd_backend(void) {
     return Rf_mkString(sd_selected_backend());
-}
-
-/* Returns 1 if the named backend was compiled with native (non-SIMDe)
- * intrinsics, i.e. the compiler targeted that ISA directly. */
-static int sd_backend_simde_native(const char *backend) {
-    if (strcmp(backend, "sse2") == 0) {
-        return SD_SIMDE_NATIVE_SSE2 != 0;
-    }
-    if (strcmp(backend, "sse41") == 0) {
-        return SD_SIMDE_NATIVE_SSE41 != 0;
-    }
-    if (strcmp(backend, "avx2") == 0) {
-        return SD_SIMDE_NATIVE_AVX2 != 0;
-    }
-    if (strcmp(backend, "avx512") == 0) {
-        return SD_SIMDE_NATIVE_AVX512 != 0;
-    }
-    if (strcmp(backend, "neon") == 0) {
-        return SD_SIMDE_NATIVE_NEON != 0;
-    }
-    if (strcmp(backend, "wasm_simd128") == 0) {
-        return SD_SIMDE_NATIVE_WASM_SIMD128 != 0;
-    }
-    return 0;
 }
 
 /* Which membership predicate to apply when building a backend character

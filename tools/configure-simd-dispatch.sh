@@ -254,27 +254,6 @@ case "$arch" in
         ;;
 esac
 
-SIMDE_VERSION_FILE=""
-if [ -f "$ROOT/inst/vendor/simde/VERSION" ]; then
-    SIMDE_VERSION_FILE="$ROOT/inst/vendor/simde/VERSION"
-elif [ -n "${R_HOME:-}" ] && [ -x "${R_HOME}/bin/Rscript" ]; then
-    RSD_VERSION_FILE=$(
-        "${R_HOME}/bin/Rscript" -e 'cat(system.file("vendor", "simde", "VERSION", package = "RsimdDispatch"))' 2>/dev/null || true
-    )
-    if [ -n "$RSD_VERSION_FILE" ] && [ -f "$RSD_VERSION_FILE" ]; then
-        SIMDE_VERSION_FILE="$RSD_VERSION_FILE"
-    fi
-fi
-
-SIMDE_VERSION="unknown"
-SIMDE_COMMIT="unknown"
-if [ -n "$SIMDE_VERSION_FILE" ]; then
-    SIMDE_VERSION=$(sed -n 's/^Version: //p' "$SIMDE_VERSION_FILE" | head -n 1)
-    SIMDE_COMMIT=$(sed -n 's/^Commit: //p' "$SIMDE_VERSION_FILE" | head -n 1)
-fi
-[ -n "$SIMDE_VERSION" ] || SIMDE_VERSION="unknown"
-[ -n "$SIMDE_COMMIT" ] || SIMDE_COMMIT="unknown"
-
 # Phase 2: write config.h (now that HAVE_* and SIMDE_* are finalised).
 mkdir -p "$(dirname "$CONFIG_OUT_PATH")"
 cat > "$CONFIG_OUT_PATH" <<EOF
