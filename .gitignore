@@ -21,6 +21,7 @@ config.log
 docs
 tools/simdDispatch/build/
 tools/simdDispatch/README.html
+AGENT.md
 
 vignettes/*.html
 /doc/

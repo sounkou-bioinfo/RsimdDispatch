@@ -26,3 +26,4 @@
 ^vignettes/.*\.html$
 ^doc$
 ^Meta$
+^AGENT\.md$
