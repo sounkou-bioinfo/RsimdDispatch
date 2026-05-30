@@ -16,5 +16,5 @@ A character scalar naming the selected backend summary.
 
 ``` r
 simd_backend()
-#> [1] "avx512"
+#> [1] "avx2"
 ```
