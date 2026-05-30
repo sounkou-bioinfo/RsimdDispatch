@@ -33,18 +33,14 @@ endif
 # Each backend requires SIMDe and the matching -m flag.
 # --------------------------------------------------------------------------
 ifeq ($(HAVE_SIMDE),1)
-    try_flag = $(shell printf '#include <simde/x86/sse2.h>\nint main(void){return 0;}\n' | \
-                   $(CC) $(CFLAGS) $(SIMDE_CFLAGS) $(1) -x c - -o /dev/null 2>/dev/null && echo 1 || echo 0)
+    try_flag = $(shell printf '%s\n%s\n' '#include <simde/x86/sse2.h>' 'int main(void){return 0;}' | $(CC) $(CFLAGS) $(SIMDE_CFLAGS) $(1) -x c - -o /dev/null 2>/dev/null && echo 1 || echo 0)
 
     HAVE_SSE2   := $(call try_flag,-msse2)
     HAVE_SSE41  := $(call try_flag,-msse4.1)
     HAVE_AVX2   := $(call try_flag,-mavx2)
     HAVE_AVX512 := $(call try_flag,-mavx512f -mavx512bw -mavx512vl)
-    HAVE_NEON   := $(shell printf 'int main(void){return 0;}\n' | \
-                       $(CC) $(CFLAGS) -x c - -o /dev/null 2>/dev/null && \
-                       $(CC) -dM -E - < /dev/null | grep -q '__ARM_NEON' && echo 1 || echo 0)
-    HAVE_WASM   := $(shell printf 'int main(void){return 0;}\n' | \
-                       $(CC) $(CFLAGS) -msimd128 -x c - -o /dev/null 2>/dev/null && echo 1 || echo 0)
+    HAVE_NEON   := $(shell printf '%s\n' 'int main(void){return 0;}' | $(CC) $(CFLAGS) -x c - -o /dev/null 2>/dev/null && $(CC) -dM -E - < /dev/null | grep -q '__ARM_NEON' && echo 1 || echo 0)
+    HAVE_WASM   := $(shell printf '%s\n' 'int main(void){return 0;}' | $(CC) $(CFLAGS) -msimd128 -x c - -o /dev/null 2>/dev/null && echo 1 || echo 0)
 else
     HAVE_SSE2   := 0
     HAVE_SSE41  := 0

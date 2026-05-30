@@ -85,19 +85,46 @@ cd "$(git rev-parse --show-toplevel)/tools/simdDispatch" && make test 2>/dev/nul
 
 ## API
 
-The library is initialised once and then used through three calls:
+Initialise the library, optionally select a backend, fill a call-frame
+struct, and invoke:
 
-``` c
-sd_init_dispatch();   /* auto-select the best compiled + available backend */
-sd_set_backend("avx2");   /* or pick explicitly; "auto" reverts */
+``` c_run
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include "simd_dispatch.h"
+#include "cpu_features.h"
+#include "kernels/kernel_api.h"
 
-SdCountNonzeroCall call = { .x = buf, .n = n, .result = 0 };
-sd_dispatch_invoke(SD_OP_COUNT_NONZERO, SD_SIG_RAW_COUNT, &call, "count_nonzero");
+int main(void) {
+    sd_init_dispatch();
+    printf("arch    : %s\n", sd_target_arch());
+    printf("os      : %s\n", sd_target_os());
+    printf("backend : %s\n", sd_selected_backend());
+
+    const uint8_t buf[] = {0, 1, 2, 0, 3, 0, 0, 4, 5, 0};
+    SdCountNonzeroCall call = { .x = buf, .n = sizeof(buf), .result = 0 };
+    sd_dispatch_invoke(SD_OP_COUNT_NONZERO, SD_SIG_RAW_COUNT, &call, "count_nonzero");
+    printf("count_nonzero = %zu  (expected 5)\n", call.result);
+
+    const double a[] = {1.0, 2.0, 3.0}, b[] = {1.0, 0.0, -1.0};
+    double out[5] = {0};
+    SdConvolve1dCall conv = { .a = a, .na = 3, .b = b, .nb = 3, .out = out };
+    sd_dispatch_invoke(SD_OP_CONVOLVE1D, SD_SIG_F64_CONVOLVE, &conv, "convolve1d");
+    printf("convolve1d    = [%.0f, %.0f, %.0f, %.0f, %.0f]  (expected [1, 2, 2, -2, -3])\n",
+           out[0], out[1], out[2], out[3], out[4]);
+    return 0;
+}
 ```
 
-`sd_dispatch_invoke` writes the result into the call-frame struct; there
-is no return value and no allocation. `sd_init_dispatch` is idempotent
-and thread-safe for concurrent reads after the first call.
+    arch    : x86_64
+    os      : linux
+    backend : avx2
+    count_nonzero = 5  (expected 5)
+    convolve1d    = [1, 2, 2, -2, -3]  (expected [1, 2, 2, -2, -3])
+
+`sd_dispatch_invoke` writes results into the call-frame struct; there is
+no return value and no allocation. `sd_init_dispatch` is idempotent.
 
 The error handler is pluggable. The default writes to stderr and calls
 `abort()`; the R adapter installs one that redirects to `Rf_error()`.
@@ -112,67 +139,107 @@ value, signature enum value, call-frame struct), a kernel function per
 backend, and a `SdKernelDef` table registered with
 `sd_register_kernel_table()`.
 
-## Runtime diagnostics (via the R package)
-
-``` r
-info <- simd_info()
-info[c("compiled_backends", "simde_native_backends",
-       "available_backends", "target_arch", "target_os")]
-```
-
-    $compiled_backends
-    [1] "scalar" "sse2"   "sse41"  "avx2"   "avx512"
-
-    $simde_native_backends
-    [1] "sse2"   "sse41"  "avx2"   "avx512"
-
-    $available_backends
-    [1] "scalar" "sse2"   "sse41"  "avx2"  
-
-    $target_arch
-    [1] "x86_64"
-
-    $target_os
-    [1] "linux"
-
 ## Benchmarks
 
-Timings on this machine comparing scalar against the best available
-backend for the two built-in operations.
+Wall-clock timings comparing the scalar backend against the best
+available backend for each operation. Each measurement runs the
+operation 2000 times and reports the median nanoseconds per call.
 
-``` r
-if (requireNamespace("bench", quietly = TRUE)) {
-  x <- rep(as.raw(c(0L, 1L, 2L, 3L, 0L, 255L, 7L, 0L)), length.out = 2^20)
-  best <- tail(simd_info()$available_backends, 1)
+``` c_run
+#define _POSIX_C_SOURCE 200809L
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
+#include <time.h>
+#include "simd_dispatch.h"
+#include "kernels/kernel_api.h"
 
-  b1 <- bench::mark(
-    scalar = { simd_set_backend("scalar"); count_nonzero(x) },
-    best   = { simd_set_backend(best);   count_nonzero(x) },
-    iterations = 20, check = TRUE
-  )
-  simd_set_backend("auto")
-  print(b1[, c("expression", "median", "itr/sec")])
+#define N_RUNS   2000
+#define BUF_N    (1 << 20)   /* 1 M bytes  */
+#define VEC_N    (1 << 14)   /* 16 K doubles */
+#define KERN_N   64
 
-  a <- runif(2^14); kernel <- runif(64)
-  b2 <- bench::mark(
-    scalar = { simd_set_backend("scalar"); convolve1d(a, kernel) },
-    best   = { simd_set_backend(best);   convolve1d(a, kernel) },
-    iterations = 20, check = TRUE, relative = FALSE
-  )
-  simd_set_backend("auto")
-  print(b2[, c("expression", "median", "itr/sec")])
-} else {
-  message("install the 'bench' package to see timings")
+static double median_ns(struct timespec *times, int n) {
+    /* simple insertion sort then pick middle */
+    for (int i = 1; i < n; ++i) {
+        struct timespec key = times[i]; int j = i - 1;
+        while (j >= 0 && (times[j].tv_sec > key.tv_sec ||
+               (times[j].tv_sec == key.tv_sec && times[j].tv_nsec > key.tv_nsec))) {
+            times[j+1] = times[j]; --j;
+        }
+        times[j+1] = key;
+    }
+    long s = times[n/2].tv_sec, ns = times[n/2].tv_nsec;
+    return (double)s * 1e9 + (double)ns;
+}
+
+static void bench_op(const char *backend, const char *op_name,
+                     SdOperation op, SdKernelSignature sig, void *call,
+                     struct timespec *scratch) {
+    sd_set_backend(backend);
+    for (int i = 0; i < N_RUNS; ++i) {
+        struct timespec t0, t1;
+        clock_gettime(CLOCK_MONOTONIC, &t0);
+        sd_dispatch_invoke(op, sig, call, op_name);
+        clock_gettime(CLOCK_MONOTONIC, &t1);
+        scratch[i].tv_sec  = t1.tv_sec  - t0.tv_sec;
+        scratch[i].tv_nsec = t1.tv_nsec - t0.tv_nsec;
+        if (scratch[i].tv_nsec < 0) { scratch[i].tv_sec--; scratch[i].tv_nsec += 1000000000L; }
+    }
+}
+
+int main(void) {
+    sd_init_dispatch();
+
+    /* find best available backend (last in list that is available) */
+    const char *best = "scalar";
+    for (size_t i = 0; i < sd_backend_count(); ++i) {
+        const char *name = sd_backend_name(i);
+        if (sd_backend_available(name)) best = name;
+    }
+    printf("scalar vs %s  (%d runs each)\n\n", best, N_RUNS);
+
+    static uint8_t buf[BUF_N];
+    memset(buf, 0x5a, sizeof(buf));
+    SdCountNonzeroCall cnt = { .x = buf, .n = BUF_N, .result = 0 };
+
+    static double a[VEC_N], b[KERN_N], out[VEC_N + KERN_N - 1];
+    for (size_t i = 0; i < VEC_N;  ++i) a[i]   = (double)i / VEC_N;
+    for (size_t i = 0; i < KERN_N; ++i) b[i]   = 1.0 / KERN_N;
+    SdConvolve1dCall conv = { .a = a, .na = VEC_N, .b = b, .nb = KERN_N, .out = out };
+
+    static struct timespec scratch[N_RUNS];
+
+    bench_op("scalar", "count_nonzero", SD_OP_COUNT_NONZERO, SD_SIG_RAW_COUNT, &cnt, scratch);
+    double cnt_scalar = median_ns(scratch, N_RUNS);
+    bench_op(best, "count_nonzero", SD_OP_COUNT_NONZERO, SD_SIG_RAW_COUNT, &cnt, scratch);
+    double cnt_best = median_ns(scratch, N_RUNS);
+
+    printf("count_nonzero  (n=%d)\n", BUF_N);
+    printf("  scalar  %8.0f ns\n", cnt_scalar);
+    printf("  %-7s %8.0f ns  (%.1fx)\n\n", best, cnt_best, cnt_scalar / cnt_best);
+
+    bench_op("scalar", "convolve1d", SD_OP_CONVOLVE1D, SD_SIG_F64_CONVOLVE, &conv, scratch);
+    double conv_scalar = median_ns(scratch, N_RUNS);
+    bench_op(best, "convolve1d", SD_OP_CONVOLVE1D, SD_SIG_F64_CONVOLVE, &conv, scratch);
+    double conv_best = median_ns(scratch, N_RUNS);
+
+    printf("convolve1d     (na=%d, nb=%d)\n", VEC_N, KERN_N);
+    printf("  scalar  %8.0f ns\n", conv_scalar);
+    printf("  %-7s %8.0f ns  (%.1fx)\n", best, conv_best, conv_scalar / conv_best);
+
+    sd_set_backend("auto");
+    return 0;
 }
 ```
 
-    # A tibble: 2 × 3
-      expression   median `itr/sec`
-      <bch:expr> <bch:tm>     <dbl>
-    1 scalar      235.5µs     4230.
-    2 best         18.7µs    46656.
-    # A tibble: 2 × 3
-      expression   median `itr/sec`
-      <bch:expr> <bch:tm>     <dbl>
-    1 scalar        468µs     2232.
-    2 best          162µs     5873.
+    scalar vs avx2  (2000 runs each)
+
+    count_nonzero  (n=1048576)
+      scalar    233724 ns
+      avx2       15212 ns  (15.4x)
+
+    convolve1d     (na=16384, nb=64)
+      scalar    246936 ns
+      avx2      131821 ns  (1.9x)

@@ -81,4 +81,4 @@ jobs:
         run: R CMD INSTALL .
 
       - name: Run tinytest suite
-        run: Rscript -e "tinytest::run_test_dir('inst/tinytest', verbose = TRUE)"
+        run: Rscript -e "tinytest::test_package('RsimdDispatch', verbose = TRUE)"
