@@ -48,18 +48,16 @@ configure
 configure.win
 cleanup
 tools/configure-simd-dispatch.sh
-tools/kernels/kernel_scalar.c
-tools/kernels/kernel_sse2.c
-tools/kernels/kernel_sse41.c
-tools/kernels/kernel_avx2.c
-tools/kernels/kernel_avx512.c
-tools/kernels/kernel_neon.c
-tools/kernels/kernel_wasm_simd128.c
-tools/kernels/kernel_common.h
+tools/simdDispatch/kernels/kernel_scalar.c
+tools/simdDispatch/kernels/kernel_sse2.c
+tools/simdDispatch/kernels/kernel_sse41.c
+tools/simdDispatch/kernels/kernel_avx2.c
+tools/simdDispatch/kernels/kernel_avx512.c
+tools/simdDispatch/kernels/kernel_neon.c
+tools/simdDispatch/kernels/kernel_wasm_simd128.c
+tools/simdDispatch/kernels/kernel_common.h
 src/Makevars.in
 src/Makevars.win.in
-src/cpu_features.c
-src/simd_dispatch.c
 ```
 
 ## Replace the demo kernels
@@ -68,14 +66,14 @@ The demo operations are registered by each backend file. For example,
 the AVX2 staged source registers both demo operations:
 
 ``` c
-static const RsdKernelDef rsd_avx2_kernels[] = {
-    {RSD_OP_COUNT_NONZERO, RSD_SIG_RAW_COUNT, rsd_count_nonzero_avx2_invoke},
-    {RSD_OP_CONVOLVE1D, RSD_SIG_F64_CONVOLVE, rsd_convolve1d_avx2_invoke},
-    RSD_KERNEL_DEF_END
+static const SdKernelDef sd_avx2_kernels[] = {
+    {SD_OP_COUNT_NONZERO, SD_SIG_RAW_COUNT, sd_count_nonzero_avx2_invoke},
+    {SD_OP_CONVOLVE1D, SD_SIG_F64_CONVOLVE, sd_convolve1d_avx2_invoke},
+    SD_KERNEL_DEF_END
 };
 
-void rsd_register_avx2(RsdDispatchBuilder *builder) {
-    rsd_register_kernel_table(builder, rsd_avx2_kernels);
+void sd_register_avx2(SdDispatchBuilder *builder) {
+    sd_register_kernel_table(builder, sd_avx2_kernels);
 }
 ```
 
@@ -89,8 +87,9 @@ the unsupported operation.
 
 For a real package, replace the demo operation signatures with your own
 and keep the same structure. Staged kernel files include
-`tools/kernels/kernel_api.h`, not private headers from `src/`; the
-dispatch core implements that kernel-facing registration ABI.
+`tools/simdDispatch/kernels/kernel_api.h`, not private headers from
+`src/`; the dispatch core implements that kernel-facing registration
+ABI.
 
 ``` text
 R API wrapper        ordinary src/Makevars compilation
@@ -108,27 +107,29 @@ baseline CPUs.
 ## Extending the number of operations
 
 The staged build model already scales across operations: if you add
-another function to each existing `tools/kernels/kernel_*.c` file, the
-same staged object for that backend contains the new implementation. For
-a small number of operations, keep the dispatch code explicit and add:
+another function to each existing
+`tools/simdDispatch/kernels/kernel_*.c` file, the same staged object for
+that backend contains the new implementation. For a small number of
+operations, keep the dispatch code explicit and add:
 
 1.  an operation ID, signature ID, call-frame type, and kernel
-    definition entry type support in `tools/kernels/kernel_api.h`;
+    definition entry type support in
+    `tools/simdDispatch/kernels/kernel_api.h`;
 2.  one implementation plus a small `void *` call-frame thunk per
-    backend file under `tools/kernels/`, following the naming convention
-    `rsd_<operation>_<backend>()`;
-3.  one `RsdKernelDef` row in each backend file that implements the
+    backend file under `tools/simdDispatch/kernels/`, following the
+    naming convention `sd_<operation>_<backend>()`;
+3.  one `SdKernelDef` row in each backend file that implements the
     operation;
 4.  the `.Call` wrapper in `src/r_api.c`, which marshals R objects into
-    the operation call frame and calls `rsd_dispatch_invoke()`;
+    the operation call frame and calls `sd_dispatch_invoke()`;
 5.  the native registration entry in `src/registration.c`;
 6.  the R wrapper, tests, and documentation.
 
 Backend metadata and kernel availability are table-driven, similar in
 spirit to R’s native routine registration tables. Operation
 implementation ownership stays close to each backend source file, while
-`src/simd_dispatch.c` consumes only opaque operation IDs and generic
-kernel-definition rows.
+`tools/simdDispatch/simd_dispatch.c` consumes only opaque operation IDs
+and generic kernel-definition rows.
 
 For packages with many public operations, keep a single operation
 catalog that can generate the repetitive dispatch metadata, `.Call`

@@ -149,8 +149,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar      328.2µs     3008.
-#> 2 auto         43.8µs    19879.
+#> 1 scalar      339.9µs     2959.
+#> 2 auto         53.2µs    16271.
 ```
 
 The same switch applies to the full one-dimensional convolution demo:
@@ -180,8 +180,8 @@ if (requireNamespace("bench", quietly = TRUE)) {
 #> # A tibble: 2 × 3
 #>   expression   median `itr/sec`
 #>   <bch:expr> <bch:tm>     <dbl>
-#> 1 scalar        425µs     2331.
-#> 2 auto          175µs     5563.
+#> 1 scalar        419µs     2359.
+#> 2 auto          180µs     5474.
 ```
 
 `"auto"` selects the best backend from the compiled and supported

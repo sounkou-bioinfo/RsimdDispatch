@@ -103,32 +103,30 @@ performs the important substitutions, including <code>@useDynLib</code>,
 <span><span class="va">configure.win</span></span>
 <span><span class="va">cleanup</span></span>
 <span><span class="va">tools</span><span class="op">/</span><span class="va">configure</span><span class="op">-</span><span class="va">simd</span><span class="op">-</span><span class="va">dispatch.sh</span></span>
-<span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_scalar.c</span></span>
-<span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_sse2.c</span></span>
-<span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_sse41.c</span></span>
-<span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_avx2.c</span></span>
-<span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_avx512.c</span></span>
-<span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_neon.c</span></span>
-<span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_wasm_simd128.c</span></span>
-<span><span class="va">tools</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_common.h</span></span>
+<span><span class="va">tools</span><span class="op">/</span><span class="va">simdDispatch</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_scalar.c</span></span>
+<span><span class="va">tools</span><span class="op">/</span><span class="va">simdDispatch</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_sse2.c</span></span>
+<span><span class="va">tools</span><span class="op">/</span><span class="va">simdDispatch</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_sse41.c</span></span>
+<span><span class="va">tools</span><span class="op">/</span><span class="va">simdDispatch</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_avx2.c</span></span>
+<span><span class="va">tools</span><span class="op">/</span><span class="va">simdDispatch</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_avx512.c</span></span>
+<span><span class="va">tools</span><span class="op">/</span><span class="va">simdDispatch</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_neon.c</span></span>
+<span><span class="va">tools</span><span class="op">/</span><span class="va">simdDispatch</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_wasm_simd128.c</span></span>
+<span><span class="va">tools</span><span class="op">/</span><span class="va">simdDispatch</span><span class="op">/</span><span class="va">kernels</span><span class="op">/</span><span class="va">kernel_common.h</span></span>
 <span><span class="va">src</span><span class="op">/</span><span class="va">Makevars.in</span></span>
-<span><span class="va">src</span><span class="op">/</span><span class="va">Makevars.win.in</span></span>
-<span><span class="va">src</span><span class="op">/</span><span class="va">cpu_features.c</span></span>
-<span><span class="va">src</span><span class="op">/</span><span class="va">simd_dispatch.c</span></span></code></pre>
+<span><span class="va">src</span><span class="op">/</span><span class="va">Makevars.win.in</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="replace-the-demo-kernels">Replace the demo kernels<a class="anchor" aria-label="anchor" href="#replace-the-demo-kernels"></a>
 </h2>
 <p>The demo operations are registered by each backend file. For example,
 the AVX2 staged source registers both demo operations:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="dt">static</span> <span class="dt">const</span> RsdKernelDef rsd_avx2_kernels<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    <span class="op">{</span>RSD_OP_COUNT_NONZERO<span class="op">,</span> RSD_SIG_RAW_COUNT<span class="op">,</span> rsd_count_nonzero_avx2_invoke<span class="op">},</span></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    <span class="op">{</span>RSD_OP_CONVOLVE1D<span class="op">,</span> RSD_SIG_F64_CONVOLVE<span class="op">,</span> rsd_convolve1d_avx2_invoke<span class="op">},</span></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    RSD_KERNEL_DEF_END</span>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="dt">static</span> <span class="dt">const</span> SdKernelDef sd_avx2_kernels<span class="op">[]</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    <span class="op">{</span>SD_OP_COUNT_NONZERO<span class="op">,</span> SD_SIG_RAW_COUNT<span class="op">,</span> sd_count_nonzero_avx2_invoke<span class="op">},</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    <span class="op">{</span>SD_OP_CONVOLVE1D<span class="op">,</span> SD_SIG_F64_CONVOLVE<span class="op">,</span> sd_convolve1d_avx2_invoke<span class="op">},</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    SD_KERNEL_DEF_END</span>
 <span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="op">};</span></span>
 <span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="dt">void</span> rsd_register_avx2<span class="op">(</span>RsdDispatchBuilder <span class="op">*</span>builder<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>    rsd_register_kernel_table<span class="op">(</span>builder<span class="op">,</span> rsd_avx2_kernels<span class="op">);</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="dt">void</span> sd_register_avx2<span class="op">(</span>SdDispatchBuilder <span class="op">*</span>builder<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>    sd_register_kernel_table<span class="op">(</span>builder<span class="op">,</span> sd_avx2_kernels<span class="op">);</span></span>
 <span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>SSE2 and SSE4.1 currently register only <code><a href="../reference/count_nonzero.html">count_nonzero()</a></code>,
 which demonstrates operation-level backend support. A backend
@@ -138,9 +136,9 @@ unsupported operation errors clearly; <code>"auto"</code> skips that
 backend for the unsupported operation.</p>
 <p>For a real package, replace the demo operation signatures with your
 own and keep the same structure. Staged kernel files include
-<code>tools/kernels/kernel_api.h</code>, not private headers from
-<code>src/</code>; the dispatch core implements that kernel-facing
-registration ABI.</p>
+<code>tools/simdDispatch/kernels/kernel_api.h</code>, not private
+headers from <code>src/</code>; the dispatch core implements that
+kernel-facing registration ABI.</p>
 <pre class="text"><code>R API wrapper        ordinary src/Makevars compilation
 CPU feature checks   ordinary src/Makevars compilation
 dispatch table       ordinary src/Makevars compilation
@@ -155,22 +153,23 @@ kernel objects, and the dispatcher remains safe on baseline CPUs.</p>
 <h2 id="extending-the-number-of-operations">Extending the number of operations<a class="anchor" aria-label="anchor" href="#extending-the-number-of-operations"></a>
 </h2>
 <p>The staged build model already scales across operations: if you add
-another function to each existing <code>tools/kernels/kernel_*.c</code>
-file, the same staged object for that backend contains the new
-implementation. For a small number of operations, keep the dispatch code
-explicit and add:</p>
+another function to each existing
+<code>tools/simdDispatch/kernels/kernel_*.c</code> file, the same staged
+object for that backend contains the new implementation. For a small
+number of operations, keep the dispatch code explicit and add:</p>
 <ol style="list-style-type: decimal">
 <li>an operation ID, signature ID, call-frame type, and kernel
 definition entry type support in
-<code>tools/kernels/kernel_api.h</code>;</li>
+<code>tools/simdDispatch/kernels/kernel_api.h</code>;</li>
 <li>one implementation plus a small <code>void *</code> call-frame thunk
-per backend file under <code>tools/kernels/</code>, following the naming
-convention <code>rsd_&lt;operation&gt;_&lt;backend&gt;()</code>;</li>
-<li>one <code>RsdKernelDef</code> row in each backend file that
+per backend file under <code>tools/simdDispatch/kernels/</code>,
+following the naming convention
+<code>sd_&lt;operation&gt;_&lt;backend&gt;()</code>;</li>
+<li>one <code>SdKernelDef</code> row in each backend file that
 implements the operation;</li>
 <li>the <code>.Call</code> wrapper in <code>src/r_api.c</code>, which
 marshals R objects into the operation call frame and calls
-<code>rsd_dispatch_invoke()</code>;</li>
+<code>sd_dispatch_invoke()</code>;</li>
 <li>the native registration entry in
 <code>src/registration.c</code>;</li>
 <li>the R wrapper, tests, and documentation.</li>
@@ -178,8 +177,8 @@ marshals R objects into the operation call frame and calls
 <p>Backend metadata and kernel availability are table-driven, similar in
 spirit to R’s native routine registration tables. Operation
 implementation ownership stays close to each backend source file, while
-<code>src/simd_dispatch.c</code> consumes only opaque operation IDs and
-generic kernel-definition rows.</p>
+<code>tools/simdDispatch/simd_dispatch.c</code> consumes only opaque
+operation IDs and generic kernel-definition rows.</p>
 <p>For packages with many public operations, keep a single operation
 catalog that can generate the repetitive dispatch metadata,
 <code>.Call</code> registration, and R wrappers. Optimized backend
