@@ -1,0 +1,117 @@
+---
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = "")
+library(RsimdDispatch)
+```
+# simdDispatch
+
+A small, self-contained C library for runtime SIMD dispatch. The build
+system probes the compiler for each ISA at configure time, compiles matching
+kernel objects with the appropriate flags, and links them into a static archive.
+At runtime, CPU feature detection selects the best available backend; the caller
+invokes an operation through a single `sd_dispatch_invoke()` call and the library
+routes it to the right kernel.
+
+`simd_dispatch.c`, `cpu_features.c`, and the scalar kernel have no external
+dependencies beyond a C11 compiler. SIMDe is a dependency of the SIMD backend
+kernels only (`kernels/kernel_sse2.c`, `kernel_avx2.c`, etc.) — the dispatch
+core and the scalar path are completely independent of it. If SIMDe headers are
+absent the build falls back to a scalar-only library.
+
+## Building
+
+```bash
+cd tools/simdDispatch
+make          # builds build/libsimd_dispatch.a
+make test     # builds and runs the test suite
+make examples # builds example binaries
+make info     # shows what the compiler supports on this machine
+```
+
+`SIMDE_DIR` can be overridden if SIMDe headers are not at `../../inst/include`:
+
+```bash
+make SIMDE_DIR=/path/to/simde-parent test
+```
+
+## What the compiler sees on this machine
+
+```{r info, engine="bash", engine.opts=list(bash="-l")}
+cd "$(git rev-parse --show-toplevel)/tools/simdDispatch" && make info 2>/dev/null
+```
+
+## Test results
+
+```{r tests, engine="bash", engine.opts=list(bash="-l")}
+cd "$(git rev-parse --show-toplevel)/tools/simdDispatch" && make test 2>/dev/null
+```
+
+## API
+
+The library is initialised once and then used through three calls:
+
+```c
+sd_init_dispatch();   /* auto-select the best compiled + available backend */
+sd_set_backend("avx2");   /* or pick explicitly; "auto" reverts */
+
+SdCountNonzeroCall call = { .x = buf, .n = n, .result = 0 };
+sd_dispatch_invoke(SD_OP_COUNT_NONZERO, SD_SIG_RAW_COUNT, &call, "count_nonzero");
+```
+
+`sd_dispatch_invoke` writes the result into the call-frame struct; there is no
+return value and no allocation. `sd_init_dispatch` is idempotent and
+thread-safe for concurrent reads after the first call.
+
+The error handler is pluggable. The default writes to stderr and calls
+`abort()`; the R adapter installs one that redirects to `Rf_error()`.
+
+## Operations
+
+The two operations compiled into the reference kernels are
+`SD_OP_COUNT_NONZERO` (`uint8_t` buffer → `size_t`) and `SD_OP_CONVOLVE1D`
+(`double` arrays → `double` output). Adding an operation requires entries in
+`kernels/kernel_api.h` (operation enum value, signature enum value, call-frame
+struct), a kernel function per backend, and a `SdKernelDef` table registered
+with `sd_register_kernel_table()`.
+
+## Runtime diagnostics (via the R package)
+
+```{r diag}
+info <- simd_info()
+info[c("compiled_backends", "simde_native_backends",
+       "available_backends", "target_arch", "target_os")]
+```
+
+## Benchmarks
+
+Timings on this machine comparing scalar against the best available backend
+for the two built-in operations.
+
+```{r bench, message=FALSE}
+if (requireNamespace("bench", quietly = TRUE)) {
+  x <- rep(as.raw(c(0L, 1L, 2L, 3L, 0L, 255L, 7L, 0L)), length.out = 2^20)
+  best <- tail(simd_info()$available_backends, 1)
+
+  b1 <- bench::mark(
+    scalar = { simd_set_backend("scalar"); count_nonzero(x) },
+    best   = { simd_set_backend(best);   count_nonzero(x) },
+    iterations = 20, check = TRUE
+  )
+  simd_set_backend("auto")
+  print(b1[, c("expression", "median", "itr/sec")])
+
+  a <- runif(2^14); kernel <- runif(64)
+  b2 <- bench::mark(
+    scalar = { simd_set_backend("scalar"); convolve1d(a, kernel) },
+    best   = { simd_set_backend(best);   convolve1d(a, kernel) },
+    iterations = 20, check = TRUE, relative = FALSE
+  )
+  simd_set_backend("auto")
+  print(b2[, c("expression", "median", "itr/sec")])
+} else {
+  message("install the 'bench' package to see timings")
+}
+```

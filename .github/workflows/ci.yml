@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # --------------------------------------------------------------------------
+  # Standalone C library — matrix over OS / compiler
+  # --------------------------------------------------------------------------
+  c-lib:
+    name: C lib (${{ matrix.os }}, ${{ matrix.cc }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cc: gcc
+          - os: ubuntu-latest
+            cc: clang
+          - os: macos-latest
+            cc: clang   # Apple Clang, arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and test (with SIMDe)
+        working-directory: tools/simdDispatch
+        env:
+          CC: ${{ matrix.cc }}
+        run: make test
+
+      - name: Build and test (scalar only, no SIMDe)
+        working-directory: tools/simdDispatch
+        env:
+          CC: ${{ matrix.cc }}
+        run: make clean && make test SIMDE_DIR=/nonexistent
+
+  # --------------------------------------------------------------------------
+  # Cross-compile for aarch64 (Linux host, compile-only)
+  # --------------------------------------------------------------------------
+  c-lib-cross-aarch64:
+    name: C lib (cross aarch64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cross-compiler
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Cross-compile (scalar only — can't run aarch64 binaries)
+        working-directory: tools/simdDispatch
+        run: make CC=aarch64-linux-gnu-gcc SIMDE_DIR=/nonexistent
+
+  # --------------------------------------------------------------------------
+  # R package — tinytest suite
+  # --------------------------------------------------------------------------
+  r-tests:
+    name: R tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: tinytest
+
+      - name: Install package
+        run: R CMD INSTALL .
+
+      - name: Run tinytest suite
+        run: Rscript -e "tinytest::run_test_dir('inst/tinytest', verbose = TRUE)"
