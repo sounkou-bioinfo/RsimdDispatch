@@ -203,8 +203,8 @@ same-process backend switching through the public API.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        465µs     <span style="text-decoration: underline;">2</span>156.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto           48µs    <span style="text-decoration: underline;">19</span>867.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      330.9µs     <span style="text-decoration: underline;">3</span>003.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         51.2µs    <span style="text-decoration: underline;">17</span>530.</span></span></code></pre></div>
 <p>The same switch applies to the full one-dimensional convolution
 demo:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -231,8 +231,8 @@ demo:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        411µs     <span style="text-decoration: underline;">2</span>410.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto          246µs     <span style="text-decoration: underline;">3</span>991.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        423µs     <span style="text-decoration: underline;">2</span>327.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto          194µs     <span style="text-decoration: underline;">5</span>092.</span></span></code></pre></div>
 <p><code>"auto"</code> selects the best backend from the compiled and
 supported intersection that also supports the operation being called.
 The current ranking is:</p>

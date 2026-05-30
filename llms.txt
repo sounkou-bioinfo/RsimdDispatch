@@ -39,7 +39,7 @@ symbol prefixes. It does not add a runtime dependency on
 [`count_nonzero()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/count_nonzero.md)
 and
 [`convolve1d()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/convolve1d.md)
-kernels under `tools/kernels/` with your own
+kernels under `tools/simdDispatch/kernels/` with your own
 scalar/SSE/AVX/NEON/WebAssembly kernels. The generated `configure`
 script probes compiler support, stages selected kernel objects in
 `src/rsd-kernels/`, and leaves `src/Makevars` to link those objects with

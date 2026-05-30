@@ -39,7 +39,7 @@ RsimdDispatch::use_simd_dispatch(pkg = "MyPackage", prefix = "mypkg")
 If `pkg` is omitted, the package name is read from `DESCRIPTION`. If
 `prefix` is omitted, a lowercase C identifier prefix is derived from the
 package name. The helper performs the important substitutions, including
-`@useDynLib`, `R_init_<Package>()`, `rsd_`, `RSD_`, and `RC_` symbols.
+`@useDynLib`, `R_init_<Package>()`, `sd_`, `SD_`, and `RC_` symbols.
 
 The copied scaffold includes:
 

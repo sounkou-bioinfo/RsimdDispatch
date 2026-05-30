@@ -32,7 +32,7 @@ use_simd_dispatch(
 
 - prefix:
 
-  C symbol prefix used to replace `rsd_` in the copied sources. The
+  C symbol prefix used to replace `sd_` in the copied sources. The
   default is a sanitized lowercase package name.
 
 - overwrite:

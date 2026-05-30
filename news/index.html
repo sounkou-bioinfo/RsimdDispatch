@@ -45,11 +45,11 @@
 <li>Clarify many-operation maintenance guidance: repetitive dispatch metadata, C registration, and R wrapper metadata should come from one source of truth; hand-written code should focus on backend kernels.</li>
 <li>Move the downstream-use vignette after runtime dispatch semantics in the pkgdown article order and shorten its many-operation guidance.</li>
 <li>Trim redundant backend-selection wording from README and dispatch semantics documentation.</li>
-<li>Move the staged-kernel-only <code>kernel_common.h</code> helper from <code>src/</code> into <code>tools/kernels/</code> and the copied template kernel directory, and update downstream-template docs for that layout.</li>
+<li>Move the staged-kernel-only <code>kernel_common.h</code> helper from <code>src/</code> into <code>tools/simdDispatch/kernels/</code> and the copied template kernel directory, and update downstream-template docs for that layout.</li>
 <li>Replace short-lived C preprocessor expansion blocks in <code>src/</code> with explicit operation-table declarations, dispatch wrappers, and native registration entries.</li>
 <li>Move dispatch to a NumKong-inspired resolved operation table: backend files register the operation slots they implement, <code>"auto"</code> resolves the best backend per operation, and <code><a href="../reference/simd_info.html">simd_info()</a></code> reports both operation-level backend availability and the selected backend for each operation.</li>
 <li>Add <code>Dockerfile.musl-check</code> for Alpine Linux / musl <code>R CMD check</code> smoke testing in repository-specific CI.</li>
-<li>Split the staged-kernel registration ABI into <code>tools/kernels/kernel_api.h</code> so backend kernels no longer include private dispatch headers from <code>src/</code>. Backend files now expose R-style <code>RsdKernelDef</code> tables consumed by the generic dispatch core, keeping operation names and operation-specific wrappers out of <code>src/simd_dispatch.c</code>.</li>
+<li>Split the staged-kernel registration ABI into <code>tools/simdDispatch/kernels/kernel_api.h</code> so backend kernels no longer include private dispatch headers from <code>src/</code>. Backend files now expose <code>SdKernelDef</code> tables consumed by the generic dispatch core, keeping operation names and operation-specific wrappers out of <code>tools/simdDispatch/simd_dispatch.c</code>.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.2" id="rsimddispatch-012">RsimdDispatch 0.1.2<a class="anchor" aria-label="anchor" href="#rsimddispatch-012"></a></h2>
@@ -58,14 +58,14 @@
 <li>Add webR check tooling based on the local <code>rwasm::build()</code> + Node <code>webr</code> workflow used by related packages.</li>
 <li>Generate explicit SIMDe include flags in <code>src/Makevars</code> and quote configure include paths so copied templates are more robust in downstream libraries.</li>
 <li>Eagerly initialize dispatch at package load, exercise copied-template runtime behavior in CI, and remove legacy comma-separated backend-list C helpers.</li>
-<li>Switch dispatch from one function pointer per operation to a backend <code>RsdOps</code> operation table. Backend diagnostics now reuse the C backend metadata table, and the R setter no longer hardcodes backend names.</li>
+<li>Switch dispatch from one function pointer per operation to a backend <code>SdKernelDef</code> operation table. Backend diagnostics now reuse the C backend metadata table, and the R setter no longer hardcodes backend names.</li>
 <li>Add a dispatched <code><a href="../reference/convolve1d.html">convolve1d()</a></code> full one-dimensional convolution demo, using SIMDe inner-loop multiply-add kernels for numeric vectors, and include it in tests, documentation, webR checks, and evaluated benchmarks.</li>
 <li>Document the current extension path for adding operations while retaining RsimdDispatch’s staged-object R package build model.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.1" id="rsimddispatch-011-2026-05-28">RsimdDispatch 0.1.1 (2026-05-28)<a class="anchor" aria-label="anchor" href="#rsimddispatch-011-2026-05-28"></a></h2>
 <ul><li>Stage scalar and optional SIMD kernel objects during <code>configure</code>, then link them through generated <code>src/Makevars</code> with the baseline R API, CPU feature detection, and dispatcher code.</li>
-<li>Move demo kernels from <code>src/</code> to <code>tools/kernels/</code> so copied templates keep build-time kernel sources separate from ordinary R package <code>src/</code> files.</li>
+<li>Move demo kernels from <code>src/</code> to <code>tools/simdDispatch/kernels/</code> so copied templates keep build-time kernel sources separate from ordinary R package <code>src/</code> files.</li>
 <li>Reword <code>DESCRIPTION</code> to avoid incoming spell-check notes for backend acronym names while keeping detailed backend names in user-facing documentation.</li>
 </ul></div>
     <div class="section level2">
