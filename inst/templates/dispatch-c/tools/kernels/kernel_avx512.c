@@ -5,8 +5,21 @@
 
 #include <simde/x86/avx512.h>
 
-#include "kernel_common.h"
 #include "kernel_api.h"
+
+/* 64-bit popcount for AVX-512 byte-comparison masks (one bit per lane). */
+static unsigned int rsd_popcount64(uint64_t x) {
+#if defined(__GNUC__) || defined(__clang__)
+    return (unsigned int)__builtin_popcountll((unsigned long long)x);
+#else
+    unsigned int n = 0;
+    while (x != 0) {
+        n += (unsigned int)(x & UINT64_C(1));
+        x >>= 1;
+    }
+    return n;
+#endif
+}
 
 size_t rsd_count_nonzero_avx512(const uint8_t *x, size_t n) {
     size_t i = 0;

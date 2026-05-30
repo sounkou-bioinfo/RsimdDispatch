@@ -2,11 +2,56 @@
 #include "simd_dispatch.h"
 #include "cpu_features.h"
 
-#include <R.h>
-
 #include <limits.h>
+#include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+/* --------------------------------------------------------------------------
+ * Pluggable error handler
+ * The default writes to stderr and aborts, which is safe in any embedding
+ * context.  R callers install rsd_r_error_handler() (via registration.c)
+ * which redirects to Rf_error() and therefore longjmps as R expects.
+ * -------------------------------------------------------------------------- */
+
+static void rsd_default_error_handler(const char *msg) {
+    fprintf(stderr, "RsimdDispatch error: %s\n", msg);
+    abort();
+}
+
+static rsd_error_handler_fn rsd_error_handler = rsd_default_error_handler;
+
+void rsd_set_error_handler(rsd_error_handler_fn handler) {
+    rsd_error_handler = handler != NULL ? handler : rsd_default_error_handler;
+}
+
+#define RSD_ERROR_BUF_SIZE 512
+
+static void rsd_raise_error(const char *fmt, ...) {
+    char buf[RSD_ERROR_BUF_SIZE];
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    rsd_error_handler(buf);
+    /* Safety net: if the handler returns (it must not), abort to prevent UB. */
+    abort();
+}
+
+/* --------------------------------------------------------------------------
+ * Backend priority constants
+ * Lower value = higher priority: the backend with the smallest priority number
+ * wins the slot for a given operation during auto-dispatch.
+ * -------------------------------------------------------------------------- */
+
+#define RSD_PRIORITY_AVX512       10u
+#define RSD_PRIORITY_AVX2         20u
+#define RSD_PRIORITY_SSE41        30u
+#define RSD_PRIORITY_SSE2         40u
+#define RSD_PRIORITY_NEON         50u
+#define RSD_PRIORITY_WASM_SIMD128 60u
+#define RSD_PRIORITY_SCALAR       70u
 
 static int rsd_cpu_has_scalar_backend(void) {
     return 1;
@@ -55,36 +100,36 @@ extern void rsd_register_wasm_simd128(RsdDispatchBuilder *builder);
 #endif
 
 static const RsdBackendEntry rsd_backend_entries[] = {
-    {"scalar", 1, rsd_cpu_has_scalar_backend, rsd_register_scalar, 70},
+    {"scalar", 1, rsd_cpu_has_scalar_backend, rsd_register_scalar, RSD_PRIORITY_SCALAR},
 #if RSD_HAVE_SSE2
-    {"sse2", 1, rsd_cpu_has_sse2, rsd_register_sse2, 40},
+    {"sse2", 1, rsd_cpu_has_sse2, rsd_register_sse2, RSD_PRIORITY_SSE2},
 #else
-    {"sse2", 0, rsd_cpu_has_sse2, NULL, 40},
+    {"sse2", 0, rsd_cpu_has_sse2, NULL, RSD_PRIORITY_SSE2},
 #endif
 #if RSD_HAVE_SSE41
-    {"sse41", 1, rsd_cpu_has_sse41, rsd_register_sse41, 30},
+    {"sse41", 1, rsd_cpu_has_sse41, rsd_register_sse41, RSD_PRIORITY_SSE41},
 #else
-    {"sse41", 0, rsd_cpu_has_sse41, NULL, 30},
+    {"sse41", 0, rsd_cpu_has_sse41, NULL, RSD_PRIORITY_SSE41},
 #endif
 #if RSD_HAVE_AVX2
-    {"avx2", 1, rsd_cpu_has_avx2, rsd_register_avx2, 20},
+    {"avx2", 1, rsd_cpu_has_avx2, rsd_register_avx2, RSD_PRIORITY_AVX2},
 #else
-    {"avx2", 0, rsd_cpu_has_avx2, NULL, 20},
+    {"avx2", 0, rsd_cpu_has_avx2, NULL, RSD_PRIORITY_AVX2},
 #endif
 #if RSD_HAVE_AVX512
-    {"avx512", 1, rsd_cpu_has_avx512, rsd_register_avx512, 10},
+    {"avx512", 1, rsd_cpu_has_avx512, rsd_register_avx512, RSD_PRIORITY_AVX512},
 #else
-    {"avx512", 0, rsd_cpu_has_avx512, NULL, 10},
+    {"avx512", 0, rsd_cpu_has_avx512, NULL, RSD_PRIORITY_AVX512},
 #endif
 #if RSD_HAVE_NEON
-    {"neon", 1, rsd_cpu_has_neon, rsd_register_neon, 50},
+    {"neon", 1, rsd_cpu_has_neon, rsd_register_neon, RSD_PRIORITY_NEON},
 #else
-    {"neon", 0, rsd_cpu_has_neon, NULL, 50},
+    {"neon", 0, rsd_cpu_has_neon, NULL, RSD_PRIORITY_NEON},
 #endif
 #if RSD_HAVE_WASM_SIMD128
-    {"wasm_simd128", 1, rsd_cpu_has_wasm_simd128, rsd_register_wasm_simd128, 60}
+    {"wasm_simd128", 1, rsd_cpu_has_wasm_simd128, rsd_register_wasm_simd128, RSD_PRIORITY_WASM_SIMD128}
 #else
-    {"wasm_simd128", 0, rsd_cpu_has_wasm_simd128, NULL, 60}
+    {"wasm_simd128", 0, rsd_cpu_has_wasm_simd128, NULL, RSD_PRIORITY_WASM_SIMD128}
 #endif
 };
 
@@ -273,9 +318,9 @@ static void rsd_resolve_backend(const RsdBackendEntry *entry) {
 static void rsd_error_unavailable_operation(const char *operation_name) {
     const char *name = operation_name != NULL ? operation_name : "<unknown>";
     if (strcmp(rsd_requested_backend_buf, "auto") == 0) {
-        Rf_error("operation '%s' is not available for any compiled and CPU-supported backend", name);
+        rsd_raise_error("operation '%s' is not available for any compiled and CPU-supported backend", name);
     }
-    Rf_error("operation '%s' is not available for selected backend '%s'", name, rsd_selected_backend_buf);
+    rsd_raise_error("operation '%s' is not available for selected backend '%s'", name, rsd_selected_backend_buf);
 }
 
 void rsd_init_dispatch(void) {
@@ -289,7 +334,7 @@ void rsd_set_backend(const char *backend) {
     const RsdBackendEntry *entry;
 
     if (backend == NULL || backend[0] == '\0') {
-        Rf_error("backend must be a non-empty string");
+        rsd_raise_error("backend must be a non-empty string");
     }
     if (strcmp(backend, "auto") == 0) {
         snprintf(rsd_requested_backend_buf, sizeof(rsd_requested_backend_buf), "%s", "auto");
@@ -299,13 +344,13 @@ void rsd_set_backend(const char *backend) {
 
     entry = rsd_find_backend(backend);
     if (entry == NULL) {
-        Rf_error("unknown SIMD backend '%s'", backend);
+        rsd_raise_error("unknown SIMD backend '%s'", backend);
     }
     if (entry->compiled == 0) {
-        Rf_error("SIMD backend '%s' was not compiled into this build", backend);
+        rsd_raise_error("SIMD backend '%s' was not compiled into this build", backend);
     }
     if (!rsd_backend_entry_cpu_supported(entry)) {
-        Rf_error("SIMD backend '%s' is not supported on this CPU/runtime", backend);
+        rsd_raise_error("SIMD backend '%s' is not supported on this CPU/runtime", backend);
     }
 
     snprintf(rsd_requested_backend_buf, sizeof(rsd_requested_backend_buf), "%s", backend);
@@ -314,7 +359,7 @@ void rsd_set_backend(const char *backend) {
 
 void rsd_dispatch_invoke(RsdOperation operation, RsdKernelSignature signature, void *call, const char *operation_name) {
     if (!rsd_operation_valid(operation)) {
-        Rf_error("unknown operation '%s'", operation_name != NULL ? operation_name : "<unknown>");
+        rsd_raise_error("unknown operation '%s'", operation_name != NULL ? operation_name : "<unknown>");
     }
     if (!rsd_dispatch_initialized) {
         rsd_init_dispatch();
@@ -323,7 +368,7 @@ void rsd_dispatch_invoke(RsdOperation operation, RsdKernelSignature signature, v
         rsd_error_unavailable_operation(operation_name);
     }
     if (rsd_active_slots[operation].signature != signature) {
-        Rf_error("internal dispatch signature mismatch for operation '%s'", operation_name != NULL ? operation_name : "<unknown>");
+        rsd_raise_error("internal dispatch signature mismatch for operation '%s'", operation_name != NULL ? operation_name : "<unknown>");
     }
     rsd_active_slots[operation].invoke(call);
 }

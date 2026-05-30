@@ -149,11 +149,14 @@ rsd_update_description <- function(path) {
 rsd_update_ignores <- function(path) {
   rsd_append_unique_lines(
     file.path(path, ".Rbuildignore"),
-    c("^src/Makevars$", "^src/Makevars\\.win$", "^src/config\\.h$", "^src/.*\\.o$", "^src/rsd-kernels$", "^src/rsd-kernels/.*$")
+    c("^src/Makevars$", "^src/Makevars\\.win$", "^src/config\\.h$",
+      "^src/.*\\.o$", "^src/rsd-kernels$", "^src/rsd-kernels/.*$",
+      "^src/rsd-lib$", "^src/rsd-lib/.*$")
   )
   rsd_append_unique_lines(
     file.path(path, ".gitignore"),
-    c("src/Makevars", "src/Makevars.win", "src/config.h", "src/*.o", "src/rsd-kernels/")
+    c("src/Makevars", "src/Makevars.win", "src/config.h",
+      "src/*.o", "src/rsd-kernels/", "src/rsd-lib/")
   )
   invisible(TRUE)
 }

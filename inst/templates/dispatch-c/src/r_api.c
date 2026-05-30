@@ -129,7 +129,8 @@ SEXP RC_simd_backend(void) {
     return Rf_mkString(rsd_selected_backend());
 }
 
-/* Returns a protected STRSXP; caller must UNPROTECT. */
+/* Returns 1 if the named backend was compiled with native (non-SIMDe)
+ * intrinsics, i.e. the compiler targeted that ISA directly. */
 static int rsd_backend_simde_native(const char *backend) {
     if (strcmp(backend, "sse2") == 0) {
         return RSD_SIMDE_NATIVE_SSE2 != 0;
@@ -152,33 +153,40 @@ static int rsd_backend_simde_native(const char *backend) {
     return 0;
 }
 
-static int rsd_backend_included(const char *backend, int mode) {
-    if (mode == 0) {
-        return rsd_backend_compiled(backend);
+/* Which membership predicate to apply when building a backend character
+ * vector.  This replaces the former magic integer argument to
+ * rsd_backend_included(). */
+typedef enum {
+    RSD_BACKEND_FILTER_COMPILED      = 0,
+    RSD_BACKEND_FILTER_CPU_SUPPORTED = 1,
+    RSD_BACKEND_FILTER_AVAILABLE     = 2,
+    RSD_BACKEND_FILTER_SIMDE_NATIVE  = 3
+} RsdBackendFilter;
+
+static int rsd_backend_included(const char *backend, RsdBackendFilter filter) {
+    switch (filter) {
+        case RSD_BACKEND_FILTER_COMPILED:      return rsd_backend_compiled(backend);
+        case RSD_BACKEND_FILTER_CPU_SUPPORTED: return rsd_backend_cpu_supported(backend);
+        case RSD_BACKEND_FILTER_AVAILABLE:     return rsd_backend_available(backend);
+        case RSD_BACKEND_FILTER_SIMDE_NATIVE:  return rsd_backend_simde_native(backend);
+        default:                               return 0;
     }
-    if (mode == 1) {
-        return rsd_backend_cpu_supported(backend);
-    }
-    if (mode == 2) {
-        return rsd_backend_available(backend);
-    }
-    return rsd_backend_simde_native(backend);
 }
 
-static SEXP rsd_backend_character_vector(int mode) {
+static SEXP rsd_backend_character_vector(RsdBackendFilter filter) {
     size_t n_backends = rsd_backend_count();
     int n = 0;
 
     for (size_t i = 0; i < n_backends; ++i) {
         const char *backend = rsd_backend_name(i);
-        n += rsd_backend_included(backend, mode) != 0;
+        n += rsd_backend_included(backend, filter) != 0;
     }
 
     SEXP out = PROTECT(Rf_allocVector(STRSXP, n));
     int j = 0;
     for (size_t i = 0; i < n_backends; ++i) {
         const char *backend = rsd_backend_name(i);
-        if (rsd_backend_included(backend, mode)) {
+        if (rsd_backend_included(backend, filter)) {
             SET_STRING_ELT(out, j, Rf_mkChar(backend));
             ++j;
         }
@@ -281,10 +289,10 @@ SEXP RC_simd_info(void) {
     SET_VECTOR_ELT(out, 0, Rf_mkString(rsd_dispatch_mode()));
     SET_VECTOR_ELT(out, 1, Rf_mkString(rsd_requested_backend()));
     SET_VECTOR_ELT(out, 2, Rf_mkString(rsd_selected_backend()));
-    SET_VECTOR_ELT(out, 3, rsd_backend_character_vector(0)); UNPROTECT(1);
-    SET_VECTOR_ELT(out, 4, rsd_backend_character_vector(1)); UNPROTECT(1);
-    SET_VECTOR_ELT(out, 5, rsd_backend_character_vector(2)); UNPROTECT(1);
-    SET_VECTOR_ELT(out, 6, rsd_backend_character_vector(3)); UNPROTECT(1);
+    SET_VECTOR_ELT(out, 3, rsd_backend_character_vector(RSD_BACKEND_FILTER_COMPILED));      UNPROTECT(1);
+    SET_VECTOR_ELT(out, 4, rsd_backend_character_vector(RSD_BACKEND_FILTER_CPU_SUPPORTED)); UNPROTECT(1);
+    SET_VECTOR_ELT(out, 5, rsd_backend_character_vector(RSD_BACKEND_FILTER_AVAILABLE));     UNPROTECT(1);
+    SET_VECTOR_ELT(out, 6, rsd_backend_character_vector(RSD_BACKEND_FILTER_SIMDE_NATIVE));  UNPROTECT(1);
     SET_VECTOR_ELT(out, 7, rsd_operation_character_vector()); UNPROTECT(1);
     SET_VECTOR_ELT(out, 8, rsd_operation_backends_list()); UNPROTECT(1);
     SET_VECTOR_ELT(out, 9, rsd_operation_selected_backends_vector()); UNPROTECT(1);

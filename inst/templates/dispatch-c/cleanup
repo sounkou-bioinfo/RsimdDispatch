@@ -1,3 +1,3 @@
 #!/bin/sh
 rm -f src/Makevars src/Makevars.win src/config.h config.log
-rm -rf src/rsd-kernels
+rm -rf src/rsd-kernels src/rsd-lib

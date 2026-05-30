@@ -13,6 +13,7 @@ src/Makevars.win
 src/config.h
 src/*.o
 src/rsd-kernels/
+src/rsd-lib/
 src/*.so
 src/*.dll
 src/*.dylib

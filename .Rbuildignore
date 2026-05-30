@@ -10,6 +10,8 @@
 ^src/.*\.o$
 ^src/rsd-kernels$
 ^src/rsd-kernels/.*$
+^src/rsd-lib$
+^src/rsd-lib/.*$
 ^config\.log$
 ^Makefile$
 ^Dockerfile\.webr-test$

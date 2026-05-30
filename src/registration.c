@@ -19,7 +19,15 @@ static const R_CallMethodDef call_methods[] = {
     {NULL, NULL, 0}
 };
 
+/* Error handler that redirects dispatch engine errors into R's error
+ * mechanism. Installed before rsd_init_dispatch() so any error raised
+ * during eager initialisation is handled correctly. */
+static void rsd_r_error_handler(const char *msg) {
+    Rf_error("%s", msg);
+}
+
 void R_init_RsimdDispatch(DllInfo *dll) {
+    rsd_set_error_handler(rsd_r_error_handler);
     rsd_init_dispatch();
     R_registerRoutines(dll, NULL, call_methods, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);

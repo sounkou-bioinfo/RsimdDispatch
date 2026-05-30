@@ -53,6 +53,10 @@ void rsd_convolve1d_neon(const double *a, size_t na, const double *b, size_t nb,
         }
     }
 #else
+    /* 32-bit ARM targets (armv7/armhf) do not expose float64x2_t; the NEON
+     * AArch32 ISA only added limited 64-bit float support in VFPv3.  Fall
+     * back to a scalar loop, which matches the scalar kernel.  On AArch64
+     * the vectorised path above is always taken. */
     for (size_t i = 0; i < na; ++i) {
         const double ai = a[i];
         for (size_t j = 0; j < nb; ++j) {

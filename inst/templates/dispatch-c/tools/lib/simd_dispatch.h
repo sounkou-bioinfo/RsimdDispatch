@@ -1,0 +1,106 @@
+#ifndef RSD_SIMD_DISPATCH_H
+#define RSD_SIMD_DISPATCH_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include "kernel_api.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* --------------------------------------------------------------------------
+ * Error handler
+ *
+ * The dispatch engine does not depend on R headers. All fatal errors are
+ * routed through a pluggable handler. The default handler writes to stderr
+ * and calls abort(). R callers should install rsd_r_error_handler() (see
+ * registration.c) which redirects to Rf_error() so that R's error-handling
+ * and longjmp machinery work correctly.
+ *
+ * The handler receives a fully-formatted, null-terminated message string.
+ * It must not return; if it does, the dispatch engine calls abort().
+ * -------------------------------------------------------------------------- */
+
+typedef void (*rsd_error_handler_fn)(const char *msg);
+
+/* Install a custom error handler. Passing NULL restores the default. */
+void rsd_set_error_handler(rsd_error_handler_fn handler);
+
+/* --------------------------------------------------------------------------
+ * Dispatch lifecycle
+ * -------------------------------------------------------------------------- */
+
+/* Initialise the dispatch table using auto-selection. No-op if already
+ * initialised. Called automatically on first use, but also called eagerly
+ * by R_init_* so the selected backend is deterministic at package load. */
+void rsd_init_dispatch(void);
+
+/* Select a backend by name. Pass "auto" to revert to auto-selection.
+ * Raises an error (via the installed handler) for unknown, uncompiled, or
+ * CPU-unsupported backends. */
+void rsd_set_backend(const char *backend);
+
+/* --------------------------------------------------------------------------
+ * Dispatch invocation
+ * -------------------------------------------------------------------------- */
+
+/* Invoke the resolved kernel for the given operation.
+ * - operation:      which operation to dispatch
+ * - signature:      expected kernel signature; raises an error on mismatch
+ * - call:           pointer to the operation-specific call-frame struct
+ * - operation_name: human-readable name used in error messages (may be NULL)
+ */
+void rsd_dispatch_invoke(RsdOperation operation, RsdKernelSignature signature,
+                         void *call, const char *operation_name);
+
+/* --------------------------------------------------------------------------
+ * Backend introspection
+ * -------------------------------------------------------------------------- */
+
+/* Returns the requested backend string ("auto" or a named backend). */
+const char *rsd_requested_backend(void);
+
+/* Returns a summary string for the currently selected backend.
+ * Possible values:
+ *   - a backend name (all operations resolved to the same backend)
+ *   - "mixed"       (different operations resolved to different backends)
+ *   - "unavailable" (no operation could be resolved)
+ *   - "uninitialized" (dispatch has not been initialised yet)
+ */
+const char *rsd_selected_backend(void);
+
+/* Returns the backend name selected for a specific operation, or NULL if
+ * the operation has no resolved kernel. */
+const char *rsd_operation_selected_backend(RsdOperation operation);
+
+/* Returns 1 if backend is in the known backend list. */
+int rsd_backend_known(const char *backend);
+
+/* Returns 1 if backend was compiled into this build. */
+int rsd_backend_compiled(const char *backend);
+
+/* Returns 1 if the current CPU/runtime supports backend at runtime. */
+int rsd_backend_cpu_supported(const char *backend);
+
+/* Returns 1 if backend is both compiled and CPU-supported. */
+int rsd_backend_available(const char *backend);
+
+/* Returns 1 if backend is available AND provides a kernel for operation. */
+int rsd_backend_operation_available(const char *backend, RsdOperation operation);
+
+/* Total number of known backends (compiled or not). */
+size_t rsd_backend_count(void);
+
+/* Name of the i-th backend, or NULL if i is out of range. */
+const char *rsd_backend_name(size_t i);
+
+/* A stable string identifying the dispatch implementation strategy. */
+const char *rsd_dispatch_mode(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
