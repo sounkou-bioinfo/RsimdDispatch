@@ -81,10 +81,13 @@ const char *sd_requested_backend(void);
 
 /* Returns a summary string for the currently selected backend.
  * Possible values:
- *   - a backend name (all operations resolved to the same backend)
- *   - "mixed"       (different operations resolved to different backends)
- *   - "unavailable" (no operation could be resolved)
- *   - "uninitialized" (dispatch has not been initialised yet)
+ *   - a backend name   (all operations resolved to the same backend)
+ *   - "partial:<name>" (explicit backend selected but covers only a subset
+ *                       of operations; some operations are unresolved)
+ *   - "mixed"          (different operations resolved to different backends;
+ *                       only possible under auto-dispatch)
+ *   - "unavailable"    (no operation could be resolved)
+ *   - "uninitialized"  (dispatch has not been initialised yet)
  */
 const char *sd_selected_backend(void);
 

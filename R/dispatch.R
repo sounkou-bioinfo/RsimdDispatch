@@ -54,6 +54,8 @@ convolve1d <- function(a, b) {
 #' @return The selected backend summary string, invisibly. Possible values:
 #'   \describe{
 #'     \item{`"<name>"`}{All operations resolved to the same named backend.}
+#'     \item{`"partial:<name>"`}{The named backend was selected explicitly but
+#'       only covers a subset of operations (some operations are unresolved).}
 #'     \item{`"mixed"`}{Different operations resolved to different backends
 #'       (only possible under `"auto"`).}
 #'     \item{`"unavailable"`}{No operation could be resolved for the requested

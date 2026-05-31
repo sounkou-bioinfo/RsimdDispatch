@@ -67,7 +67,7 @@ if [ -z "${CPICFLAGS:-}" ] && [ -n "${R_HOME:-}" ] && [ -x "${R_HOME}/bin/R" ]; 
     CPICFLAGS=$("${R_HOME}/bin/R" CMD config CPICFLAGS 2>/dev/null || true)
 fi
 
-RSD_LOG_PREFIX=${RSD_LOG_PREFIX:-RsimdDispatch}
+RSD_LOG_PREFIX=${RSD_LOG_PREFIX:-@PKG_NAME@}
 
 SIMDE_INCLUDE_DIR=${RSD_SIMDE_INCLUDE_DIR:-}
 RSD_SIMDE_CPPFLAGS=${RSD_SIMDE_CPPFLAGS:-}

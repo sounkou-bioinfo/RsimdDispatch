@@ -34,14 +34,22 @@ check-template-sync:
 	@diff -rq src inst/templates/dispatch-c/src \
 		--exclude='*.o' --exclude='*.so' --exclude='*.dll' --exclude='*.dylib' \
 		--exclude='Makevars' --exclude='Makevars.win' --exclude='config.h' --exclude='rsd-kernels' --exclude='rsd-lib' \
+		--exclude='registration.c' \
 		|| (echo 'ERROR: template/src drift detected' && exit 1)
 	@diff -rq tools/simdDispatch inst/templates/dispatch-c/tools/simdDispatch \
 		--exclude='build' --exclude='README.Rmd' --exclude='README.md' \
+		--exclude='simd_dispatch.c' \
 		|| (echo 'ERROR: template simdDispatch drift detected' && exit 1)
-	@for f in cleanup configure configure.win src/Makevars.in src/Makevars.win.in tools/configure-simd-dispatch.sh; do \
+	@for f in cleanup configure configure.win src/Makevars.in src/Makevars.win.in; do \
 		diff -q "$$f" "inst/templates/dispatch-c/$$f" >/dev/null || \
 			(echo "ERROR: template file drift detected: $$f" && exit 1); \
 	done
+	@sh tools/tokenize-template.sh src/registration.c | diff - inst/templates/dispatch-c/src/registration.c \
+		|| (echo 'ERROR: template file drift detected: src/registration.c' && exit 1)
+	@sh tools/tokenize-template.sh tools/simdDispatch/simd_dispatch.c | diff - inst/templates/dispatch-c/tools/simdDispatch/simd_dispatch.c \
+		|| (echo 'ERROR: template file drift detected: tools/simdDispatch/simd_dispatch.c' && exit 1)
+	@sh tools/tokenize-template.sh tools/configure-simd-dispatch.sh | diff - inst/templates/dispatch-c/tools/configure-simd-dispatch.sh \
+		|| (echo 'ERROR: template file drift detected: tools/configure-simd-dispatch.sh' && exit 1)
 
 sync-template:
 	@rsync -a --delete \
@@ -55,6 +63,9 @@ sync-template:
 	@for f in cleanup configure configure.win src/Makevars.in src/Makevars.win.in tools/configure-simd-dispatch.sh; do \
 		cp "$$f" "inst/templates/dispatch-c/$$f"; \
 	done
+	@sh tools/tokenize-template.sh src/registration.c > inst/templates/dispatch-c/src/registration.c
+	@sh tools/tokenize-template.sh tools/simdDispatch/simd_dispatch.c > inst/templates/dispatch-c/tools/simdDispatch/simd_dispatch.c
+	@sh tools/tokenize-template.sh tools/configure-simd-dispatch.sh > inst/templates/dispatch-c/tools/configure-simd-dispatch.sh
 	@echo 'Template synced.'
 
 build:

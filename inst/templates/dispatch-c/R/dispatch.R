@@ -1,4 +1,4 @@
-#' @useDynLib RsimdDispatch, .registration = TRUE
+#' @useDynLib @PKG_NAME@, .registration = TRUE
 NULL
 
 #' Count non-zero bytes with the selected SIMD backend
@@ -43,7 +43,7 @@ convolve1d <- function(a, b) {
 #' Select the runtime SIMD backend
 #'
 #' Select the backend used by subsequent calls to dispatched demo kernels such
-#' as `count_nonzero()` and `convolve1d()`. `RsimdDispatch` keeps all compiled
+#' as `count_nonzero()` and `convolve1d()`. `@PKG_NAME@` keeps all compiled
 #' variants in one shared object and switches a guarded resolved operation
 #' table. This makes same-process benchmarking possible.
 #'

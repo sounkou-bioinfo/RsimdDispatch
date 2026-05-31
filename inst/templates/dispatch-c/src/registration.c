@@ -23,7 +23,7 @@ static void sd_r_error_handler(const char *msg) {
     Rf_error("%s", msg);
 }
 
-void R_init_RsimdDispatch(DllInfo *dll) {
+void R_init_@PKG_NAME@(DllInfo *dll) {
     sd_set_error_handler(sd_r_error_handler);
     sd_init_dispatch();
     R_registerRoutines(dll, NULL, call_methods, NULL, NULL);

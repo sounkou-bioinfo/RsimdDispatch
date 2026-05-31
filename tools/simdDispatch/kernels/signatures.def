@@ -1,0 +1,21 @@
+/* signatures.def — canonical kernel signature catalog.
+ *
+ * Each row defines one kernel call-frame signature. This file is included with
+ * SD_SIGNATURE defined to different macros depending on context. Guards are
+ * intentionally omitted so the file can be included multiple times.
+ *
+ * SD_SIGNATURE(UPPER_ID, CallType)
+ *
+ *   UPPER_ID  — appended to SD_SIG_ to form the SdKernelSignature enum value
+ *   CallType  — the call-frame struct type for this signature
+ *
+ * To add a signature:
+ *   1. Add a row here.
+ *   2. Add the CallType struct to kernel_api.h.
+ *   3. Add the SD_SIG_UPPER_ID reference in the operations.def row for any
+ *      operation that uses this signature.
+ *   4. Add a SD_DEFINE_*_THUNK macro in kernel_api.h for the new signature.
+ */
+
+SD_SIGNATURE(RAW_COUNT,    SdCountNonzeroCall)
+SD_SIGNATURE(F64_CONVOLVE, SdConvolve1dCall)

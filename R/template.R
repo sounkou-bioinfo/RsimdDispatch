@@ -105,15 +105,11 @@ rsd_sanitize_c_prefix <- function(pkg) {
 
 rsd_template_substitute <- function(x, pkg, prefix, file = "") {
   upper_prefix <- toupper(prefix)
-  x <- gsub("RsimdDispatch", pkg, x, fixed = TRUE)
+  x <- gsub("@PKG_NAME@", pkg, x, fixed = TRUE)
   x <- gsub("sd_", paste0(prefix, "_"), x, fixed = TRUE)
   x <- gsub("Sd", rsd_camel_prefix(prefix), x, fixed = TRUE)
   x <- gsub("SD_", paste0(upper_prefix, "_"), x, fixed = TRUE)
   x <- gsub("RC_", paste0(upper_prefix, "_C_"), x, fixed = TRUE)
-  if (identical(file, file.path("tools", "configure-simd-dispatch.sh"))) {
-    x <- gsub(paste0('package = "', pkg, '"'), 'package = "RsimdDispatch"', x, fixed = TRUE)
-    x <- gsub(paste0('package="', pkg, '"'), 'package="RsimdDispatch"', x, fixed = TRUE)
-  }
   x
 }
 

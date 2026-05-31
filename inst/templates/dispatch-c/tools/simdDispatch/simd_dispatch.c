@@ -90,7 +90,7 @@
  * -------------------------------------------------------------------------- */
 
 static void sd_default_error_handler(const char *msg) {
-    fprintf(stderr, "RsimdDispatch error: %s\n", msg);
+    fprintf(stderr, "@PKG_NAME@ error: %s\n", msg);
     abort();
 }
 
@@ -354,14 +354,27 @@ void sd_register_kernel_table(SdDispatchBuilder *builder, const SdKernelDef *ker
         return;
     }
 
+    /* First pass: validate ALL rows unconditionally.
+     * A lower-priority backend with a wrong signature must be caught even if it
+     * would never win the priority race.  We check every row before installing
+     * any, so that a mis-wired backend always raises an error at registration
+     * time regardless of dispatch priority. */
     for (size_t i = 0; kernels[i].invoke != NULL; ++i) {
         SdOperation operation = kernels[i].operation;
-        if (!sd_builder_should_update(builder, operation, &kernels[i])) {
-            continue;
+        if (!sd_operation_valid(operation)) {
+            sd_raise_error(
+                "backend '%s' registered unknown operation id %d",
+                builder->backend != NULL ? builder->backend->name : "<unknown>",
+                (int)operation
+            );
         }
-        /* Validate that the kernel's signature matches the operation catalog.
-         * This catches mis-wired backends at initialization time rather than
-         * at call time. */
+        if (kernels[i].signature == SD_SIG_NONE) {
+            sd_raise_error(
+                "backend '%s' registered operation '%s' with SD_SIG_NONE signature",
+                builder->backend != NULL ? builder->backend->name : "<unknown>",
+                sd_operation_name(operation) != NULL ? sd_operation_name(operation) : "<unknown>"
+            );
+        }
         if (kernels[i].signature != sd_operation_expected_signature(operation)) {
             sd_raise_error(
                 "backend '%s' registered operation '%s' with wrong signature "
@@ -371,6 +384,14 @@ void sd_register_kernel_table(SdDispatchBuilder *builder, const SdKernelDef *ker
                 (int)sd_operation_expected_signature(operation),
                 (int)kernels[i].signature
             );
+        }
+    }
+
+    /* Second pass: install rows based on priority. */
+    for (size_t i = 0; kernels[i].invoke != NULL; ++i) {
+        SdOperation operation = kernels[i].operation;
+        if (!sd_builder_should_update(builder, operation, &kernels[i])) {
+            continue;
         }
         builder->slots[operation].invoke = kernels[i].invoke;
         builder->slots[operation].signature = kernels[i].signature;
@@ -474,7 +495,15 @@ static void sd_resolve_backend(const SdBackendEntry *entry) {
         sd_raise_error("backend '%s' does not provide any registered operation",
                        entry->name);
     }
-    snprintf(sd_selected_backend_buf, sizeof(sd_selected_backend_buf), "%s", entry->name);
+    /* Write "partial:<name>" when the backend covers only a subset of
+     * operations; write the plain name when all operations are resolved. */
+    if (resolved < (size_t)SD_OP_COUNT) {
+        snprintf(sd_selected_backend_buf, sizeof(sd_selected_backend_buf),
+                 "partial:%s", entry->name);
+    } else {
+        snprintf(sd_selected_backend_buf, sizeof(sd_selected_backend_buf),
+                 "%s", entry->name);
+    }
     sd_dispatch_initialized = 1;
 }
 
@@ -483,7 +512,7 @@ static void sd_error_unavailable_operation(const char *operation_name) {
     if (strcmp(sd_requested_backend_buf, "auto") == 0) {
         sd_raise_error("operation '%s' is not available for any compiled and CPU-supported backend", name);
     }
-    sd_raise_error("operation '%s' is not available for selected backend '%s'", name, sd_selected_backend_buf);
+    sd_raise_error("operation '%s' is not available for selected backend '%s'", name, sd_requested_backend_buf);
 }
 
 void sd_init_dispatch(void) {

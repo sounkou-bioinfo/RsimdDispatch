@@ -54,14 +54,19 @@ typedef enum SdOperation {
 /* --------------------------------------------------------------------------
  * SdKernelSignature enum — identifies the call-frame ABI for a kernel.
  *
- * SD_SIG_NONE is used for unresolved slots and as a sentinel.
+ * Generated from signatures.def via X-macro expansion.
+ * SD_SIG_NONE is the explicit sentinel (value 0, unresolved slots).
  * SD_SIG_COUNT is the number of named signatures (not including NONE).
+ *
+ * To add a signature: add a row to signatures.def (and add the CallType
+ * struct above, and a thunk macro below).
  * -------------------------------------------------------------------------- */
 
 typedef enum SdKernelSignature {
     SD_SIG_NONE = 0,
-    SD_SIG_RAW_COUNT,
-    SD_SIG_F64_CONVOLVE,
+#define SD_SIGNATURE(ID, call_type) SD_SIG_##ID,
+#include "signatures.def"
+#undef SD_SIGNATURE
     SD_SIG_COUNT
 } SdKernelSignature;
 

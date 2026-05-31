@@ -14,7 +14,9 @@
  * To add an operation:
  *   1. Add a row here.
  *   2. Add the CallType struct to kernel_api.h.
- *   3. Add the SD_SIG_* enumerator to SdKernelSignature in kernel_api.h.
+ *   3. If introducing a new signature, add a row to signatures.def and add
+ *      the SD_SIG_* enumerator there; if reusing an existing signature, just
+ *      reference the existing SD_SIG_* id.
  *   4. Add SD_DEFINE_*_THUNK and RC_* wrapper to the appropriate files.
  */
 

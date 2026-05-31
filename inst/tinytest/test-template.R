@@ -26,7 +26,7 @@ expect_equal(RsimdDispatch:::rsd_camel_prefix("_foo"), "Foo")
 # rsd_template_substitute
 # ---------------------------------------------------------------------------
 
-lines <- c("sd_count", "SD_HAVE_SSE2", "Sd something", "RsimdDispatch", "RC_count")
+lines <- c("sd_count", "SD_HAVE_SSE2", "Sd something", "@PKG_NAME@", "RC_count")
 out <- RsimdDispatch:::rsd_template_substitute(lines, pkg = "MyPkg", prefix = "mp")
 expect_equal(out[1], "mp_count")
 expect_equal(out[2], "MP_HAVE_SSE2")
@@ -34,8 +34,8 @@ expect_equal(out[3], "Mp something")
 expect_equal(out[4], "MyPkg")
 expect_equal(out[5], "MP_C_count")
 
-# configure script: 'package = "MyPkg"' should be reverted to 'package = "RsimdDispatch"'
-cfg_lines <- c('x <- system.file(package = "MyPkg")', 'y <- system.file(package="MyPkg")')
+# configure script: 'package = "RsimdDispatch"' stays literal (not substituted)
+cfg_lines <- c('x <- system.file(package = "RsimdDispatch")', 'y <- system.file(package="RsimdDispatch")')
 cfg_out <- RsimdDispatch:::rsd_template_substitute(
   cfg_lines, pkg = "MyPkg", prefix = "mp",
   file = file.path("tools", "configure-simd-dispatch.sh")
