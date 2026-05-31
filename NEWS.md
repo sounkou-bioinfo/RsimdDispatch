@@ -1,3 +1,29 @@
+# RsimdDispatch 0.1.2.9001
+
+* Fix template generation: `.def` files (operations.def, signatures.def,
+  backends.def) are now treated as text and receive prefix substitution when
+  `use_simd_dispatch()` deploys the scaffold — previously they were
+  binary-copied, causing the generated configure to fail to compile.
+* Fix prefix substitution: use boundary-aware regex (`\b`) for all four
+  C-prefix patterns so that env-var names like `RSD_LOG_PREFIX` and shell
+  variables like `SRC_DIR_PATH` are no longer mangled in generated packages.
+* Fix `simd_backend()` test: allow `"partial:<name>"` return value when an
+  explicitly-selected backend implements only a subset of operations (e.g.
+  SSE2/SSE41 implement `count_nonzero` but not `convolve1d`).
+* Fix `sd_register_kernel_table()` sentinel: detect the canonical sentinel
+  `{SD_OP_COUNT, SD_SIG_NONE, NULL}` explicitly; a `NULL` invoke on any
+  other row is now an error rather than silently truncating the table.
+* Add operation and signature catalog order-invariant checks in
+  `sd_init_dispatch()` to catch mis-ordered `.def` files at startup.
+* Use the `CallType` argument in `signatures.def` to generate a
+  `SdSignatureCatalogEntry` catalog with `name` and `call_size`
+  (`sizeof(call_type)`); expose `sd_signature_name()` in the public API.
+* Update `simd_info()` documentation to list `"partial:<name>"` as a
+  possible `selected_backend` value.
+* Update vignette build-layout table: dispatch core and CPU feature
+  detection are staged in `src/rsd-lib/`, not compiled by the ordinary
+  `src/Makevars` path.
+
 # RsimdDispatch 0.1.2.9000
 
 * Open the post-0.1.2 development cycle.

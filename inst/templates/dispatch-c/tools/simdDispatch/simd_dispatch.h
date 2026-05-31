@@ -25,7 +25,12 @@ extern "C" {
 
 typedef void (*sd_error_handler_fn)(const char *msg);
 
-/* Install a custom error handler. Passing NULL restores the default. */
+/* Install a custom error handler. Passing NULL restores the default.
+ *
+ * Thread-safety: this function modifies a global function pointer.  It must
+ * not be called concurrently with sd_dispatch_invoke() or with itself.
+ * Install the handler once during initialisation before any concurrent
+ * dispatch calls are issued. */
 void sd_set_error_handler(sd_error_handler_fn handler);
 
 /* --------------------------------------------------------------------------
