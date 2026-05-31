@@ -11,10 +11,10 @@ provider. The usual workflow is:
     and
     [`convolve1d()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/convolve1d.md)
     kernels with package-specific kernels;
-3.  keep CPU detection, dispatch, and R API files compiled by R’s
-    ordinary `src/Makevars` path;
-4.  let `configure` stage scalar and ISA-specific kernel objects before
-    linking one shared library.
+3.  let `configure` stage the dispatch core, CPU feature detection, and
+    kernel objects;
+4.  link everything into one shared library via the generated
+    `src/Makevars`.
 
 [`use_simd_dispatch()`](https://sounkou-bioinfo.github.io/RsimdDispatch/reference/simd_dispatch_template_path.md)
 updates `DESCRIPTION`, adding `RsimdDispatch` to `LinkingTo`, and copies
@@ -93,10 +93,11 @@ ABI.
 
 ``` text
 R API wrapper        ordinary src/Makevars compilation
-CPU feature checks   ordinary src/Makevars compilation
-dispatch table       ordinary src/Makevars compilation
+R registration       ordinary src/Makevars compilation
+dispatch core        staged baseline object under src/rsd-lib/
+CPU feature checks   staged baseline object under src/rsd-lib/
 scalar kernel        staged by configure under src/rsd-kernels/
-SSE/AVX/NEON/wasm files   staged by configure as optional objects under src/rsd-kernels/
+SSE/AVX/NEON/wasm    staged by configure as optional objects under src/rsd-kernels/
 ```
 
 Do not put `-mavx2`, `-mavx512*`, `-msimd128`, or `-march=native` in
@@ -112,9 +113,10 @@ another function to each existing
 that backend contains the new implementation. For a small number of
 operations, keep the dispatch code explicit and add:
 
-1.  an operation ID, signature ID, call-frame type, and kernel
-    definition entry type support in
-    `tools/simdDispatch/kernels/kernel_api.h`;
+1.  add a row to `tools/simdDispatch/kernels/operations.def` (operation
+    ID, lower name, signature ID, call-frame type); if the operation
+    uses a new call-frame struct, also add the struct to `kernel_api.h`
+    and a row to `signatures.def`;
 2.  one implementation plus a small `void *` call-frame thunk per
     backend file under `tools/simdDispatch/kernels/`, following the
     naming convention `sd_<operation>_<backend>()`;

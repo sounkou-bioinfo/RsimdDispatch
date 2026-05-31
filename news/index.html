@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">RsimdDispatch</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,17 @@
       <small>Source: <a href="https://github.com/sounkou-bioinfo/RsimdDispatch/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.2.9001" id="rsimddispatch-0129001">RsimdDispatch 0.1.2.9001<a class="anchor" aria-label="anchor" href="#rsimddispatch-0129001"></a></h2>
+<ul><li>Fix template generation: <code>.def</code> files (operations.def, signatures.def, backends.def) are now treated as text and receive prefix substitution when <code><a href="../reference/simd_dispatch_template_path.html">use_simd_dispatch()</a></code> deploys the scaffold — previously they were binary-copied, causing the generated configure to fail to compile.</li>
+<li>Fix prefix substitution: use boundary-aware regex (<code>\b</code>) for all four C-prefix patterns so that env-var names like <code>RSD_LOG_PREFIX</code> and shell variables like <code>SRC_DIR_PATH</code> are no longer mangled in generated packages.</li>
+<li>Fix <code><a href="../reference/simd_backend.html">simd_backend()</a></code> test: allow <code>"partial:&lt;name&gt;"</code> return value when an explicitly-selected backend implements only a subset of operations (e.g. SSE2/SSE41 implement <code>count_nonzero</code> but not <code>convolve1d</code>).</li>
+<li>Fix <code>sd_register_kernel_table()</code> sentinel: detect the canonical sentinel <code>{SD_OP_COUNT, SD_SIG_NONE, NULL}</code> explicitly; a <code>NULL</code> invoke on any other row is now an error rather than silently truncating the table.</li>
+<li>Add operation and signature catalog order-invariant checks in <code>sd_init_dispatch()</code> to catch mis-ordered <code>.def</code> files at startup.</li>
+<li>Use the <code>CallType</code> argument in <code>signatures.def</code> to generate a <code>SdSignatureCatalogEntry</code> catalog with <code>name</code> and <code>call_size</code> (<code>sizeof(call_type)</code>); expose <code>sd_signature_name()</code> in the public API.</li>
+<li>Update <code><a href="../reference/simd_info.html">simd_info()</a></code> documentation to list <code>"partial:&lt;name&gt;"</code> as a possible <code>selected_backend</code> value.</li>
+<li>Update vignette build-layout table: dispatch core and CPU feature detection are staged in <code>src/rsd-lib/</code>, not compiled by the ordinary <code>src/Makevars</code> path.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.2.9000" id="rsimddispatch-0129000">RsimdDispatch 0.1.2.9000<a class="anchor" aria-label="anchor" href="#rsimddispatch-0129000"></a></h2>
 <ul><li>Open the post-0.1.2 development cycle.</li>

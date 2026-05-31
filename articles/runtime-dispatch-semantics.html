@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">RsimdDispatch</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -203,8 +203,8 @@ same-process backend switching through the public API.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar      349.7µs     <span style="text-decoration: underline;">2</span>509.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto         45.8µs    <span style="text-decoration: underline;">19</span>571.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        329µs     <span style="text-decoration: underline;">2</span>987.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto           45µs    <span style="text-decoration: underline;">17</span>900.</span></span></code></pre></div>
 <p>The same switch applies to the full one-dimensional convolution
 demo:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -231,8 +231,8 @@ demo:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
 <span><span class="co">#&gt;   expression   median `itr/sec`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;bch:expr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;bch:tm&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        422µs     <span style="text-decoration: underline;">2</span>367.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto          207µs     <span style="text-decoration: underline;">4</span>687.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scalar        504µs     <span style="text-decoration: underline;">2</span>080.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> auto          212µs     <span style="text-decoration: underline;">4</span>536.</span></span></code></pre></div>
 <p><code>"auto"</code> selects the best backend from the compiled and
 supported intersection that also supports the operation being called.
 The current ranking is:</p>
