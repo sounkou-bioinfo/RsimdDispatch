@@ -134,6 +134,26 @@ static const SdOperationCatalogEntry sd_operation_catalog[] = {
 #undef SD_OPERATION
 };
 
+/* --------------------------------------------------------------------------
+ * Signature catalog — generated from signatures.def.
+ *
+ * Provides name and call-frame size for each named signature.  call_size is
+ * the sizeof the corresponding call-frame struct, giving a compile-time
+ * sanity anchor and a runtime-queryable descriptor.
+ * -------------------------------------------------------------------------- */
+
+typedef struct {
+    SdKernelSignature signature;
+    const char *name;
+    size_t call_size;
+} SdSignatureCatalogEntry;
+
+static const SdSignatureCatalogEntry sd_signature_catalog[] = {
+#define SD_SIGNATURE(ID, call_type) {SD_SIG_##ID, #ID, sizeof(call_type)},
+#include "kernels/signatures.def"
+#undef SD_SIGNATURE
+};
+
 size_t sd_operation_count(void) {
     return sizeof(sd_operation_catalog) / sizeof(sd_operation_catalog[0]);
 }
@@ -150,6 +170,15 @@ SdKernelSignature sd_operation_expected_signature(SdOperation operation) {
         return SD_SIG_NONE;
     }
     return sd_operation_catalog[operation].signature;
+}
+
+const char *sd_signature_name(SdKernelSignature sig) {
+    size_t n = sizeof(sd_signature_catalog) / sizeof(sd_signature_catalog[0]);
+    /* SD_SIG_NONE=0 is not in the catalog; named signatures are 1..n. */
+    if (sig == SD_SIG_NONE || (size_t)sig > n) {
+        return NULL;
+    }
+    return sd_signature_catalog[(size_t)sig - 1].name;
 }
 
 /* --------------------------------------------------------------------------
@@ -358,8 +387,27 @@ void sd_register_kernel_table(SdDispatchBuilder *builder, const SdKernelDef *ker
      * A lower-priority backend with a wrong signature must be caught even if it
      * would never win the priority race.  We check every row before installing
      * any, so that a mis-wired backend always raises an error at registration
-     * time regardless of dispatch priority. */
-    for (size_t i = 0; kernels[i].invoke != NULL; ++i) {
+     * time regardless of dispatch priority.
+     *
+     * A row is the canonical sentinel when all three fields match SD_KERNEL_DEF_END:
+     * {SD_OP_COUNT, SD_SIG_NONE, NULL}.  Any other row with invoke == NULL is a
+     * table construction error and is reported explicitly rather than silently
+     * terminating the scan. */
+    for (size_t i = 0; ; ++i) {
+        if (kernels[i].operation == SD_OP_COUNT &&
+            kernels[i].signature == SD_SIG_NONE &&
+            kernels[i].invoke    == NULL) {
+            break; /* canonical sentinel */
+        }
+        if (kernels[i].invoke == NULL) {
+            sd_raise_error(
+                "backend '%s': row %zu has NULL invoke for operation id %d "
+                "(expected the sentinel {SD_OP_COUNT, SD_SIG_NONE, NULL})",
+                builder->backend != NULL ? builder->backend->name : "<unknown>",
+                i,
+                (int)kernels[i].operation
+            );
+        }
         SdOperation operation = kernels[i].operation;
         if (!sd_operation_valid(operation)) {
             sd_raise_error(
@@ -388,7 +436,12 @@ void sd_register_kernel_table(SdDispatchBuilder *builder, const SdKernelDef *ker
     }
 
     /* Second pass: install rows based on priority. */
-    for (size_t i = 0; kernels[i].invoke != NULL; ++i) {
+    for (size_t i = 0; ; ++i) {
+        if (kernels[i].operation == SD_OP_COUNT &&
+            kernels[i].signature == SD_SIG_NONE &&
+            kernels[i].invoke    == NULL) {
+            break; /* canonical sentinel */
+        }
         SdOperation operation = kernels[i].operation;
         if (!sd_builder_should_update(builder, operation, &kernels[i])) {
             continue;
@@ -517,6 +570,34 @@ static void sd_error_unavailable_operation(const char *operation_name) {
 
 void sd_init_dispatch(void) {
     if (!sd_dispatch_initialized) {
+        /* Validate operation catalog order invariant (enum values must be
+         * contiguous and match array indices).  This is a cheap one-time check
+         * that makes the sd_operation_catalog[operation] direct-index access
+         * safe even if operations.def is accidentally reordered. */
+        for (size_t i = 0; i < sd_operation_count(); ++i) {
+            if ((size_t)sd_operation_catalog[i].operation != i) {
+                sd_raise_error(
+                    "operation catalog order invariant violated at index %zu "
+                    "(operation id %d); check operations.def ordering",
+                    i, (int)sd_operation_catalog[i].operation
+                );
+            }
+        }
+        /* Validate signature catalog order invariant similarly: signature ids
+         * are 1-based (SD_SIG_NONE=0 is not in the catalog), so catalog[i]
+         * must have signature == i+1. */
+        {
+            size_t nsig = sizeof(sd_signature_catalog) / sizeof(sd_signature_catalog[0]);
+            for (size_t i = 0; i < nsig; ++i) {
+                if ((size_t)sd_signature_catalog[i].signature != i + 1) {
+                    sd_raise_error(
+                        "signature catalog order invariant violated at index %zu "
+                        "(signature id %d); check signatures.def ordering",
+                        i, (int)sd_signature_catalog[i].signature
+                    );
+                }
+            }
+        }
         snprintf(sd_requested_backend_buf, sizeof(sd_requested_backend_buf), "%s", "auto");
         sd_resolve_auto();
     }

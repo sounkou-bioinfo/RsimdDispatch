@@ -106,10 +106,10 @@ rsd_sanitize_c_prefix <- function(pkg) {
 rsd_template_substitute <- function(x, pkg, prefix, file = "") {
   upper_prefix <- toupper(prefix)
   x <- gsub("@PKG_NAME@", pkg, x, fixed = TRUE)
-  x <- gsub("sd_", paste0(prefix, "_"), x, fixed = TRUE)
-  x <- gsub("Sd", rsd_camel_prefix(prefix), x, fixed = TRUE)
-  x <- gsub("SD_", paste0(upper_prefix, "_"), x, fixed = TRUE)
-  x <- gsub("RC_", paste0(upper_prefix, "_C_"), x, fixed = TRUE)
+  x <- gsub("\\bsd_", paste0(prefix, "_"), x, perl = TRUE)
+  x <- gsub("\\bSd", rsd_camel_prefix(prefix), x, perl = TRUE)
+  x <- gsub("\\bSD_", paste0(upper_prefix, "_"), x, perl = TRUE)
+  x <- gsub("\\bRC_", paste0(upper_prefix, "_C_"), x, perl = TRUE)
   x
 }
 
@@ -133,7 +133,7 @@ rsd_is_text_file <- function(path) {
     ext <- ""
   }
   base %in% c("configure", "configure.win", "cleanup", "README", "CHECKLIST") ||
-    ext %in% c("c", "h", "in", "r", "md", "sh", "yml", "yaml", "txt")
+    ext %in% c("c", "h", "in", "r", "md", "sh", "yml", "yaml", "txt", "def")
 }
 
 rsd_update_description <- function(path) {

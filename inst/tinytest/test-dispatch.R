@@ -57,7 +57,7 @@ info <- simd_info()
 available <- info$available_backends
 for (backend in setdiff(available, "scalar")) {
   expect_silent(simd_set_backend(backend))
-  expect_equal(simd_backend(), backend)
+  expect_true(simd_backend() %in% c(backend, paste0("partial:", backend)))
   info_backend <- simd_info()
   expect_equal(info_backend$operation_selected_backends[["count_nonzero"]], backend)
   expect_equal(count_nonzero(x), 4)

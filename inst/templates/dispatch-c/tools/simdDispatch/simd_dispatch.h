@@ -72,6 +72,10 @@ const char *sd_operation_name(SdOperation operation);
  * Returns SD_SIG_NONE if operation is out of range. */
 SdKernelSignature sd_operation_expected_signature(SdOperation operation);
 
+/* Name string for a kernel signature (e.g. "RAW_COUNT"), or NULL for
+ * SD_SIG_NONE or out-of-range values. */
+const char *sd_signature_name(SdKernelSignature sig);
+
 /* --------------------------------------------------------------------------
  * Backend introspection
  * -------------------------------------------------------------------------- */

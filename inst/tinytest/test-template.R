@@ -34,6 +34,15 @@ expect_equal(out[3], "Mp something")
 expect_equal(out[4], "MyPkg")
 expect_equal(out[5], "MP_C_count")
 
+# Boundary protection: patterns embedded inside longer identifiers must NOT be substituted.
+# sd_ / SD_ / Sd inside a word are not at a word boundary and must be left alone.
+boundary_lines <- c("RSD_LOG_PREFIX", "X_SD_Y", "rsd_sanitize", "fooSdBar")
+boundary_out <- RsimdDispatch:::rsd_template_substitute(boundary_lines, pkg = "MyPkg", prefix = "mp")
+expect_equal(boundary_out[1], "RSD_LOG_PREFIX")   # SD_ inside RSD_* — not replaced
+expect_equal(boundary_out[2], "X_SD_Y")           # SD_ after _ — not replaced
+expect_equal(boundary_out[3], "rsd_sanitize")     # sd_ after r — not replaced
+expect_equal(boundary_out[4], "fooSdBar")         # Sd after o — not replaced
+
 # configure script: 'package = "RsimdDispatch"' stays literal (not substituted)
 cfg_lines <- c('x <- system.file(package = "RsimdDispatch")', 'y <- system.file(package="RsimdDispatch")')
 cfg_out <- RsimdDispatch:::rsd_template_substitute(

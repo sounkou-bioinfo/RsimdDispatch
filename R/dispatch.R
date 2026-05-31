@@ -99,7 +99,9 @@ simd_backend <- function() {
 #'     \item{`requested_backend`}{Character scalar. The last value passed to
 #'       `simd_set_backend()`, or `"auto"` if not explicitly set.}
 #'     \item{`selected_backend`}{Character scalar. Summary of the currently
-#'       active backend: a backend name, `"mixed"`, or `"unavailable"`.}
+#'       active backend: a backend name, `"partial:<name>"` (explicit backend
+#'       selected but missing some operations), `"mixed"` (auto-dispatch with
+#'       different operations on different backends), or `"unavailable"`.}
 #'     \item{`compiled_backends`}{Character vector. Backends compiled into
 #'       the shared library (not necessarily supported by the current CPU).}
 #'     \item{`cpu_supported_backends`}{Character vector. Backends whose
