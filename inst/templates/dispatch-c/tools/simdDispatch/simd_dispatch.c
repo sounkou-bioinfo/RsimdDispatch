@@ -303,6 +303,29 @@ static int sd_dispatch_initialized = 0;
 static char sd_requested_backend_buf[32] = "auto";
 static char sd_selected_backend_buf[32] = "uninitialized";
 
+/* --------------------------------------------------------------------------
+ * Backend-operation availability matrix
+ *
+ * sd_backend_op_matrix[b][op] == 1 when backend b is both compiled and
+ * CPU-supported AND provides a kernel for operation op.
+ *
+ * Populated once during sd_init_dispatch() so that sd_backend_operation_available()
+ * and simd_info() diagnostics do not replay backend registration on every call.
+ * The matrix is keyed by a compile-time backend index enum so the array has
+ * a fixed size known to the compiler.
+ * -------------------------------------------------------------------------- */
+
+typedef enum {
+#define SD_BACKEND(ID, name, compiled, supported_fn, priority, simde_native_flag) \
+    SD_BACKEND_IDX_##ID,
+#include "backends.def"
+#undef SD_BACKEND
+    SD_BACKEND_IDX_COUNT
+} SdBackendIdx;
+
+static uint8_t sd_backend_op_matrix[SD_BACKEND_IDX_COUNT][SD_OP_COUNT];
+static int sd_backend_op_matrix_ready = 0;
+
 size_t sd_backend_count(void) {
     return sizeof(sd_backend_entries) / sizeof(sd_backend_entries[0]);
 }
@@ -495,15 +518,24 @@ static void sd_build_backend_slots(SdResolvedSlot *slots, const SdBackendEntry *
 
 int sd_backend_operation_available(const char *backend, SdOperation operation) {
     const SdBackendEntry *entry = sd_find_backend(backend);
-    SdResolvedSlot slots[SD_OP_COUNT];
     if (entry == NULL || !sd_operation_valid(operation)) {
         return 0;
     }
     if (!sd_backend_entry_available(entry)) {
         return 0;
     }
-    sd_build_backend_slots(slots, entry);
-    return sd_resolved_slots_has_operation(slots, operation);
+    if (sd_backend_op_matrix_ready) {
+        /* Use the cached matrix: O(1) lookup, no slot rebuild. */
+        size_t b = (size_t)(entry - sd_backend_entries);
+        return (int)sd_backend_op_matrix[b][(size_t)operation];
+    }
+    /* Matrix not yet populated (called before sd_init_dispatch); fall back to
+     * the slot-rebuild path. */
+    {
+        SdResolvedSlot slots[SD_OP_COUNT];
+        sd_build_backend_slots(slots, entry);
+        return sd_resolved_slots_has_operation(slots, operation);
+    }
 }
 
 static void sd_update_selected_backend_summary(void) {
@@ -600,6 +632,24 @@ void sd_init_dispatch(void) {
         }
         snprintf(sd_requested_backend_buf, sizeof(sd_requested_backend_buf), "%s", "auto");
         sd_resolve_auto();
+        /* Populate the backend-operation availability matrix once, so that
+         * sd_backend_operation_available() and diagnostic callers can do O(1)
+         * lookups without replaying backend registration on every call. */
+        {
+            SdResolvedSlot tmp[SD_OP_COUNT];
+            for (size_t b = 0; b < sd_backend_count(); ++b) {
+                const SdBackendEntry *e = &sd_backend_entries[b];
+                memset(&sd_backend_op_matrix[b][0], 0, sizeof(sd_backend_op_matrix[b]));
+                if (!sd_backend_entry_available(e)) {
+                    continue;
+                }
+                sd_build_backend_slots(tmp, e);
+                for (size_t op = 0; op < (size_t)SD_OP_COUNT; ++op) {
+                    sd_backend_op_matrix[b][op] = (tmp[op].invoke != NULL) ? 1u : 0u;
+                }
+            }
+            sd_backend_op_matrix_ready = 1;
+        }
     }
 }
 
